@@ -204,7 +204,7 @@ export function ContactForm() {
           )}
 
           <Button type="submit" disabled={loading} className="w-full h-12 text-base rounded-xl">
-            {loading ? 'Sending...' : 'Submit Inquiry'}
+            {loading ? 'Sending...' : 'Request a Call'}
           </Button>
         </form>
       </CardContent>

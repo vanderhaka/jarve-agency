@@ -6,18 +6,18 @@ import { motion } from 'framer-motion'
 const stats = [
   {
     value: '5x',
-    label: 'Faster delivery',
-    description: 'Modern tools mean faster builds',
+    label: 'Faster than agencies',
+    description: 'What takes others 6+ months',
   },
   {
     value: '5x',
     label: 'Lower cost',
-    description: 'We pass the savings to you',
+    description: 'Same quality, fraction of the price',
   },
   {
     value: '2-4',
     label: 'Weeks to launch',
-    description: 'Not months or years',
+    description: 'Industry average: 6+ months',
   },
 ]
 

@@ -9,25 +9,25 @@ export function ServicesSection() {
   const services = [
     {
       image: '/images/services/test-before-bet.jpeg',
-      title: 'Convert More Visitors',
-      description: 'Web apps that load instantly and keep users engaged. Higher rankings, better conversions, more revenue.',
+      title: 'Web Applications',
+      description: 'Fast, responsive web apps that convert. Built for performance, SEO, and user engagement.',
       features: ['Lightning fast', 'Works everywhere', 'SEO-optimized'],
     },
     {
       image: '/images/services/reach-mobile.jpeg',
-      title: 'Reach Users on Mobile',
-      description: 'Put your business in your customers\' pockets. From idea to App Store, we handle the entire journey.',
+      title: 'Mobile Apps',
+      description: 'Native iOS and Android apps. From idea to App Store, we handle the entire journey.',
       features: ['Smooth native feel', 'Works offline', 'Instant updates'],
     },
     {
       image: '/images/services/convert-visitors.jpeg',
-      title: 'Test Before You Bet',
+      title: 'MVP Development',
       description: 'Validate your idea before investing everything. Get to market fast, learn from real users, iterate quickly.',
       features: ['Live in weeks', 'Real user feedback', 'Adapt as you learn'],
     },
     {
       image: '/images/services/automate-busywork.jpeg',
-      title: 'Automate the Busywork',
+      title: 'AI Automation',
       description: 'Let AI handle the tasks eating your team\'s time. Smarter support, instant answers, automated workflows.',
       features: ['24/7 customer support', 'Answers from your data', 'Hands-free operations'],
     },

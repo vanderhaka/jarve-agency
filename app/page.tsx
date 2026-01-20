@@ -1,8 +1,10 @@
 import { HeroSection } from '@/components/hero-section'
 import { StatsSection } from '@/components/stats-section'
+import { TestimonialsSection } from '@/components/testimonials-section'
 import { ServicesSection } from '@/components/services-section'
 import { HowItWorksSection } from '@/components/how-it-works-section'
 import { PortfolioSection } from '@/components/portfolio-section'
+import { FAQSection } from '@/components/faq-section'
 import { ContactForm } from '@/components/contact-form'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
@@ -29,7 +31,7 @@ export default function Home() {
               Contact
             </Link>
             <Button asChild variant="default" size="sm" className="rounded-full px-6">
-              <Link href="#contact">Start Project</Link>
+              <Link href="#contact">Book a Call</Link>
             </Button>
           </nav>
           <div className="md:hidden">
@@ -42,6 +44,7 @@ export default function Home() {
       <main className="flex-1">
         <HeroSection />
         <StatsSection />
+        <TestimonialsSection />
         <ServicesSection />
         <HowItWorksSection />
         <PortfolioSection />
@@ -65,27 +68,29 @@ export default function Home() {
               </div>
 
               <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                What could you build for{' '}
+                Ready to{' '}
                 <span className="relative inline-block">
-                  <span className="relative z-10">5x less</span>
+                  <span className="relative z-10">launch</span>
                   <span className="absolute bottom-2 left-0 right-0 h-3 bg-white/30 -z-10 rounded" />
                 </span>
-                ?
+                {' '}your app?
               </h2>
 
               <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-                The project that was out of reach last year is now within budget. Let&apos;s talk about what&apos;s possible.
+                Most agencies quote $100K+ and 6 months. We&apos;ll build it for a fraction of that—and have you live in weeks.
               </p>
 
               <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-white text-[#1a1f2e] hover:bg-white/90 shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-all duration-300 group">
                 <Link href="#contact" className="flex items-center gap-2">
-                  Book a Free Strategy Call
+                  Book a Free Call
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
             </div>
           </FadeIn>
         </section>
+
+        <FAQSection />
 
         <section id="contact" className="py-24 px-4 bg-muted/30 relative">
           {/* Subtle background pattern */}
@@ -94,9 +99,9 @@ export default function Home() {
           <div className="container mx-auto max-w-2xl relative z-10">
             <FadeIn>
               <div className="text-center mb-10">
-                <h2 className="text-4xl md:text-5xl font-bold mb-4">Let&apos;s build something great</h2>
+                <h2 className="text-4xl md:text-5xl font-bold mb-4">Let&apos;s Talk About Your Project</h2>
                 <p className="text-lg text-muted-foreground">
-                  Tell us about your project and we&apos;ll get back to you within 24 hours.
+                  Book a free 15-minute call. No pressure, just a quick chat about what you&apos;re building.
                 </p>
               </div>
 

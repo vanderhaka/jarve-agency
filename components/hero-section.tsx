@@ -8,10 +8,10 @@ import { FadeIn } from '@/components/fade-in'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const rotatingWords = [
-  { word: 'product', gradient: 'from-blue-500 to-cyan-400', border: 'border-blue-500/50' },
-  { word: 'idea', gradient: 'from-purple-500 to-pink-500', border: 'border-purple-500/50' },
-  { word: 'app', gradient: 'from-orange-500 to-yellow-400', border: 'border-orange-500/50' },
-  { word: 'vision', gradient: 'from-green-500 to-emerald-400', border: 'border-green-500/50' },
+  { word: 'app', gradient: 'from-blue-500 to-cyan-400', border: 'border-blue-500/50' },
+  { word: 'MVP', gradient: 'from-purple-500 to-pink-500', border: 'border-purple-500/50' },
+  { word: 'platform', gradient: 'from-orange-500 to-yellow-400', border: 'border-orange-500/50' },
+  { word: 'software', gradient: 'from-green-500 to-emerald-400', border: 'border-green-500/50' },
 ]
 
 export function HeroSection() {
@@ -45,7 +45,7 @@ export function HeroSection() {
         <FadeIn delay={0.2}>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-foreground">
             <span className="block">
-              Your{' '}
+              Your custom{' '}
               <span className="inline-block relative">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -61,13 +61,13 @@ export function HeroSection() {
                 </AnimatePresence>
               </span>
             </span>
-            <span className="block mt-2">live in weeks.</span>
+            <span className="block mt-2">built in weeks, not months.</span>
           </h1>
         </FadeIn>
 
         <FadeIn delay={0.3}>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Modern tools have made building software <span className="text-foreground font-medium">5x faster</span> and <span className="text-foreground font-medium">5x cheaper</span>. We pass those savings to you. Get the web app, mobile app, or MVP you need—without the enterprise price tag.
+            AI-assisted development lets us build enterprise-quality software in <span className="text-foreground font-medium">weeks instead of months</span>—at a fraction of the cost. The $100K project? We can do it for $20K.
           </p>
         </FadeIn>
         
@@ -75,7 +75,7 @@ export function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button asChild size="lg" className="text-lg px-8 h-14 rounded-full shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0">
               <Link href="#contact">
-                Start Your Project
+                Book a Free Call
                 <ArrowRight className="ml-2 h-5 w-5 text-white" />
               </Link>
             </Button>
