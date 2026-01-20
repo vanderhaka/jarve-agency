@@ -22,14 +22,14 @@ export function PortfolioSection() {
       category: 'Builder CRM',
       description: 'Quote-to-invoice platform for a residential builder. Generates professional quotes in minutes, tracks jobs, and gets paid faster with online invoicing.',
       image: '/portfolio/tradeflow.png',
-      result: 'Quoting time cut by 80%',
+      result: '80% faster quotes',
     },
     {
       title: 'Kindred Goods',
       category: 'Online Store',
       description: 'E-commerce website for a local homewares retailer. Beautiful product pages, simple checkout, and inventory that syncs with their physical shop.',
       image: '/portfolio/kindred-goods.png',
-      result: 'Online sales from $0 to $12k/mo',
+      result: '$0 → $12k/mo online',
     },
   ]
 
@@ -53,7 +53,7 @@ export function PortfolioSection() {
         <div className="grid md:grid-cols-3 gap-8">
           {projects.map((project, index) => (
             <FadeIn key={project.title} delay={index * 0.1}>
-              <Card className="overflow-hidden group border-none shadow-none bg-transparent h-full flex flex-col">
+              <Card className="overflow-hidden group border-none shadow-none bg-transparent h-full flex flex-col rounded-none">
                 <div className="aspect-video relative rounded-xl overflow-hidden bg-muted mb-6 border shadow-sm group-hover:shadow-md transition-all">
                   <motion.div 
                     whileHover={{ scale: 1.05 }}
@@ -70,7 +70,7 @@ export function PortfolioSection() {
                     />
                   </motion.div>
                 </div>
-                <CardContent className="p-0 flex-1">
+                <CardContent className="p-0 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-medium text-primary">{project.category}</div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -78,11 +78,11 @@ export function PortfolioSection() {
                   <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
                     {project.title}
                   </h3>
-                  <p className="text-muted-foreground mb-4 line-clamp-2 text-base">
+                  <p className="text-muted-foreground mb-4 text-base flex-1">
                     {project.description}
                   </p>
                   <div className="mt-auto">
-                    <span className="inline-flex items-center px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full text-sm font-medium text-green-600 dark:text-green-400">
+                    <span className="flex items-center justify-center w-full px-4 py-2 bg-green-700 text-sm font-medium text-white">
                       {project.result}
                     </span>
                   </div>
