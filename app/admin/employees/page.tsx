@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+const DEFAULT_EMPLOYEE_ROLE = 'employee'
+
 async function inviteEmployee(formData: FormData) {
   'use server'
 
@@ -33,14 +35,18 @@ async function inviteEmployee(formData: FormData) {
 
   const email = (formData.get('email') as string)?.trim()
   const name = (formData.get('name') as string)?.trim()
-  const role = (formData.get('role') as string) || 'employee'
+  const role = (formData.get('role') as string) || DEFAULT_EMPLOYEE_ROLE
 
   if (!email || !name) {
     return
   }
 
   const adminClient = createAdminClient()
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/confirm?next=/login`
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (!siteUrl) {
+    throw new Error('NEXT_PUBLIC_SITE_URL environment variable is required')
+  }
+  const redirectTo = `${siteUrl}/auth/confirm?next=/login`
 
   const { data: inviteData, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
     data: { name },
@@ -65,7 +71,7 @@ async function inviteEmployee(formData: FormData) {
       })
   }
 
-  revalidatePath('/app/admin/employees')
+  revalidatePath('/admin/employees')
 }
 
 export default async function EmployeesAdminPage() {
@@ -121,7 +127,7 @@ export default async function EmployeesAdminPage() {
                 id="role"
                 name="role"
                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
-                defaultValue="employee"
+                defaultValue={DEFAULT_EMPLOYEE_ROLE}
               >
                 <option value="employee">Employee</option>
                 <option value="admin">Admin</option>

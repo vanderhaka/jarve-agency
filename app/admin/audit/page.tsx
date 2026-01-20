@@ -11,11 +11,16 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 
-const typeColors: Record<string, string> = {
+const TYPE_COLORS: Record<string, string> = {
   call: 'bg-blue-500',
   email: 'bg-purple-500',
   meeting: 'bg-emerald-500',
   note: 'bg-muted text-foreground',
+  default: 'bg-gray-500',
+}
+
+function getTypeColor(type: string): string {
+  return TYPE_COLORS[type] ?? TYPE_COLORS.default
 }
 
 export default async function AuditPage() {
@@ -82,7 +87,7 @@ export default async function AuditPage() {
               {interactions?.map((interaction) => (
                 <TableRow key={interaction.id}>
                   <TableCell>
-                    <Badge className={typeColors[interaction.type] || 'bg-gray-500'}>
+                    <Badge className={getTypeColor(interaction.type)}>
                       {interaction.type}
                     </Badge>
                   </TableCell>

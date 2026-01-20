@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { UserNav } from '@/components/user-nav'
 
-export default async function AppLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
@@ -23,7 +23,9 @@ export default async function AppLayout({
     .eq('id', user.id)
     .single()
 
-  const isAdmin = employee?.role === 'admin'
+  if (employee?.role !== 'admin') {
+    redirect('/app')
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,26 +69,21 @@ export default async function AppLayout({
           >
             My Tasks
           </Link>
-          {isAdmin && (
-            <>
-              <Link
-                href="/admin/employees"
-                className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary transition-colors"
-              >
-                Team
-              </Link>
-              <Link
-                href="/admin/audit"
-                className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary transition-colors"
-              >
-                Audit Trails
-              </Link>
-            </>
-          )}
+          <Link
+            href="/admin/employees"
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            Team
+          </Link>
+          <Link
+            href="/admin/audit"
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            Audit Trails
+          </Link>
         </nav>
         {children}
       </div>
     </div>
   )
 }
-
