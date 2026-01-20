@@ -4,6 +4,7 @@ import { TestimonialsSection } from '@/components/testimonials-section'
 import { ServicesSection } from '@/components/services-section'
 import { HowItWorksSection } from '@/components/how-it-works-section'
 import { PortfolioSection } from '@/components/portfolio-section'
+import { WhyJarveSection } from '@/components/why-jarve-section'
 import { FAQSection } from '@/components/faq-section'
 import { ContactForm } from '@/components/contact-form'
 import { Footer } from '@/components/footer'
@@ -48,7 +49,8 @@ export default function Home() {
         <ServicesSection />
         <HowItWorksSection />
         <PortfolioSection />
-        
+        <WhyJarveSection />
+
         <section className="py-32 px-4 bg-[#1a1f2e] text-white relative overflow-hidden">
           {/* Animated background elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">

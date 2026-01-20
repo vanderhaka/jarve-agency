@@ -4,6 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { FadeIn } from '@/components/fade-in'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { Check } from 'lucide-react'
 
 export function ServicesSection() {
   const services = [
@@ -69,10 +70,12 @@ export function ServicesSection() {
                       <CardDescription className="text-base leading-relaxed mb-4">
                         {service.description}
                       </CardDescription>
-                      <ul className="space-y-2">
+                      <ul className="space-y-2.5">
                         {service.features.map((feature) => (
                           <li key={feature} className="flex items-center text-sm text-muted-foreground">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary mr-2" />
+                            <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 mr-2.5">
+                              <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                            </div>
                             {feature}
                           </li>
                         ))}
