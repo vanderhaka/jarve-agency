@@ -11,6 +11,14 @@ import { motion } from 'framer-motion'
 export function PortfolioSection() {
   const projects = [
     {
+      title: 'BlurbBuddy',
+      category: 'AI Book Discovery',
+      description: 'AI-powered book recommendation engine that helps readers find their next great read. Ask for suggestions by mood, topic, or similar titles and get personalized recommendations instantly.',
+      image: '/portfolio/blurbbuddy.png',
+      result: 'Live Product',
+      href: 'https://blurbbuddy.com',
+    },
+    {
       title: 'Diggable',
       category: 'Marketplace',
       description: 'Architectural salvage marketplace connecting buyers with antique dealers nationwide. Browse thousands of vintage fixtures, fireplace mantels, and reclaimed materials from trusted shops.',
@@ -26,23 +34,7 @@ export function PortfolioSection() {
       result: 'Demo Project',
       href: '/projects/terra-flow',
     },
-    {
-      title: 'TradeFlow',
-      category: 'Builder CRM',
-      description: 'Quote-to-invoice platform for a residential builder. Generates professional quotes in minutes, tracks jobs, and gets paid faster with online invoicing.',
-      image: '/portfolio/tradeflow.png',
-      result: '80% faster quotes',
-      href: null,
-    },
-    {
-      title: 'Kindred Goods',
-      category: 'Online Store',
-      description: 'E-commerce website for a local homewares retailer. Beautiful product pages, simple checkout, and inventory that syncs with their physical shop.',
-      image: '/portfolio/kindred-goods.png',
-      result: '$0 → $12k/mo online',
-      href: null,
-    },
-  ]
+      ]
 
   return (
     <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background" id="portfolio">
@@ -108,13 +100,13 @@ export function PortfolioSection() {
                 )
 
             return (
-              <FadeIn key={project.title} delay={index * 0.1}>
+              <FadeIn key={project.title} delay={index * 0.1} className="h-full">
                 {project.href ? (
-                  <Link href={project.href} target="_blank" className="block cursor-pointer">
+                  <Link href={project.href} target="_blank" className="block cursor-pointer h-full">
                     {cardContent}
                   </Link>
                 ) : (
-                  <div>{cardContent}</div>
+                  <div className="h-full">{cardContent}</div>
                 )}
               </FadeIn>
             )
