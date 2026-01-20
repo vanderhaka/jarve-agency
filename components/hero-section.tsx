@@ -73,13 +73,13 @@ export function HeroSection() {
         
         <FadeIn delay={0.4}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button asChild size="lg" className="text-lg px-8 h-14 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+            <Button asChild size="lg" className="text-lg px-8 h-14 rounded-full shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0">
               <Link href="#contact">
                 Start Your Project
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-5 w-5 text-white" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8 h-14 rounded-full">
+            <Button asChild size="lg" variant="outline" className="text-lg px-8 h-14 rounded-full border-2">
               <Link href="#portfolio">View Our Work</Link>
             </Button>
           </div>
