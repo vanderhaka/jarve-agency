@@ -10,6 +10,7 @@ import { ContactForm } from '@/components/contact-form'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FadeIn } from '@/components/fade-in'
 import { ArrowRight, Sparkles } from 'lucide-react'
 
@@ -18,8 +19,15 @@ export default function Home() {
     <div className="flex min-h-screen flex-col font-sans">
       <header className="border-b sticky top-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold tracking-tight">
-            JARVE
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/ship_no_background.png"
+              alt="JARVE"
+              width={48}
+              height={26}
+              className="w-12 h-auto"
+            />
+            <span className="text-2xl font-bold tracking-tight">JARVE</span>
           </Link>
           <nav className="hidden md:flex gap-8 items-center">
             <Link href="#services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
