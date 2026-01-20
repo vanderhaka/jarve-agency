@@ -1,34 +1,32 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Zap, Smartphone, Rocket, Brain, Code, Layout, Database, Lock } from 'lucide-react'
-import Link from 'next/link'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FadeIn } from '@/components/fade-in'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 
 export function ServicesSection() {
   const services = [
     {
-      icon: Zap,
+      image: '/images/services/test-before-bet.jpeg',
       title: 'Convert More Visitors',
       description: 'Web apps that load instantly and keep users engaged. Higher rankings, better conversions, more revenue.',
       features: ['Lightning fast', 'Works everywhere', 'SEO-optimized'],
     },
     {
-      icon: Smartphone,
+      image: '/images/services/reach-mobile.jpeg',
       title: 'Reach Users on Mobile',
       description: 'Put your business in your customers\' pockets. From idea to App Store, we handle the entire journey.',
       features: ['Smooth native feel', 'Works offline', 'Instant updates'],
     },
     {
-      icon: Rocket,
+      image: '/images/services/convert-visitors.jpeg',
       title: 'Test Before You Bet',
       description: 'Validate your idea before investing everything. Get to market fast, learn from real users, iterate quickly.',
       features: ['Live in weeks', 'Real user feedback', 'Adapt as you learn'],
     },
     {
-      icon: Brain,
+      image: '/images/services/automate-busywork.jpeg',
       title: 'Automate the Busywork',
       description: 'Let AI handle the tasks eating your team\'s time. Smarter support, instant answers, automated workflows.',
       features: ['24/7 customer support', 'Answers from your data', 'Hands-free operations'],
@@ -50,20 +48,23 @@ export function ServicesSection() {
         </FadeIn>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service, index) => {
-            const Icon = service.icon
-            return (
+          {services.map((service, index) => (
               <FadeIn key={service.title} delay={index * 0.1}>
                 <motion.div
                   whileHover={{ y: -5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                   className="h-full"
                 >
-                  <Card className="h-full border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-300 bg-background/50 backdrop-blur-sm">
-                    <CardHeader>
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                        <Icon className="h-6 w-6 text-primary" />
-                      </div>
+                  <Card className="h-full border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-300 bg-background overflow-hidden">
+                    <div className="relative h-40 w-full">
+                      <Image
+                        src={service.image}
+                        alt={service.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <CardHeader className="pt-5">
                       <CardTitle className="text-xl mb-2">{service.title}</CardTitle>
                       <CardDescription className="text-base leading-relaxed mb-4">
                         {service.description}
@@ -80,8 +81,7 @@ export function ServicesSection() {
                   </Card>
                 </motion.div>
               </FadeIn>
-            )
-          })}
+          ))}
         </div>
       </div>
     </section>
