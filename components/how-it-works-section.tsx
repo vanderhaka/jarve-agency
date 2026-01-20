@@ -52,7 +52,7 @@ export function HowItWorksSection() {
                     <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-primary/50 to-transparent" />
                   )}
 
-                  <div className="flex flex-col items-center text-center md:items-start md:text-left">
+                  <div className="flex flex-col items-center text-center">
                     <div className="relative mb-6">
                       <div className="w-24 h-24 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                         <Icon className="w-10 h-10 text-primary" />
