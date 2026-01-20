@@ -8,6 +8,7 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { FadeIn } from '@/components/fade-in'
+import { ArrowRight, Sparkles } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -45,54 +46,61 @@ export default function Home() {
         <HowItWorksSection />
         <PortfolioSection />
         
-        <section className="py-32 px-4 bg-primary text-primary-foreground relative overflow-hidden">
-          {/* Decorative background element */}
-          <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+        <section className="py-32 px-4 bg-[#1a1f2e] text-white relative overflow-hidden">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 -left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-white/5 to-transparent rounded-full blur-3xl" />
+          </div>
+
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
+
           <FadeIn>
             <div className="container mx-auto text-center max-w-3xl relative z-10">
-               <h2 className="text-3xl md:text-5xl font-bold mb-6">What could you build for 5x less?</h2>
-               <p className="text-xl opacity-90 mb-8">
-                 The project that was out of reach last year is now within budget. Let&apos;s talk about what&apos;s possible.
-               </p>
-               <Button asChild size="lg" variant="secondary" className="h-14 px-8 rounded-full text-lg shadow-lg">
-                 <Link href="#contact">Book a Free Strategy Call</Link>
-               </Button>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-sm font-medium">AI-Powered Development</span>
+              </div>
+
+              <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+                What could you build for{' '}
+                <span className="relative inline-block">
+                  <span className="relative z-10">5x less</span>
+                  <span className="absolute bottom-2 left-0 right-0 h-3 bg-white/30 -z-10 rounded" />
+                </span>
+                ?
+              </h2>
+
+              <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+                The project that was out of reach last year is now within budget. Let&apos;s talk about what&apos;s possible.
+              </p>
+
+              <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-white text-[#1a1f2e] hover:bg-white/90 shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-all duration-300 group">
+                <Link href="#contact" className="flex items-center gap-2">
+                  Book a Free Strategy Call
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
             </div>
           </FadeIn>
         </section>
 
-        <section id="contact" className="py-24 px-4 bg-background">
-          <div className="container mx-auto max-w-4xl">
+        <section id="contact" className="py-24 px-4 bg-muted/30 relative">
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+
+          <div className="container mx-auto max-w-2xl relative z-10">
             <FadeIn>
-              <div className="grid md:grid-cols-2 gap-12 items-start">
-                <div>
-                  <h2 className="text-4xl font-bold mb-6">Get in touch</h2>
-                  <p className="text-lg text-muted-foreground mb-8">
-                    Fill out the form and we&apos;ll get back to you within 24 hours. We&apos;re excited to hear about your project.
-                  </p>
-                  <div className="space-y-4">
-                     <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                         <span className="text-xl">📧</span>
-                       </div>
-                       <div>
-                         <div className="font-semibold">Email Us</div>
-                         <div className="text-muted-foreground">hello@jarve.agency</div>
-                       </div>
-                     </div>
-                     <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                         <span className="text-xl">📍</span>
-                       </div>
-                       <div>
-                         <div className="font-semibold">Based in</div>
-                         <div className="text-muted-foreground">Adelaide, SA</div>
-                       </div>
-                     </div>
-                  </div>
-                </div>
-                <ContactForm />
+              <div className="text-center mb-10">
+                <h2 className="text-4xl md:text-5xl font-bold mb-4">Let&apos;s build something great</h2>
+                <p className="text-lg text-muted-foreground">
+                  Tell us about your project and we&apos;ll get back to you within 24 hours.
+                </p>
               </div>
+
+              <ContactForm />
             </FadeIn>
           </div>
         </section>
