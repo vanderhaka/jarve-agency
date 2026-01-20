@@ -11,6 +11,14 @@ import { motion } from 'framer-motion'
 export function PortfolioSection() {
   const projects = [
     {
+      title: 'Diggable',
+      category: 'Marketplace',
+      description: 'Architectural salvage marketplace connecting buyers with antique dealers nationwide. Browse thousands of vintage fixtures, fireplace mantels, and reclaimed materials from trusted shops.',
+      image: '/portfolio/diggable.png',
+      result: 'Live Product',
+      href: 'https://diggable.vercel.app',
+    },
+    {
       title: 'Terra Flow',
       category: 'Booking Platform',
       description: 'A demo booking platform for fitness studios. Members browse the schedule and book classes online, while studio owners manage instructors, track attendance, and handle memberships—no phone tag required.',
@@ -63,7 +71,7 @@ export function PortfolioSection() {
                         transition={{ duration: 0.5 }}
                         className="absolute inset-0"
                       >
-                        {project.href ? (
+                        {project.image ? (
                           <Image
                             src={project.image}
                             alt={project.title}
