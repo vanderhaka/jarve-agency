@@ -38,14 +38,6 @@ export function TestimonialsSection() {
       <div className="container mx-auto relative z-10">
         <FadeIn>
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-green-500 text-green-500" />
-                ))}
-              </div>
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">5.0 on Upwork</span>
-            </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Clients love working with us</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Real reviews from real projects. No fluff.

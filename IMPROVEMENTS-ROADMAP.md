@@ -84,13 +84,13 @@
 
 ### MEDIUM PRIORITY
 
-#### 4. Trust Badges Bar
+#### 4. Trust Badges Bar ✅ DONE
 **Placement**: After Testimonials or in Footer
 **Options**:
 - "12+ projects shipped"
 - "100% 5-star reviews"
 - "$500K+ in client products launched"
-- Tech stack logos (Next.js, React, Supabase, Vercel)
+- Tech stack logos (Next.js, React, Supabase, Vercel, OpenAI, Anthropic, Cursor)
 
 #### 5. Risk Reversal / Guarantee
 **Add to multiple places**:

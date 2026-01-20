@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/hero-section'
 import { StatsSection } from '@/components/stats-section'
 import { TestimonialsSection } from '@/components/testimonials-section'
+import { TrustBadgesSection } from '@/components/trust-badges-section'
 import { ServicesSection } from '@/components/services-section'
 import { HowItWorksSection } from '@/components/how-it-works-section'
 import { PortfolioSection } from '@/components/portfolio-section'
@@ -55,6 +56,7 @@ export default function Home() {
         <StatsSection />
         <TestimonialsSection />
         <ServicesSection />
+        <TrustBadgesSection />
         <HowItWorksSection />
         <PortfolioSection />
         <WhyJarveSection />
