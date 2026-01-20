@@ -203,8 +203,8 @@ export function ContactForm() {
             </div>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full h-12 text-base rounded-xl">
-            {loading ? 'Sending...' : 'Request a Call'}
+          <Button type="submit" disabled={loading} className="w-full h-14 text-lg rounded-full bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-[1.02] transition-all">
+            {loading ? 'Sending...' : 'Book a Free Call'}
           </Button>
         </form>
       </CardContent>

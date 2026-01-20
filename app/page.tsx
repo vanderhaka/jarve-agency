@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FadeIn } from '@/components/fade-in'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -40,8 +40,8 @@ export default function Home() {
             <Link href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Contact
             </Link>
-            <Button asChild variant="default" size="sm" className="rounded-full px-6">
-              <Link href="#contact">Book a Call</Link>
+            <Button asChild size="sm" className="rounded-full px-6 bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 hover:shadow-lg hover:shadow-green-500/30 transition-all">
+              <Link href="#contact">Book a Free Call</Link>
             </Button>
           </nav>
           <div className="md:hidden">
@@ -74,11 +74,6 @@ export default function Home() {
 
           <FadeIn>
             <div className="container mx-auto text-center max-w-3xl relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
-                <Sparkles className="w-4 h-4" />
-                <span className="text-sm font-medium">AI-Powered Development</span>
-              </div>
-
               <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
                 Ready to{' '}
                 <span className="relative inline-block">
@@ -92,7 +87,7 @@ export default function Home() {
                 Most agencies quote $100K+ and 6 months. We&apos;ll build it for a fraction of that—and have you live in weeks.
               </p>
 
-              <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-white text-[#1a1f2e] hover:bg-white/90 shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-all duration-300 group">
+              <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all group">
                 <Link href="#contact" className="flex items-center gap-2">
                   Book a Free Call
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
