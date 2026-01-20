@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/terra-flow/ui/button"
-import { X, Calendar, Clock, User, Check, ChevronRight, CreditCard } from "lucide-react"
+import { X, Calendar, Clock, User, Check, ChevronRight } from "lucide-react"
 
 interface ClassDetails {
   time: string
@@ -207,33 +207,6 @@ export function BookingModal({ isOpen, onClose, classDetails }: BookingModalProp
         ))}
       </div>
 
-      {selectedPayment === "drop-in" && (
-        <div className="bg-muted rounded-xl p-4 space-y-3">
-          <p className="text-sm font-medium flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Payment Details
-          </p>
-          <div className="space-y-2">
-            <input
-              type="text"
-              placeholder="Card Number"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                placeholder="MM/YY"
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary"
-              />
-              <input
-                type="text"
-                placeholder="CVC"
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={() => setStep("details")} className="flex-1 py-6 bg-transparent">
@@ -310,14 +283,9 @@ export function BookingModal({ isOpen, onClose, classDetails }: BookingModalProp
         </p>
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={handleClose} className="flex-1 py-6 bg-transparent">
-          Done
-        </Button>
-        <Button onClick={handleClose} className="flex-1 py-6 uppercase tracking-widest text-sm">
-          Add to Calendar
-        </Button>
-      </div>
+      <Button onClick={handleClose} className="w-full py-6 uppercase tracking-widest text-sm">
+        Done
+      </Button>
     </div>
   )
 
