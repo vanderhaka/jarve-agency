@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Rocket, CheckCircle, ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { FadeIn } from '@/components/fade-in'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -82,23 +82,6 @@ export function HeroSection() {
             <Button asChild size="lg" variant="outline" className="text-lg px-8 h-14 rounded-full border-2">
               <Link href="#portfolio">View Our Work</Link>
             </Button>
-          </div>
-        </FadeIn>
-
-        <FadeIn delay={0.5}>
-          <div className="pt-12 flex flex-col md:flex-row items-center justify-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Ready in weeks, not months</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Built to handle growth</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Smart features users love</span>
-            </div>
           </div>
         </FadeIn>
       </div>
