@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus } from './types'
+import { calculateNewPosition } from './position'
 
 /**
  * Get all tasks for a project, ordered by status and position
@@ -153,21 +154,7 @@ export async function moveTask(
   prevPosition: number | null,
   nextPosition: number | null
 ): Promise<Task> {
-  let newPosition: number
-
-  if (prevPosition === null && nextPosition === null) {
-    // Empty column, start at 1
-    newPosition = 1
-  } else if (prevPosition === null) {
-    // Moving to top
-    newPosition = nextPosition! - 1
-  } else if (nextPosition === null) {
-    // Moving to bottom
-    newPosition = prevPosition + 1
-  } else {
-    // Moving between two tasks
-    newPosition = (prevPosition + nextPosition) / 2
-  }
+  const newPosition = calculateNewPosition(prevPosition, nextPosition)
 
   return updateTask(taskId, {
     status: newStatus,

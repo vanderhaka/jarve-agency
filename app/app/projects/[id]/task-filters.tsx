@@ -12,13 +12,11 @@ import {
 } from '@/components/ui/select'
 import { Search, X } from 'lucide-react'
 import { TASK_STATUSES, TASK_TYPES, TASK_PRIORITIES } from '@/lib/tasks/types'
+import type { TaskFiltersState } from './filter-utils'
 
-export interface TaskFiltersState {
-  search: string
-  status: string
-  type: string
-  priority: string
-}
+// Re-export utilities from filter-utils for backwards compatibility
+export { parseFiltersFromParams, filterTasks } from './filter-utils'
+export type { TaskFiltersState } from './filter-utils'
 
 interface Props {
   filters: TaskFiltersState
@@ -105,42 +103,4 @@ export function TaskFilters({ filters }: Props) {
       )}
     </div>
   )
-}
-
-export function parseFiltersFromParams(searchParams: URLSearchParams): TaskFiltersState {
-  return {
-    search: searchParams.get('search') || '',
-    status: searchParams.get('status') || '',
-    type: searchParams.get('type') || '',
-    priority: searchParams.get('priority') || '',
-  }
-}
-
-export function filterTasks<T extends {
-  title: string
-  description: string | null
-  status: string
-  type: string
-  priority: string
-}>(tasks: T[], filters: TaskFiltersState): T[] {
-  return tasks.filter(task => {
-    // Search filter (title or description)
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      const matchesTitle = task.title.toLowerCase().includes(searchLower)
-      const matchesDescription = task.description?.toLowerCase().includes(searchLower) || false
-      if (!matchesTitle && !matchesDescription) return false
-    }
-
-    // Status filter
-    if (filters.status && task.status !== filters.status) return false
-
-    // Type filter
-    if (filters.type && task.type !== filters.type) return false
-
-    // Priority filter
-    if (filters.priority && task.priority !== filters.priority) return false
-
-    return true
-  })
 }

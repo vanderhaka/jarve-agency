@@ -3,7 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
 import { ProjectHeader } from './project-header'
 import { TasksView } from './tasks-view'
-import { parseFiltersFromParams } from './task-filters'
+import { parseFiltersFromParams } from './filter-utils'
 
 interface Props {
   params: Promise<{ id: string }>

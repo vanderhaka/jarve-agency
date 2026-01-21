@@ -11,8 +11,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { NewProjectDialog } from '@/components/new-project-dialog'
-import { TaskDialog } from '@/components/task-dialog'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 async function getProjects() {
   const supabase = await createClient()
@@ -114,7 +115,14 @@ export default async function ProjectsPage() {
               ) : (
                 projects.map((project) => (
                   <TableRow key={project.id}>
-                    <TableCell className="font-medium">{project.name}</TableCell>
+                    <TableCell className="font-medium">
+                        <Link
+                          href={`/app/projects/${project.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          {project.name}
+                        </Link>
+                      </TableCell>
                     <TableCell>
                       <Badge className={typeColors[project.type] || 'bg-gray-500'}>
                         {project.type}
@@ -139,8 +147,13 @@ export default async function ProjectsPage() {
                       {new Date(project.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <TaskDialog projectId={project.id} triggerLabel="Tasks" />
-                    </TableCell>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/app/projects/${project.id}`}>
+                            View Tasks
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </TableCell>
                   </TableRow>
                 ))
               )}

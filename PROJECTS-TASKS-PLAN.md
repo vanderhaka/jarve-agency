@@ -578,7 +578,7 @@ Pass criteria:
 
 ---
 
-## 22) QA + Tests
+## 22) QA + Tests ✅ COMPLETE
 
 Goal: Prove the flow works end-to-end.
 
@@ -595,9 +595,28 @@ Pass criteria:
 - Manual QA checklist is completed without blockers.
 - Any existing automated tests pass.
 
+**Status: COMPLETE** - 2026-01-21
+
+**Tests added:**
+- `lib/tasks/position.test.ts` - 6 tests for fractional position calculation
+- All 25 tests pass (including existing admin invite tests)
+
+**Build verification:**
+- `npm run build` passes with no type errors
+- TypeScript compilation successful
+
+**Manual QA Checklist:**
+- [x] Create task - New Task button opens modal, creates task in Backlog
+- [x] Edit task - Click task opens detail sheet, edits persist on save
+- [x] Move task - Drag-and-drop between kanban columns updates status + position
+- [x] Delete task - Delete button shows confirmation, removes task from DB
+- [x] List/Kanban toggle - View switch persists state correctly
+- [x] Filters - Status, type, priority, and search filters work
+- [x] Summary panel - Task counts match list/kanban display
+
 ---
 
-## 23) Documentation
+## 23) Documentation ✅ COMPLETE
 
 Goal: Make it easy for future devs to extend.
 
@@ -613,6 +632,132 @@ Watch out: No docs -> future regressions.
 Pass criteria:
 - Docs exist and include status list, schema summary, and reorder rules.
 - A new dev can follow the doc to create a task end-to-end.
+
+**Status: COMPLETE** - 2026-01-21
+
+---
+
+# Task System Documentation
+
+## Overview
+
+Project tasks are managed via `/app/projects/[id]` with both List and Kanban views. Tasks belong to projects (`agency_projects` table) via `project_id` foreign key.
+
+## Status Workflow
+
+| Order | Status | Terminal? | Required Fields |
+|-------|--------|-----------|-----------------|
+| 1 | Backlog | No | title, type, priority |
+| 2 | Ready | No | title, type, priority, description |
+| 3 | In Progress | No | title, type, priority, description, assignee_id |
+| 4 | Review | No | title, type, priority, description, assignee_id |
+| 5 | QA | No | title, type, priority, description |
+| 6 | Done | Yes | title, type, priority, acceptance_criteria |
+| 7 | Blocked | No | title, type, priority, blockers |
+
+## Task Types & Priorities
+
+**Types:** `feature`, `bug`, `chore`, `spike`
+
+**Priorities:** `low`, `medium`, `high`, `urgent`
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `lib/tasks/types.ts` | TypeScript types and constants |
+| `lib/tasks/data.ts` | Server-side CRUD functions |
+| `lib/tasks/position.ts` | Fractional position calculation |
+| `app/app/projects/[id]/page.tsx` | Project detail page |
+| `app/app/projects/[id]/actions.ts` | Server actions for task mutations |
+| `components/projects/task-kanban.tsx` | Kanban board with drag-and-drop |
+| `components/projects/task-list.tsx` | List view table |
+| `components/projects/task-filters.tsx` | Filter controls |
+| `components/projects/new-task-dialog.tsx` | Task creation modal |
+| `components/projects/task-detail-sheet.tsx` | Task edit drawer |
+
+## Reorder Algorithm (Fractional Positioning)
+
+Tasks use a `position` column (numeric) for ordering within each status column. When moving a task:
+
+```typescript
+// lib/tasks/position.ts
+function calculateNewPosition(prev: number | null, next: number | null): number {
+  if (prev === null && next === null) return 1        // Empty column
+  if (prev === null) return next - 1                   // Moving to top
+  if (next === null) return prev + 1                   // Moving to bottom
+  return (prev + next) / 2                             // Between two tasks
+}
+```
+
+**Example:**
+```
+Initial: [Task1: 1.0] [Task2: 2.0] [Task3: 3.0]
+Move Task3 between 1 and 2: [Task1: 1.0] [Task3: 1.5] [Task2: 2.0]
+```
+
+**Benefits:**
+- No reindexing needed for most moves
+- O(1) position updates
+- Works with concurrent edits
+
+**Note:** Eventually positions may need periodic normalization if values become too small (not implemented in V1).
+
+## Database Schema
+
+```sql
+CREATE TABLE tasks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id uuid NOT NULL REFERENCES agency_projects(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  description text,
+  status text NOT NULL DEFAULT 'Backlog',
+  type text NOT NULL DEFAULT 'feature',
+  priority text NOT NULL DEFAULT 'medium',
+  position numeric NOT NULL DEFAULT 0,
+  estimate numeric,
+  due_date date,
+  assignee_id uuid,
+  acceptance_criteria text,
+  blockers text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now()
+);
+
+-- Key indexes
+CREATE INDEX idx_tasks_project_status_position ON tasks(project_id, status, position);
+CREATE INDEX idx_tasks_project_due_date ON tasks(project_id, due_date);
+CREATE INDEX idx_tasks_project_priority ON tasks(project_id, priority);
+```
+
+## RLS Policies (Single-Admin Model)
+
+All authenticated users can access all tasks:
+- SELECT: `USING (true)`
+- INSERT: `WITH CHECK (true)`
+- UPDATE: `USING (true) WITH CHECK (true)`
+- DELETE: `USING (true)`
+
+## Adding a Task (End-to-End)
+
+1. Navigate to `/app/projects/[projectId]`
+2. Click "New Task" button in header
+3. Fill required fields: title, type, priority
+4. Click "Create Task"
+5. Task appears in Backlog column (kanban) or at top of list
+
+## Extending the System
+
+**Adding a new status:**
+1. Add to `TASK_STATUSES` array in `lib/tasks/types.ts`
+2. Update `getTasksByProjectGrouped` in `lib/tasks/data.ts`
+3. Run migrations if adding required fields
+
+**Adding a new field:**
+1. Create migration to add column to `tasks` table
+2. Update types in `lib/tasks/types.ts`
+3. Update form in `task-detail-sheet.tsx`
+4. Update creation form if needed in `new-task-dialog.tsx`
 
 ---
 
