@@ -31,11 +31,22 @@ export default async function AdminDashboardPage() {
     supabase.from('interactions').select('id', { count: 'exact', head: true }).is('deleted_at', null),
   ])
 
+  const hasStatsError = Boolean(
+    employeesResult.error || adminsResult.error || interactionsResult.error
+  )
+
+  if (employeesResult.error) console.error('[admin] employees count error:', employeesResult.error)
+  if (adminsResult.error) console.error('[admin] admins count error:', adminsResult.error)
+  if (interactionsResult.error) console.error('[admin] interactions count error:', interactionsResult.error)
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">Team overview and activity</p>
+        {hasStatsError && (
+          <p className="text-sm text-destructive">Some stats failed to load. Please refresh.</p>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

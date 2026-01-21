@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Admin actions usually need service role, but for now using public if RLS permits or if user is logged in
-// Actually, I need to use the service role key to bypass RLS if I'm running this as a script
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4ZGRveW5weG52YmR2Y2VraWV5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mzg1NzczNCwiZXhwIjoyMDc5NDMzNzM0fQ.C5Rofi6LsivDbSjanPSqV90f4v8OVnY2uDvXDDsJgTg'
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !serviceRoleKey) {
+  throw new Error(
+    'Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY'
+  )
+}
 
 const supabase = createClient(supabaseUrl, serviceRoleKey)
 

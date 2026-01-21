@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVE CRM - Admin Section Flow Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            margin: 0;
+        }
+        h1 { color: #fff; text-align: center; margin-bottom: 10px; font-size: 2rem; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.95rem; }
+        .diagram-container { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); margin-bottom: 30px; }
+        .diagram-title { color: #333; font-size: 1.3rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e0e0e0; display: flex; align-items: center; gap: 10px; }
+        .diagram-title::before { content: ''; width: 4px; height: 24px; background: linear-gradient(180deg, #4caf50, #2196f3); border-radius: 2px; }
+        .mermaid { display: flex; justify-content: center; }
+        .mermaidTooltip { position: absolute; background: #1a1a2e; color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; max-width: 300px; z-index: 1000; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid #333; }
+        .legend { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        .legend-title { color: #fff; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600; }
+        .legend-items { display: flex; flex-wrap: wrap; gap: 20px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .legend-color { width: 20px; height: 20px; border-radius: 4px; }
+        .legend-color.green { background: #4caf50; }
+        .legend-color.blue { background: #2196f3; }
+        .legend-color.purple { background: #9c27b0; }
+        .legend-color.orange { background: #ff9800; }
+        .legend-color.pink { background: #e91e63; }
+        .legend-color.red { background: #f44336; }
+        .legend-color.gray { background: #607d8b; }
+        .route-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .route-table th, .route-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        .route-table th { background: #f5f5f5; color: #333; font-weight: 600; }
+        .route-table tr:hover { background: #f9f9f9; }
+        .route-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .route-badge.admin { background: #e3f2fd; color: #1565c0; }
+        .route-badge.page { background: #f3e5f5; color: #7b1fa2; }
+        .route-badge.action { background: #fff3e0; color: #e65100; }
+        .tab-container { margin-bottom: 20px; }
+        .tabs { display: flex; gap: 5px; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 10px; width: fit-content; }
+        .tab { padding: 10px 20px; border: none; background: transparent; color: #888; cursor: pointer; border-radius: 6px; font-size: 0.9rem; transition: all 0.2s; }
+        .tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .tab.active { background: #2196f3; color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .summary-card { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .summary-card .number { font-size: 2rem; font-weight: 700; color: #2196f3; }
+        .summary-card .label { color: #888; font-size: 0.85rem; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>JARVE CRM - Admin Section Flow</h1>
+    <p class="subtitle">Interactive visualization of all admin paths, authorization flow, and data relationships</p>
+
+    <div class="summary-cards">
+        <div class="summary-card"><div class="number">3</div><div class="label">Admin Pages</div></div>
+        <div class="summary-card"><div class="number">8</div><div class="label">Navigation Links</div></div>
+        <div class="summary-card"><div class="number">3</div><div class="label">Auth Layers</div></div>
+        <div class="summary-card"><div class="number">2</div><div class="label">User Roles</div></div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-title">Color Legend</div>
+        <div class="legend-items">
+            <div class="legend-item"><div class="legend-color green"></div><span>Entry/Start</span></div>
+            <div class="legend-item"><div class="legend-color blue"></div><span>Process</span></div>
+            <div class="legend-item"><div class="legend-color purple"></div><span>Database</span></div>
+            <div class="legend-item"><div class="legend-color orange"></div><span>Decision</span></div>
+            <div class="legend-item"><div class="legend-color pink"></div><span>Admin Pages</span></div>
+            <div class="legend-item"><div class="legend-color red"></div><span>Redirect</span></div>
+            <div class="legend-item"><div class="legend-color gray"></div><span>Infrastructure</span></div>
+        </div>
+    </div>
+
+    <div class="tab-container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('routes')">Route Structure</button>
+            <button class="tab" onclick="showTab('auth')">Auth Flow</button>
+            <button class="tab" onclick="showTab('data')">Data Flow</button>
+            <button class="tab" onclick="showTab('table')">Route Table</button>
+        </div>
+    </div>
+
+    <div id="routes" class="tab-content active">
+        <div class="diagram-container">
+            <div class="diagram-title">Admin Route Hierarchy</div>
+            <div class="mermaid">
+flowchart TD
+    subgraph MIDDLEWARE["Middleware Layer"]
+        MW[/"Global Middleware"/]
+    end
+    subgraph ADMIN_LAYOUT["Admin Layout"]
+        AL[Admin Layout]
+        AUTH_CHECK{Auth Check}
+        ROLE_CHECK{Role = Admin?}
+    end
+    subgraph ADMIN_PAGES["Admin Pages"]
+        DASH["Dashboard /admin"]
+        EMP["Team /admin/employees"]
+        AUDIT["Audit /admin/audit"]
+    end
+    subgraph REGULAR_APP["Regular Routes"]
+        APP["/app/*"]
+        LOGIN["/login"]
+    end
+    MW --> AL
+    AL --> AUTH_CHECK
+    AUTH_CHECK -->|No User| LOGIN
+    AUTH_CHECK -->|Has User| ROLE_CHECK
+    ROLE_CHECK -->|Not Admin| APP
+    ROLE_CHECK -->|Is Admin| DASH
+    ROLE_CHECK -->|Is Admin| EMP
+    ROLE_CHECK -->|Is Admin| AUDIT
+    click MW callback "Intercepts all requests, manages Supabase session"
+    click AL callback "Wraps /admin/* with header, nav, auth guards"
+    click AUTH_CHECK callback "supabase.auth.getUser() verifies session"
+    click ROLE_CHECK callback "Queries employees table for admin role"
+    click DASH callback "Stats: employee count, admin count, interactions"
+    click EMP callback "Invite employees, set roles, view team"
+    click AUDIT callback "View all interactions: calls, emails, meetings"
+    click APP callback "Regular employee dashboard"
+    click LOGIN callback "Authentication page"
+    style MW fill:#607d8b,color:#fff
+    style AL fill:#2196f3,color:#fff
+    style AUTH_CHECK fill:#ff9800,color:#fff
+    style ROLE_CHECK fill:#ff9800,color:#fff
+    style DASH fill:#e91e63,color:#fff
+    style EMP fill:#e91e63,color:#fff
+    style AUDIT fill:#e91e63,color:#fff
+    style APP fill:#4caf50,color:#fff
+    style LOGIN fill:#4caf50,color:#fff
+            </div>
+        </div>
+        <div class="diagram-container">
+            <div class="diagram-title">Navigation Structure</div>
+            <div class="mermaid">
+flowchart LR
+    subgraph NAV["Navigation Links - 8 total"]
+        L1["Dashboard /app"]
+        L2["Leads /app/leads"]
+        L3["Projects /app/projects"]
+        L4["Clients /app/clients"]
+        L5["Tasks /app/tasks"]
+        L6["Admin /admin"]
+        L7["Team /admin/employees"]
+        L8["Audit /admin/audit"]
+    end
+    click L1 callback "Main dashboard with overview cards"
+    click L2 callback "Lead management"
+    click L3 callback "Project tracking"
+    click L4 callback "Client database"
+    click L5 callback "Personal task list"
+    click L6 callback "Admin dashboard with team stats"
+    click L7 callback "Employee invitation and roles"
+    click L8 callback "System-wide audit trail"
+    style L6 fill:#e91e63,color:#fff
+    style L7 fill:#e91e63,color:#fff
+    style L8 fill:#e91e63,color:#fff
+    style L1 fill:#2196f3,color:#fff
+    style L2 fill:#2196f3,color:#fff
+    style L3 fill:#2196f3,color:#fff
+    style L4 fill:#2196f3,color:#fff
+    style L5 fill:#2196f3,color:#fff
+            </div>
+        </div>
+    </div>
+
+    <div id="auth" class="tab-content">
+        <div class="diagram-container">
+            <div class="diagram-title">Authorization Flow (3-Layer Security)</div>
+            <div class="mermaid">
+flowchart TD
+    START((Request))
+    subgraph LAYER1["Layer 1: Middleware"]
+        MW_SESSION{"Session?"}
+        MW_REFRESH["Refresh"]
+        MW_PASS["Pass"]
+    end
+    subgraph LAYER2["Layer 2: Layout"]
+        LAYOUT_AUTH{"User?"}
+        LAYOUT_QUERY["Query Role"]
+        LAYOUT_ROLE{"Admin?"}
+        LAYOUT_OK["Render UI"]
+    end
+    subgraph LAYER3["Layer 3: Page"]
+        PAGE_AUTH{"Verify"}
+        PAGE_ROLE{"Admin?"}
+        PAGE_OK["Render"]
+    end
+    subgraph REDIRECTS["Redirects"]
+        TO_LOGIN["to /login"]
+        TO_APP["to /app"]
+    end
+    START --> MW_SESSION
+    MW_SESSION -->|No| MW_PASS
+    MW_SESSION -->|Yes| MW_REFRESH
+    MW_REFRESH --> MW_PASS
+    MW_PASS --> LAYOUT_AUTH
+    LAYOUT_AUTH -->|No| TO_LOGIN
+    LAYOUT_AUTH -->|Yes| LAYOUT_QUERY
+    LAYOUT_QUERY --> LAYOUT_ROLE
+    LAYOUT_ROLE -->|No| TO_APP
+    LAYOUT_ROLE -->|Yes| LAYOUT_OK
+    LAYOUT_OK --> PAGE_AUTH
+    PAGE_AUTH -->|No| TO_LOGIN
+    PAGE_AUTH -->|Yes| PAGE_ROLE
+    PAGE_ROLE -->|No| TO_APP
+    PAGE_ROLE -->|Yes| PAGE_OK
+    click MW_SESSION callback "Checks Supabase auth cookies"
+    click MW_REFRESH callback "Refreshes JWT if near expiry"
+    click LAYOUT_AUTH callback "supabase.auth.getUser() validates JWT"
+    click LAYOUT_QUERY callback "SELECT role FROM employees WHERE deleted_at IS NULL"
+    click LAYOUT_ROLE callback "role === admin check"
+    click PAGE_AUTH callback "Defense in depth - re-verify"
+    click PAGE_ROLE callback "Re-queries for current role"
+    click TO_LOGIN callback "redirect /login"
+    click TO_APP callback "Non-admins to regular dashboard"
+    style START fill:#4caf50,color:#fff
+    style MW_SESSION fill:#ff9800,color:#fff
+    style LAYOUT_AUTH fill:#ff9800,color:#fff
+    style LAYOUT_ROLE fill:#ff9800,color:#fff
+    style PAGE_AUTH fill:#ff9800,color:#fff
+    style PAGE_ROLE fill:#ff9800,color:#fff
+    style TO_LOGIN fill:#f44336,color:#fff
+    style TO_APP fill:#f44336,color:#fff
+    style PAGE_OK fill:#4caf50,color:#fff
+            </div>
+        </div>
+        <div class="diagram-container">
+            <div class="diagram-title">Employee Invitation Flow</div>
+            <div class="mermaid">
+sequenceDiagram
+    participant Admin
+    participant Form
+    participant Action as Server Action
+    participant Auth as Supabase Auth
+    participant DB as Database
+    Admin->>Form: Fill name, email, role
+    Form->>Action: inviteEmployee()
+    Action->>DB: Validate admin role
+    DB-->>Action: role = admin
+    Action->>DB: check_email_available()
+    DB-->>Action: true
+    Action->>Auth: inviteUserByEmail()
+    Auth-->>Action: user object
+    Action->>DB: create_employee_record()
+    DB-->>Action: success
+    Action-->>Form: revalidatePath
+    Form-->>Admin: Updated list
+            </div>
+        </div>
+    </div>
+
+    <div id="data" class="tab-content">
+        <div class="diagram-container">
+            <div class="diagram-title">Database Entity Relationships</div>
+            <div class="mermaid">
+erDiagram
+    EMPLOYEES {
+        uuid id PK
+        string email UK
+        string name
+        string role
+        uuid created_by FK
+        timestamp deleted_at
+    }
+    INTERACTIONS {
+        uuid id PK
+        string type
+        text summary
+        uuid lead_id FK
+        uuid client_id FK
+        timestamp deleted_at
+    }
+    LEADS {
+        uuid id PK
+        string name
+        string status
+        uuid assigned_to FK
+        timestamp deleted_at
+    }
+    CLIENTS {
+        uuid id PK
+        string name
+        uuid converted_from FK
+        timestamp deleted_at
+    }
+    EMPLOYEES ||--o{ INTERACTIONS : creates
+    EMPLOYEES ||--o{ LEADS : assigned
+    LEADS ||--o{ INTERACTIONS : has
+    CLIENTS ||--o{ INTERACTIONS : has
+    LEADS ||--o| CLIENTS : converts
+            </div>
+        </div>
+        <div class="diagram-container">
+            <div class="diagram-title">Admin Page Data Queries</div>
+            <div class="mermaid">
+flowchart LR
+    subgraph DASH["/admin"]
+        D1["Count Employees"]
+        D2["Count Admins"]
+        D3["Count Interactions"]
+    end
+    subgraph EMP["/admin/employees"]
+        E1["List Employees"]
+        E2["Invite"]
+        E3["Check Email"]
+    end
+    subgraph AUD["/admin/audit"]
+        A1["List Interactions"]
+    end
+    subgraph SB["Supabase"]
+        DB[(Database)]
+        AUTH[Auth]
+        RPC[RPC]
+    end
+    D1 --> DB
+    D2 --> DB
+    D3 --> DB
+    E1 --> DB
+    E2 --> AUTH
+    E2 --> RPC
+    E3 --> RPC
+    A1 --> DB
+    click D1 callback "COUNT employees WHERE deleted_at IS NULL"
+    click D2 callback "COUNT employees WHERE role=admin"
+    click D3 callback "COUNT interactions"
+    click E1 callback "SELECT * FROM employees ORDER BY created_at"
+    click E2 callback "inviteUserByEmail + create_employee_record"
+    click E3 callback "check_email_available RPC"
+    click A1 callback "SELECT interactions with leads/clients LIMIT 200"
+    style DB fill:#9c27b0,color:#fff
+    style AUTH fill:#9c27b0,color:#fff
+    style RPC fill:#9c27b0,color:#fff
+            </div>
+        </div>
+    </div>
+
+    <div id="table" class="tab-content">
+        <div class="diagram-container">
+            <div class="diagram-title">Complete Admin Route Reference</div>
+            <table class="route-table">
+                <thead><tr><th>Path</th><th>Type</th><th>File</th><th>Purpose</th><th>Auth</th></tr></thead>
+                <tbody>
+                    <tr><td><code>/admin</code></td><td><span class="route-badge page">Page</span></td><td>/app/admin/page.tsx</td><td>Dashboard with team stats</td><td>Admin</td></tr>
+                    <tr><td><code>/admin/employees</code></td><td><span class="route-badge page">Page</span></td><td>/app/admin/employees/page.tsx</td><td>Employee invitation & management</td><td>Admin</td></tr>
+                    <tr><td><code>/admin/audit</code></td><td><span class="route-badge page">Page</span></td><td>/app/admin/audit/page.tsx</td><td>Interaction audit trails</td><td>Admin</td></tr>
+                    <tr><td><code>/admin/*</code></td><td><span class="route-badge admin">Layout</span></td><td>/app/admin/layout.tsx</td><td>Admin layout with nav & guards</td><td>Admin</td></tr>
+                    <tr><td><code>inviteEmployee()</code></td><td><span class="route-badge action">Action</span></td><td>/app/admin/employees/page.tsx</td><td>Server action to invite users</td><td>Admin</td></tr>
+                </tbody>
+            </table>
+            <div class="diagram-title" style="margin-top: 30px;">RPC Functions</div>
+            <table class="route-table">
+                <thead><tr><th>Function</th><th>Parameters</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>check_email_available</code></td><td>p_email</td><td>Validates email not in use</td></tr>
+                    <tr><td><code>create_employee_record</code></td><td>p_id, p_name, p_email, p_role, p_created_by</td><td>Creates employee DB record</td></tr>
+                </tbody>
+            </table>
+            <div class="diagram-title" style="margin-top: 30px;">Soft Delete Pattern</div>
+            <table class="route-table">
+                <thead><tr><th>Table</th><th>Filter</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td>employees</td><td><code>.is('deleted_at', null)</code></td><td>Hide deactivated employees</td></tr>
+                    <tr><td>interactions</td><td><code>.is('deleted_at', null)</code></td><td>Hide deleted interactions</td></tr>
+                    <tr><td>leads</td><td><code>.is('deleted_at', null)</code></td><td>Hide deleted leads</td></tr>
+                    <tr><td>clients</td><td><code>.is('deleted_at', null)</code></td><td>Hide deleted clients</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }, sequence: { useMaxWidth: true, actorMargin: 80 }, securityLevel: 'loose' });
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            setTimeout(() => mermaid.init(undefined, document.querySelectorAll('#' + tabId + ' .mermaid:not([data-processed])')), 100);
+        }
+        document.addEventListener('DOMContentLoaded', () => setTimeout(() => document.querySelectorAll('.node').forEach(n => n.style.cursor = 'pointer'), 1000));
+    </script>
+</body>
+</html>

@@ -17,13 +17,18 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const { data: employee } = await supabase
+  const { data: employee, error: employeeError } = await supabase
     .from('employees')
     .select('name, email, role')
     .eq('id', user.id)
+    .is('deleted_at', null)
     .single()
 
-  const isAdmin = employee?.role === 'admin'
+  if (employeeError || !employee) {
+    redirect('/revoked')
+  }
+
+  const isAdmin = employee.role === 'admin'
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,4 +94,3 @@ export default async function AppLayout({
     </div>
   )
 }
-

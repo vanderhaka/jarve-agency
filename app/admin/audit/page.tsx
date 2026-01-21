@@ -42,7 +42,7 @@ export default async function AuditPage() {
     redirect('/app')
   }
 
-  const { data: interactions } = await supabase
+  const { data: interactions, error: interactionsError } = await supabase
     .from('interactions')
     .select(`
       id,
@@ -60,6 +60,10 @@ export default async function AuditPage() {
     .order('created_at', { ascending: false })
     .limit(200)
 
+  if (interactionsError) {
+    console.error('[admin] interactions load error:', interactionsError)
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -72,6 +76,9 @@ export default async function AuditPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Interactions</CardTitle>
+          {interactionsError && (
+            <p className="text-sm text-destructive">Unable to load interactions right now.</p>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
@@ -93,11 +100,13 @@ export default async function AuditPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {interactions?.map((interaction) => (
+              {interactions?.map((interaction) => {
+                const interactionType = interaction.type ?? 'default'
+                return (
                 <TableRow key={interaction.id}>
                   <TableCell>
-                    <Badge className={getTypeColor(interaction.type)}>
-                      {interaction.type}
+                    <Badge className={getTypeColor(interactionType)}>
+                      {interaction.type || 'unknown'}
                     </Badge>
                   </TableCell>
                   <TableCell className="max-w-md whitespace-pre-wrap">
@@ -113,13 +122,16 @@ export default async function AuditPage() {
                     {interaction.created_by_name || 'Unknown'}
                   </TableCell>
                   <TableCell>
-                    {new Date(interaction.created_at).toLocaleString()}
+                    {interaction.created_at
+                      ? new Date(interaction.created_at).toLocaleString()
+                      : '—'}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {interaction.next_steps || '-'}
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
