@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -103,7 +103,7 @@ function SortableTaskCard({
   // Only show type badge for non-default values
   const showType = task.type !== 'feature'
   const priorityInfo = priorityIndicators[task.priority]
-  const hasFooter = task.due_date || priorityInfo.symbol || showType || task.assignee
+  const hasFooter = task.due_date || priorityInfo.symbol || showType
 
   return (
     <Card
@@ -122,7 +122,17 @@ function SortableTaskCard({
     >
       <CardContent className="p-3">
         <div className="space-y-2">
-          <p className="font-medium text-sm line-clamp-2 text-gray-900">{task.title}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-medium text-sm line-clamp-2 text-gray-900 flex-1">{task.title}</p>
+            {task.assignee && (
+              <div
+                className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium ring-2 ring-zinc-900 flex-shrink-0"
+                title={task.assignee.name}
+              >
+                {getInitials(task.assignee.name)}
+              </div>
+            )}
+          </div>
           {hasFooter && (
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -138,21 +148,11 @@ function SortableTaskCard({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                {priorityInfo.symbol && (
-                  <span className={`text-sm font-bold ${priorityInfo.color}`}>
-                    {priorityInfo.symbol}
-                  </span>
-                )}
-                {task.assignee && (
-                  <div
-                    className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium"
-                    title={task.assignee.name}
-                  >
-                    {getInitials(task.assignee.name)}
-                  </div>
-                )}
-              </div>
+              {priorityInfo.symbol && (
+                <span className={`text-sm font-bold ${priorityInfo.color}`}>
+                  {priorityInfo.symbol}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -164,13 +164,20 @@ function SortableTaskCard({
 function TaskCardOverlay({ task }: { task: TaskWithAssignee }) {
   const showType = task.type !== 'feature'
   const priorityInfo = priorityIndicators[task.priority]
-  const hasFooter = task.due_date || priorityInfo.symbol || showType || task.assignee
+  const hasFooter = task.due_date || priorityInfo.symbol || showType
 
   return (
     <Card className="cursor-grabbing shadow-xl rotate-2 bg-white border border-gray-300">
       <CardContent className="p-3">
         <div className="space-y-2">
-          <p className="font-medium text-sm line-clamp-2 text-gray-900">{task.title}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-medium text-sm line-clamp-2 text-gray-900 flex-1">{task.title}</p>
+            {task.assignee && (
+              <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium ring-2 ring-zinc-900 flex-shrink-0">
+                {getInitials(task.assignee.name)}
+              </div>
+            )}
+          </div>
           {hasFooter && (
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -186,18 +193,11 @@ function TaskCardOverlay({ task }: { task: TaskWithAssignee }) {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                {priorityInfo.symbol && (
-                  <span className={`text-sm font-bold ${priorityInfo.color}`}>
-                    {priorityInfo.symbol}
-                  </span>
-                )}
-                {task.assignee && (
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
-                    {getInitials(task.assignee.name)}
-                  </div>
-                )}
-              </div>
+              {priorityInfo.symbol && (
+                <span className={`text-sm font-bold ${priorityInfo.color}`}>
+                  {priorityInfo.symbol}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -287,7 +287,7 @@ function KanbanColumn({
 
 export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }: Props) {
   const router = useRouter()
-  const dndId = useId()
+  const dndId = `task-kanban-dnd-${projectId}`
   const [activeTask, setActiveTask] = useState<TaskWithAssignee | null>(null)
   const [localTasksByStatus, setLocalTasksByStatus] = useState(tasksByStatus)
   const [overColumn, setOverColumn] = useState<TaskStatus | null>(null)
