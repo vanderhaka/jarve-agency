@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
   DragOverlay,
   DragStartEvent,
   DragEndEvent,
-  closestCenter,
+  DragOverEvent,
+  closestCorners,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -141,15 +143,22 @@ function KanbanColumn({
   tasks,
   onTaskClick,
   onAddTask,
+  isOver,
 }: {
   status: TaskStatus
   tasks: Task[]
   onTaskClick?: (task: Task) => void
   onAddTask?: () => void
+  isOver?: boolean
 }) {
+  const { setNodeRef } = useDroppable({ id: status })
+
   return (
     <div
-      className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[280px] max-w-[280px]`}
+      ref={setNodeRef}
+      className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[280px] max-w-[280px] transition-colors ${
+        isOver ? 'ring-2 ring-primary ring-offset-2' : ''
+      }`}
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center justify-between">
@@ -198,6 +207,12 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
   const router = useRouter()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [localTasksByStatus, setLocalTasksByStatus] = useState(tasksByStatus)
+  const [overColumn, setOverColumn] = useState<TaskStatus | null>(null)
+
+  // Sync local state when props change (e.g., after task creation)
+  useEffect(() => {
+    setLocalTasksByStatus(tasksByStatus)
+  }, [tasksByStatus])
 
   // Use pointer sensor with some activation delay to allow clicks
   const sensors = useSensors(
@@ -212,6 +227,24 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
     const { active } = event
     const task = findTask(active.id as string)
     setActiveTask(task || null)
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event
+    if (!over) {
+      setOverColumn(null)
+      return
+    }
+
+    // Check if over a column directly
+    if (TASK_STATUSES.includes(over.id as TaskStatus)) {
+      setOverColumn(over.id as TaskStatus)
+      return
+    }
+
+    // Check if over a task - find which column it's in
+    const status = findTaskStatus(over.id as string)
+    setOverColumn(status || null)
   }
 
   function findTask(id: string): Task | undefined {
@@ -234,6 +267,7 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     setActiveTask(null)
+    setOverColumn(null)
 
     if (!over) return
 
@@ -344,8 +378,9 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="flex gap-4 overflow-x-auto pb-4">
@@ -356,6 +391,7 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
             tasks={localTasksByStatus[status]}
             onTaskClick={onTaskClick}
             onAddTask={onAddTask ? () => onAddTask(status) : undefined}
+            isOver={overColumn === status}
           />
         ))}
       </div>
