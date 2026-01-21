@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -287,6 +287,7 @@ function KanbanColumn({
 
 export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }: Props) {
   const router = useRouter()
+  const dndId = useId()
   const [activeTask, setActiveTask] = useState<TaskWithAssignee | null>(null)
   const [localTasksByStatus, setLocalTasksByStatus] = useState(tasksByStatus)
   const [overColumn, setOverColumn] = useState<TaskStatus | null>(null)
@@ -459,6 +460,7 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}

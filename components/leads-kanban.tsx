@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -81,6 +81,7 @@ function SortableLead({ lead }: { lead: Lead }) {
 }
 
 export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
+  const dndId = useId()
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [activeId, setActiveId] = useState<string | null>(null)
   const supabase = createClient()
@@ -154,6 +155,7 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={(event) => setActiveId(event.active.id as string)}
