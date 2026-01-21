@@ -32,6 +32,7 @@ import {
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { updateTaskAction, deleteTaskAction } from './actions'
+import { EmployeeSelect } from '@/components/employee-select'
 import {
   Task,
   TASK_STATUSES,
@@ -63,6 +64,7 @@ export function TaskDetailSheet({ task, projectId, open, onOpenChange }: Props) 
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [dueDate, setDueDate] = useState('')
   const [estimate, setEstimate] = useState('')
+  const [assigneeId, setAssigneeId] = useState('')
   const [acceptanceCriteria, setAcceptanceCriteria] = useState('')
   const [blockers, setBlockers] = useState('')
 
@@ -77,6 +79,7 @@ export function TaskDetailSheet({ task, projectId, open, onOpenChange }: Props) 
   const initialPriority = task?.priority ?? 'medium'
   const initialDueDate = task?.due_date ?? ''
   const initialEstimate = task?.estimate?.toString() ?? ''
+  const initialAssigneeId = task?.assignee_id ?? ''
   const initialAcceptanceCriteria = task?.acceptance_criteria ?? ''
   const initialBlockers = task?.blockers ?? ''
 
@@ -90,6 +93,7 @@ export function TaskDetailSheet({ task, projectId, open, onOpenChange }: Props) 
       setPriority(initialPriority)
       setDueDate(initialDueDate)
       setEstimate(initialEstimate)
+      setAssigneeId(initialAssigneeId)
       setAcceptanceCriteria(initialAcceptanceCriteria)
       setBlockers(initialBlockers)
     }
@@ -108,6 +112,7 @@ export function TaskDetailSheet({ task, projectId, open, onOpenChange }: Props) 
       priority,
       due_date: dueDate || null,
       estimate: estimate ? parseFloat(estimate) : null,
+      assignee_id: assigneeId || null,
       acceptance_criteria: acceptanceCriteria || null,
       blockers: blockers || null,
     })
@@ -150,6 +155,7 @@ export function TaskDetailSheet({ task, projectId, open, onOpenChange }: Props) 
       setPriority(task.priority)
       setDueDate(task.due_date ?? '')
       setEstimate(task.estimate?.toString() ?? '')
+      setAssigneeId(task.assignee_id ?? '')
       setAcceptanceCriteria(task.acceptance_criteria ?? '')
       setBlockers(task.blockers ?? '')
     }
@@ -232,6 +238,14 @@ export function TaskDetailSheet({ task, projectId, open, onOpenChange }: Props) 
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Assignee</Label>
+            <EmployeeSelect
+              value={assigneeId}
+              onChange={setAssigneeId}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Task, TaskStatus, TASK_STATUSES } from '@/lib/tasks/types'
+import { Task, TaskWithAssignee, TaskStatus, TASK_STATUSES } from '@/lib/tasks/types'
 import { TaskKanban } from './task-kanban'
 import { TaskList } from './task-list'
 import { TaskDetailSheet } from './task-detail-sheet'
@@ -10,7 +10,7 @@ import { NewTaskDialog } from './new-task-dialog'
 
 interface Props {
   projectId: string
-  tasksByStatus: Record<TaskStatus, Task[]>
+  tasksByStatus: Record<TaskStatus, TaskWithAssignee[]>
   currentView: 'list' | 'kanban'
   filters: TaskFiltersState
 }
@@ -25,7 +25,7 @@ export function TasksView({ projectId, tasksByStatus, currentView, filters }: Pr
   const filteredTasksByStatus = TASK_STATUSES.reduce((acc, status) => {
     acc[status] = filterTasks(tasksByStatus[status], filters)
     return acc
-  }, {} as Record<TaskStatus, Task[]>)
+  }, {} as Record<TaskStatus, TaskWithAssignee[]>)
 
   // Flatten tasks for list view
   const allTasks = TASK_STATUSES.flatMap(status => filteredTasksByStatus[status])

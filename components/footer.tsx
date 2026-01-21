@@ -1,10 +1,16 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 
+// SSR-safe year calculation using useSyncExternalStore
+const subscribe = () => () => {}
+const getSnapshot = () => new Date().getFullYear()
+const getServerSnapshot = () => null as number | null
+
 export function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   return (
     <footer className="bg-zinc-950 text-white relative overflow-hidden">
@@ -75,7 +81,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-zinc-800 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-zinc-500 text-sm">
-            &copy; {currentYear} JARVE. All rights reserved.
+            &copy; {currentYear ?? '2024'} JARVE. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-zinc-500">
             <Link href="#" className="hover:text-white transition-colors">

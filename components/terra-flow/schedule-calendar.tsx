@@ -1,9 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useSyncExternalStore } from "react"
 import { Button } from "@/components/terra-flow/ui/button"
 import { ChevronLeft, ChevronRight, Clock, User } from "lucide-react"
 import { BookingModal } from "@/components/terra-flow/booking-modal"
+
+// SSR-safe mounted state using useSyncExternalStore
+const subscribe = () => () => {}
+const getSnapshot = () => true
+const getServerSnapshot = () => false
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -73,8 +78,20 @@ export function ScheduleCalendar() {
   const [currentWeek, setCurrentWeek] = useState(0)
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [selectedClass, setSelectedClass] = useState<ClassDetails | null>(null)
+  const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
-  const getWeekDates = () => {
+  const weekDates = useMemo(() => {
+    if (!mounted) {
+      // Return placeholder data during SSR
+      return daysOfWeek.map((day) => ({
+        day,
+        date: 1,
+        month: "Jan",
+        fullDate: "",
+        isToday: false,
+      }))
+    }
+
     const today = new Date()
     const startOfWeek = new Date(today)
     startOfWeek.setDate(today.getDate() - today.getDay() + 1 + currentWeek * 7)
@@ -90,9 +107,7 @@ export function ScheduleCalendar() {
         isToday: date.toDateString() === today.toDateString(),
       }
     })
-  }
-
-  const weekDates = getWeekDates()
+  }, [mounted, currentWeek])
 
   const handleBookClass = (cls: (typeof classSchedule)["Mon"][0]) => {
     const currentDayInfo = weekDates.find((d) => d.day === selectedDay)

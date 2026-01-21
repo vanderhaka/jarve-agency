@@ -1,16 +1,24 @@
 import { createClient } from '@/utils/supabase/server'
-import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus } from './types'
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskWithAssignee } from './types'
 import { calculateNewPosition } from './position'
 
 /**
  * Get all tasks for a project, ordered by status and position
+ * Includes assignee info from employees table
  */
-export async function getTasksByProject(projectId: string): Promise<Task[]> {
+export async function getTasksByProject(projectId: string): Promise<TaskWithAssignee[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('tasks')
-    .select('*')
+    .select(`
+      *,
+      assignee:employees!assignee_id (
+        id,
+        name,
+        email
+      )
+    `)
     .eq('project_id', projectId)
     .order('position', { ascending: true })
 
@@ -18,16 +26,16 @@ export async function getTasksByProject(projectId: string): Promise<Task[]> {
     throw new Error(`Failed to fetch tasks: ${error.message}`)
   }
 
-  return data as Task[]
+  return data as TaskWithAssignee[]
 }
 
 /**
  * Get tasks grouped by status for kanban view
  */
-export async function getTasksByProjectGrouped(projectId: string): Promise<Record<TaskStatus, Task[]>> {
+export async function getTasksByProjectGrouped(projectId: string): Promise<Record<TaskStatus, TaskWithAssignee[]>> {
   const tasks = await getTasksByProject(projectId)
 
-  const grouped: Record<TaskStatus, Task[]> = {
+  const grouped: Record<TaskStatus, TaskWithAssignee[]> = {
     'Backlog': [],
     'Ready': [],
     'In Progress': [],

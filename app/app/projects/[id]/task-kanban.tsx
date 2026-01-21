@@ -20,30 +20,39 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Task, TaskStatus, TASK_STATUSES } from '@/lib/tasks/types'
+import { TaskWithAssignee, TaskStatus, TASK_STATUSES } from '@/lib/tasks/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { moveTaskAction } from './actions'
 
 interface Props {
   projectId: string
-  tasksByStatus: Record<TaskStatus, Task[]>
-  onTaskClick?: (task: Task) => void
+  tasksByStatus: Record<TaskStatus, TaskWithAssignee[]>
+  onTaskClick?: (task: TaskWithAssignee) => void
   onAddTask?: (status: TaskStatus) => void
 }
 
-// Colored left border only - clean neutral columns
-const statusBorderColors: Record<TaskStatus, string> = {
-  'Backlog': 'border-l-gray-400',
-  'Ready': 'border-l-blue-500',
-  'In Progress': 'border-l-amber-500',
-  'Review': 'border-l-purple-500',
-  'QA': 'border-l-orange-500',
-  'Done': 'border-l-emerald-500',
-  'Blocked': 'border-l-red-500',
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+// Colored header backgrounds for each status
+const statusHeaderColors: Record<TaskStatus, string> = {
+  'Backlog': 'bg-gray-200 text-gray-700',
+  'Ready': 'bg-blue-100 text-blue-800',
+  'In Progress': 'bg-amber-100 text-amber-800',
+  'Review': 'bg-purple-100 text-purple-800',
+  'QA': 'bg-orange-100 text-orange-800',
+  'Done': 'bg-emerald-100 text-emerald-800',
+  'Blocked': 'bg-red-100 text-red-800',
 }
 
 // Higher contrast badge colors
@@ -61,11 +70,19 @@ const typeColors: Record<string, string> = {
   spike: 'bg-violet-100 text-violet-700 border-violet-400',
 }
 
+// Priority indicators: low = nothing, medium = !, high = !!, urgent = !!!
+const priorityIndicators: Record<string, { symbol: string; color: string }> = {
+  low: { symbol: '', color: '' },
+  medium: { symbol: '!', color: 'text-blue-600' },
+  high: { symbol: '!!', color: 'text-amber-600' },
+  urgent: { symbol: '!!!', color: 'text-red-600' },
+}
+
 function SortableTaskCard({
   task,
   onClick,
 }: {
-  task: Task
+  task: TaskWithAssignee
   onClick?: () => void
 }) {
   const {
@@ -83,16 +100,16 @@ function SortableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  // Only show badges for non-default values
+  // Only show type badge for non-default values
   const showType = task.type !== 'feature'
-  const showPriority = task.priority !== 'medium'
-  const hasBadges = showType || showPriority
+  const priorityInfo = priorityIndicators[task.priority]
+  const hasFooter = task.due_date || priorityInfo.symbol || showType || task.assignee
 
   return (
     <Card
       ref={setNodeRef}
       style={style}
-      className="cursor-grab bg-white shadow-sm hover:shadow-md transition-all active:cursor-grabbing border-0 ring-1 ring-gray-200 hover:ring-gray-300"
+      className="cursor-grab bg-white shadow-md hover:shadow-lg transition-all active:cursor-grabbing border border-gray-300 hover:border-gray-400"
       {...attributes}
       {...listeners}
       onClick={e => {
@@ -106,24 +123,37 @@ function SortableTaskCard({
       <CardContent className="p-3">
         <div className="space-y-2">
           <p className="font-medium text-sm line-clamp-2 text-gray-900">{task.title}</p>
-          {hasBadges && (
-            <div className="flex flex-wrap gap-1.5">
-              {showType && (
-                <Badge variant="outline" className={`text-xs font-medium ${typeColors[task.type]}`}>
-                  {task.type}
-                </Badge>
-              )}
-              {showPriority && (
-                <Badge variant="outline" className={`text-xs font-medium ${priorityColors[task.priority]}`}>
-                  {task.priority}
-                </Badge>
-              )}
+          {hasFooter && (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {showType && (
+                  <Badge variant="outline" className={`text-xs font-medium ${typeColors[task.type]}`}>
+                    {task.type}
+                  </Badge>
+                )}
+                {task.due_date && (
+                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                {priorityInfo.symbol && (
+                  <span className={`text-sm font-bold ${priorityInfo.color}`}>
+                    {priorityInfo.symbol}
+                  </span>
+                )}
+                {task.assignee && (
+                  <div
+                    className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium"
+                    title={task.assignee.name}
+                  >
+                    {getInitials(task.assignee.name)}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-          {task.due_date && (
-            <p className="text-xs text-gray-500">
-              Due: {new Date(task.due_date).toLocaleDateString()}
-            </p>
           )}
         </div>
       </CardContent>
@@ -131,28 +161,43 @@ function SortableTaskCard({
   )
 }
 
-function TaskCardOverlay({ task }: { task: Task }) {
+function TaskCardOverlay({ task }: { task: TaskWithAssignee }) {
   const showType = task.type !== 'feature'
-  const showPriority = task.priority !== 'medium'
-  const hasBadges = showType || showPriority
+  const priorityInfo = priorityIndicators[task.priority]
+  const hasFooter = task.due_date || priorityInfo.symbol || showType || task.assignee
 
   return (
-    <Card className="cursor-grabbing shadow-xl rotate-2 bg-white border-0 ring-1 ring-gray-200">
+    <Card className="cursor-grabbing shadow-xl rotate-2 bg-white border border-gray-300">
       <CardContent className="p-3">
         <div className="space-y-2">
           <p className="font-medium text-sm line-clamp-2 text-gray-900">{task.title}</p>
-          {hasBadges && (
-            <div className="flex flex-wrap gap-1.5">
-              {showType && (
-                <Badge variant="outline" className={`text-xs font-medium ${typeColors[task.type]}`}>
-                  {task.type}
-                </Badge>
-              )}
-              {showPriority && (
-                <Badge variant="outline" className={`text-xs font-medium ${priorityColors[task.priority]}`}>
-                  {task.priority}
-                </Badge>
-              )}
+          {hasFooter && (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {showType && (
+                  <Badge variant="outline" className={`text-xs font-medium ${typeColors[task.type]}`}>
+                    {task.type}
+                  </Badge>
+                )}
+                {task.due_date && (
+                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                {priorityInfo.symbol && (
+                  <span className={`text-sm font-bold ${priorityInfo.color}`}>
+                    {priorityInfo.symbol}
+                  </span>
+                )}
+                {task.assignee && (
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
+                    {getInitials(task.assignee.name)}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -169,8 +214,8 @@ function KanbanColumn({
   isOver,
 }: {
   status: TaskStatus
-  tasks: Task[]
-  onTaskClick?: (task: Task) => void
+  tasks: TaskWithAssignee[]
+  onTaskClick?: (task: TaskWithAssignee) => void
   onAddTask?: () => void
   isOver?: boolean
 }) {
@@ -179,14 +224,14 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col rounded-lg bg-gray-50/80 border border-gray-200 border-l-4 ${statusBorderColors[status]} min-w-[280px] max-w-[280px] transition-all ${
+      className={`flex flex-col rounded-lg bg-gray-50/80 border border-gray-200 min-w-[280px] max-w-[280px] transition-all overflow-hidden ${
         isOver ? 'bg-gray-100 ring-2 ring-primary/20' : ''
       }`}
     >
-      <div className="px-3 py-3 border-b border-gray-200/60">
+      <div className={`px-3 py-3 ${statusHeaderColors[status]}`}>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">{status}</h3>
-          <span className="text-xs font-medium text-gray-400 bg-gray-200/60 px-2 py-0.5 rounded-full">
+          <h3 className="text-base font-semibold">{status}</h3>
+          <span className="text-lg font-bold opacity-60">
             {tasks.length}
           </span>
         </div>
@@ -197,33 +242,44 @@ function KanbanColumn({
           strategy={verticalListSortingStrategy}
         >
           {tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-24 text-center">
-              <div className="w-8 h-8 rounded-full bg-gray-200/60 flex items-center justify-center mb-2">
-                <Plus className="h-4 w-4 text-gray-400" />
+            onAddTask ? (
+              <button
+                onClick={onAddTask}
+                className="flex flex-col items-center justify-center w-full h-32 text-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100/50 transition-all cursor-pointer group"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-200 group-hover:bg-gray-300 flex items-center justify-center mb-2 transition-colors">
+                  <Plus className="h-5 w-5 text-gray-500 group-hover:text-gray-600" />
+                </div>
+                <p className="text-sm text-gray-500 group-hover:text-gray-600 font-medium">Add a task</p>
+              </button>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-24 text-center">
+                <p className="text-xs text-gray-400">No tasks yet</p>
               </div>
-              <p className="text-xs text-gray-400">No tasks yet</p>
-            </div>
+            )
           ) : (
-            tasks.map(task => (
-              <SortableTaskCard
-                key={task.id}
-                task={task}
-                onClick={() => onTaskClick?.(task)}
-              />
-            ))
+            <>
+              {tasks.map(task => (
+                <SortableTaskCard
+                  key={task.id}
+                  task={task}
+                  onClick={() => onTaskClick?.(task)}
+                />
+              ))}
+              {onAddTask && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200/50"
+                  onClick={onAddTask}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add task
+                </Button>
+              )}
+            </>
           )}
         </SortableContext>
-        {onAddTask && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200/50"
-            onClick={onAddTask}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add task
-          </Button>
-        )}
       </div>
     </div>
   )
@@ -231,7 +287,7 @@ function KanbanColumn({
 
 export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }: Props) {
   const router = useRouter()
-  const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [activeTask, setActiveTask] = useState<TaskWithAssignee | null>(null)
   const [localTasksByStatus, setLocalTasksByStatus] = useState(tasksByStatus)
   const [overColumn, setOverColumn] = useState<TaskStatus | null>(null)
 
@@ -273,7 +329,7 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
     setOverColumn(status || null)
   }
 
-  function findTask(id: string): Task | undefined {
+  function findTask(id: string): TaskWithAssignee | undefined {
     for (const status of TASK_STATUSES) {
       const task = localTasksByStatus[status].find(t => t.id === id)
       if (task) return task

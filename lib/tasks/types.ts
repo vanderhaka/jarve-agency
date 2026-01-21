@@ -74,10 +74,14 @@ export interface KanbanColumn {
   tasks: Task[]
 }
 
+// Assignee info from employees table
+export interface TaskAssignee {
+  id: string
+  name: string
+  email: string
+}
+
 // Task with optional relations
 export interface TaskWithAssignee extends Task {
-  assignee?: {
-    id: string
-    email: string
-  } | null
+  assignee?: TaskAssignee | null
 }
