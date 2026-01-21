@@ -28,12 +28,27 @@ import { TASK_STATUSES, TASK_TYPES, TASK_PRIORITIES } from '@/lib/tasks/types'
 
 interface Props {
   projectId: string
+  defaultStatus?: typeof TASK_STATUSES[number]
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function NewTaskDialog({ projectId }: Props) {
-  const [open, setOpen] = useState(false)
+export function NewTaskDialog({
+  projectId,
+  defaultStatus = 'Backlog',
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: Props) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -64,12 +79,16 @@ export function NewTaskDialog({ projectId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-1" />
-          New Task
-        </Button>
-      </DialogTrigger>
+      {trigger !== undefined ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4 mr-1" />
+            New Task
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
@@ -91,7 +110,7 @@ export function NewTaskDialog({ projectId }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select name="status" defaultValue="Backlog">
+              <Select name="status" defaultValue={defaultStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

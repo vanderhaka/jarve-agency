@@ -2,6 +2,7 @@
 
 import { Task } from '@/lib/tasks/types'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -10,10 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Plus } from 'lucide-react'
 
 interface Props {
   tasks: Task[]
   onTaskClick?: (task: Task) => void
+  onAddTask?: () => void
 }
 
 const priorityColors: Record<string, string> = {
@@ -40,11 +43,17 @@ const typeColors: Record<string, string> = {
   spike: 'bg-purple-100 text-purple-700',
 }
 
-export function TaskList({ tasks, onTaskClick }: Props) {
+export function TaskList({ tasks, onTaskClick, onAddTask }: Props) {
   if (tasks.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-muted-foreground border-2 border-dashed rounded-lg">
-        No tasks yet. Create your first task to get started.
+      <div className="flex flex-col items-center justify-center gap-3 h-40 text-muted-foreground border-2 border-dashed rounded-lg">
+        <p>No tasks yet. Create your first task to get started.</p>
+        {onAddTask && (
+          <Button variant="outline" size="sm" onClick={onAddTask}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add Task
+          </Button>
+        )}
       </div>
     )
   }
@@ -83,6 +92,19 @@ export function TaskList({ tasks, onTaskClick }: Props) {
               </TableCell>
             </TableRow>
           ))}
+          {onAddTask && (
+            <TableRow
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={onAddTask}
+            >
+              <TableCell colSpan={5} className="text-muted-foreground">
+                <div className="flex items-center">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add task
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

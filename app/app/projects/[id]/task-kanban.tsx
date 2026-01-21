@@ -21,6 +21,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { Task, TaskStatus, TASK_STATUSES } from '@/lib/tasks/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { moveTaskAction } from './actions'
 
@@ -28,6 +30,7 @@ interface Props {
   projectId: string
   tasksByStatus: Record<TaskStatus, Task[]>
   onTaskClick?: (task: Task) => void
+  onAddTask?: (status: TaskStatus) => void
 }
 
 const statusColors: Record<TaskStatus, string> = {
@@ -137,10 +140,12 @@ function KanbanColumn({
   status,
   tasks,
   onTaskClick,
+  onAddTask,
 }: {
   status: TaskStatus
   tasks: Task[]
   onTaskClick?: (task: Task) => void
+  onAddTask?: () => void
 }) {
   return (
     <div
@@ -173,12 +178,23 @@ function KanbanColumn({
             ))
           )}
         </SortableContext>
+        {onAddTask && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={onAddTask}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add task
+          </Button>
+        )}
       </CardContent>
     </div>
   )
 }
 
-export function TaskKanban({ projectId, tasksByStatus, onTaskClick }: Props) {
+export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }: Props) {
   const router = useRouter()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [localTasksByStatus, setLocalTasksByStatus] = useState(tasksByStatus)
@@ -339,6 +355,7 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick }: Props) {
             status={status}
             tasks={localTasksByStatus[status]}
             onTaskClick={onTaskClick}
+            onAddTask={onAddTask ? () => onAddTask(status) : undefined}
           />
         ))}
       </div>
