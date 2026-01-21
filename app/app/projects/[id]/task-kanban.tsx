@@ -21,7 +21,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Task, TaskStatus, TASK_STATUSES } from '@/lib/tasks/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
@@ -35,28 +35,30 @@ interface Props {
   onAddTask?: (status: TaskStatus) => void
 }
 
-const statusColors: Record<TaskStatus, string> = {
-  'Backlog': 'bg-gray-100 border-gray-300',
-  'Ready': 'bg-blue-50 border-blue-300',
-  'In Progress': 'bg-yellow-50 border-yellow-300',
-  'Review': 'bg-purple-50 border-purple-300',
-  'QA': 'bg-orange-50 border-orange-300',
-  'Done': 'bg-green-50 border-green-300',
-  'Blocked': 'bg-red-50 border-red-300',
+// Colored left border only - clean neutral columns
+const statusBorderColors: Record<TaskStatus, string> = {
+  'Backlog': 'border-l-gray-400',
+  'Ready': 'border-l-blue-500',
+  'In Progress': 'border-l-amber-500',
+  'Review': 'border-l-purple-500',
+  'QA': 'border-l-orange-500',
+  'Done': 'border-l-emerald-500',
+  'Blocked': 'border-l-red-500',
 }
 
+// Higher contrast badge colors
 const priorityColors: Record<string, string> = {
-  low: 'bg-gray-100 text-gray-700',
-  medium: 'bg-blue-100 text-blue-700',
-  high: 'bg-orange-100 text-orange-700',
-  urgent: 'bg-red-100 text-red-700',
+  low: 'bg-slate-100 text-slate-600 border-slate-300',
+  medium: 'bg-sky-100 text-sky-700 border-sky-300',
+  high: 'bg-amber-100 text-amber-700 border-amber-400',
+  urgent: 'bg-red-100 text-red-700 border-red-400',
 }
 
 const typeColors: Record<string, string> = {
-  feature: 'bg-green-100 text-green-700',
-  bug: 'bg-red-100 text-red-700',
-  chore: 'bg-gray-100 text-gray-700',
-  spike: 'bg-purple-100 text-purple-700',
+  feature: 'bg-emerald-100 text-emerald-700 border-emerald-400',
+  bug: 'bg-rose-100 text-rose-700 border-rose-400',
+  chore: 'bg-slate-100 text-slate-600 border-slate-300',
+  spike: 'bg-violet-100 text-violet-700 border-violet-400',
 }
 
 function SortableTaskCard({
@@ -81,11 +83,16 @@ function SortableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   }
 
+  // Only show badges for non-default values
+  const showType = task.type !== 'feature'
+  const showPriority = task.priority !== 'medium'
+  const hasBadges = showType || showPriority
+
   return (
     <Card
       ref={setNodeRef}
       style={style}
-      className="cursor-grab hover:shadow-md transition-shadow active:cursor-grabbing"
+      className="cursor-grab bg-white shadow-sm hover:shadow-md transition-all active:cursor-grabbing border-0 ring-1 ring-gray-200 hover:ring-gray-300"
       {...attributes}
       {...listeners}
       onClick={e => {
@@ -98,17 +105,23 @@ function SortableTaskCard({
     >
       <CardContent className="p-3">
         <div className="space-y-2">
-          <p className="font-medium text-sm line-clamp-2">{task.title}</p>
-          <div className="flex flex-wrap gap-1">
-            <Badge variant="outline" className={typeColors[task.type]}>
-              {task.type}
-            </Badge>
-            <Badge variant="outline" className={priorityColors[task.priority]}>
-              {task.priority}
-            </Badge>
-          </div>
+          <p className="font-medium text-sm line-clamp-2 text-gray-900">{task.title}</p>
+          {hasBadges && (
+            <div className="flex flex-wrap gap-1.5">
+              {showType && (
+                <Badge variant="outline" className={`text-xs font-medium ${typeColors[task.type]}`}>
+                  {task.type}
+                </Badge>
+              )}
+              {showPriority && (
+                <Badge variant="outline" className={`text-xs font-medium ${priorityColors[task.priority]}`}>
+                  {task.priority}
+                </Badge>
+              )}
+            </div>
+          )}
           {task.due_date && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500">
               Due: {new Date(task.due_date).toLocaleDateString()}
             </p>
           )}
@@ -119,19 +132,29 @@ function SortableTaskCard({
 }
 
 function TaskCardOverlay({ task }: { task: Task }) {
+  const showType = task.type !== 'feature'
+  const showPriority = task.priority !== 'medium'
+  const hasBadges = showType || showPriority
+
   return (
-    <Card className="cursor-grabbing shadow-lg rotate-3">
+    <Card className="cursor-grabbing shadow-xl rotate-2 bg-white border-0 ring-1 ring-gray-200">
       <CardContent className="p-3">
         <div className="space-y-2">
-          <p className="font-medium text-sm line-clamp-2">{task.title}</p>
-          <div className="flex flex-wrap gap-1">
-            <Badge variant="outline" className={typeColors[task.type]}>
-              {task.type}
-            </Badge>
-            <Badge variant="outline" className={priorityColors[task.priority]}>
-              {task.priority}
-            </Badge>
-          </div>
+          <p className="font-medium text-sm line-clamp-2 text-gray-900">{task.title}</p>
+          {hasBadges && (
+            <div className="flex flex-wrap gap-1.5">
+              {showType && (
+                <Badge variant="outline" className={`text-xs font-medium ${typeColors[task.type]}`}>
+                  {task.type}
+                </Badge>
+              )}
+              {showPriority && (
+                <Badge variant="outline" className={`text-xs font-medium ${priorityColors[task.priority]}`}>
+                  {task.priority}
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -156,26 +179,29 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[280px] max-w-[280px] transition-colors ${
-        isOver ? 'ring-2 ring-primary ring-offset-2' : ''
+      className={`flex flex-col rounded-lg bg-gray-50/80 border border-gray-200 border-l-4 ${statusBorderColors[status]} min-w-[280px] max-w-[280px] transition-all ${
+        isOver ? 'bg-gray-100 ring-2 ring-primary/20' : ''
       }`}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium flex items-center justify-between">
-          {status}
-          <Badge variant="secondary" className="ml-2">
+      <div className="px-3 py-3 border-b border-gray-200/60">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">{status}</h3>
+          <span className="text-xs font-medium text-gray-400 bg-gray-200/60 px-2 py-0.5 rounded-full">
             {tasks.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 p-2 space-y-2 min-h-[200px]">
+          </span>
+        </div>
+      </div>
+      <div className="flex-1 p-2 space-y-2 min-h-[200px]">
         <SortableContext
           items={tasks.map(t => t.id)}
           strategy={verticalListSortingStrategy}
         >
           {tasks.length === 0 ? (
-            <div className="flex items-center justify-center h-20 text-sm text-muted-foreground border-2 border-dashed rounded-md">
-              No tasks
+            <div className="flex flex-col items-center justify-center h-24 text-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200/60 flex items-center justify-center mb-2">
+                <Plus className="h-4 w-4 text-gray-400" />
+              </div>
+              <p className="text-xs text-gray-400">No tasks yet</p>
             </div>
           ) : (
             tasks.map(task => (
@@ -191,14 +217,14 @@ function KanbanColumn({
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            className="w-full justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200/50"
             onClick={onAddTask}
           >
             <Plus className="h-4 w-4 mr-1" />
             Add task
           </Button>
         )}
-      </CardContent>
+      </div>
     </div>
   )
 }
@@ -383,7 +409,7 @@ export function TaskKanban({ projectId, tasksByStatus, onTaskClick, onAddTask }:
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
         {TASK_STATUSES.map(status => (
           <KanbanColumn
             key={status}

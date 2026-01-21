@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/select'
 import { createClient } from '@/utils/supabase/client'
 
+const UNASSIGNED_VALUE = 'unassigned'
+
 interface Employee {
   id: string
   name: string
@@ -21,11 +23,13 @@ interface EmployeeSelectProps {
   onChange?: (value: string) => void
   name?: string
   required?: boolean
+  autoSelectSingle?: boolean
 }
 
-export function EmployeeSelect({ value, onChange, name, required }: EmployeeSelectProps) {
+export function EmployeeSelect({ value, onChange, name, required, autoSelectSingle = false }: EmployeeSelectProps) {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
+  const [internalValue, setInternalValue] = useState(value)
   const supabase = createClient()
 
   useEffect(() => {
@@ -33,21 +37,37 @@ export function EmployeeSelect({ value, onChange, name, required }: EmployeeSele
       const { data } = await supabase
         .from('employees')
         .select('id, name, email')
+        .is('deleted_at', null)
         .order('name')
-      
-      if (data) setEmployees(data)
+
+      if (data) {
+        setEmployees(data)
+        if (autoSelectSingle && data.length === 1 && !value) {
+          const singleEmployeeId = data[0].id
+          setInternalValue(singleEmployeeId)
+          onChange?.(singleEmployeeId)
+        }
+      }
       setLoading(false)
     }
     fetchEmployees()
-  }, [])
+  }, [autoSelectSingle, onChange, supabase, value])
+
+  const selectValue = value ?? internalValue ?? UNASSIGNED_VALUE
+
+  function handleChange(newValue: string) {
+    const actualValue = newValue === UNASSIGNED_VALUE ? '' : newValue
+    setInternalValue(actualValue)
+    onChange?.(actualValue)
+  }
 
   return (
-    <Select name={name} value={value} onValueChange={onChange} required={required}>
+    <Select name={name} value={selectValue} onValueChange={handleChange} required={required}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Assign to..." />
+        <SelectValue placeholder={loading ? "Loading..." : "Assign to..."} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="unassigned">Unassigned</SelectItem>
+        <SelectItem value={UNASSIGNED_VALUE}>Unassigned</SelectItem>
         {employees.map((employee) => (
           <SelectItem key={employee.id} value={employee.id}>
             {employee.name}

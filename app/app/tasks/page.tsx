@@ -5,10 +5,20 @@ import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import Link from 'next/link'
 
+const DEFAULT_STATUS_COLOR = 'bg-gray-100 text-gray-700'
+
 const statusColors: Record<string, string> = {
-  todo: 'bg-muted text-foreground',
-  in_progress: 'bg-blue-500 text-white',
-  done: 'bg-green-500 text-white',
+  'Backlog': DEFAULT_STATUS_COLOR,
+  'Ready': 'bg-blue-100 text-blue-700',
+  'In Progress': 'bg-amber-100 text-amber-700',
+  'Review': 'bg-purple-100 text-purple-700',
+  'QA': 'bg-orange-100 text-orange-700',
+  'Done': 'bg-emerald-100 text-emerald-700',
+  'Blocked': 'bg-red-100 text-red-700',
+}
+
+function getStatusColor(status: string): string {
+  return statusColors[status] ?? DEFAULT_STATUS_COLOR
 }
 
 export default async function TasksPage() {
@@ -23,8 +33,9 @@ export default async function TasksPage() {
 
   const { data: tasks, error } = await supabase
     .from('tasks')
-    .select(`*, leads ( id, name ), agency_projects ( id, name )`)
-    .or('status.eq.todo,status.eq.in_progress')
+    .select(`*, agency_projects ( id, name )`)
+    .eq('assignee_id', user.id)
+    .neq('status', 'Done')
     .order('due_date', { ascending: true, nullsFirst: true })
 
   if (error) {
@@ -56,19 +67,17 @@ export default async function TasksPage() {
                 <div>
                   <CardTitle className="text-lg">{task.title}</CardTitle>
                   <CardDescription>
-                    {task.leads ? (
-                      <Link href={`/app/leads/${task.leads.id}`} className="text-primary hover:underline">
-                        Lead: {task.leads.name}
+                    {task.agency_projects ? (
+                      <Link href={`/app/projects/${task.agency_projects.id}`} className="text-primary hover:underline">
+                        {task.agency_projects.name}
                       </Link>
-                    ) : task.agency_projects ? (
-                      <span className="text-primary">Project: {task.agency_projects.name}</span>
                     ) : (
                       'General task'
                     )}
                   </CardDescription>
                 </div>
-                <Badge className={statusColors[task.status] || 'bg-gray-500 text-white'}>
-                  {task.status.replace('_', ' ')}
+                <Badge className={getStatusColor(task.status)}>
+                  {task.status}
                 </Badge>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -78,6 +87,7 @@ export default async function TasksPage() {
                 <div className="text-sm text-muted-foreground flex flex-wrap gap-4">
                   {task.due_date && <span>Due {format(new Date(task.due_date), 'MMM d, yyyy')}</span>}
                   <span className="capitalize">Priority: {task.priority}</span>
+                  <span className="capitalize">Type: {task.type}</span>
                 </div>
               </CardContent>
             </Card>

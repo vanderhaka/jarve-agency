@@ -25,6 +25,7 @@ import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { createTaskAction } from './actions'
 import { TASK_STATUSES, TASK_TYPES, TASK_PRIORITIES } from '@/lib/tasks/types'
+import { EmployeeSelect } from '@/components/employee-select'
 
 interface Props {
   projectId: string
@@ -43,6 +44,7 @@ export function NewTaskDialog({
 }: Props) {
   const [internalOpen, setInternalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [assigneeId, setAssigneeId] = useState<string>('')
   const router = useRouter()
 
   // Support both controlled and uncontrolled modes
@@ -64,6 +66,7 @@ export function NewTaskDialog({
       type: formData.get('type') as typeof TASK_TYPES[number],
       priority: formData.get('priority') as typeof TASK_PRIORITIES[number],
       due_date: (formData.get('due_date') as string) || null,
+      assignee_id: assigneeId || null,
     })
 
     setLoading(false)
@@ -151,9 +154,19 @@ export function NewTaskDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="due_date">Due Date</Label>
-            <Input id="due_date" name="due_date" type="date" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="due_date">Due Date</Label>
+              <Input id="due_date" name="due_date" type="date" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="assignee">Assignee</Label>
+              <EmployeeSelect
+                value={assigneeId}
+                onChange={setAssigneeId}
+                autoSelectSingle
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2">
