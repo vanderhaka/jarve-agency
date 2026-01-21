@@ -15,6 +15,7 @@ interface Project {
   type: string
   status: string
   description: string | null
+  client_id?: string | null
   clients?: { name: string; email: string } | null
 }
 
@@ -66,8 +67,13 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, overd
               <Badge className={getStatusColor(project.status)}>
                 {project.status}
               </Badge>
-              {project.clients && (
-                <span>• {project.clients.name}</span>
+              {project.clients && project.client_id && (
+                <Link
+                  href={`/app/clients/${project.client_id}`}
+                  className="text-primary hover:underline"
+                >
+                  • {project.clients.name}
+                </Link>
               )}
             </div>
           </div>

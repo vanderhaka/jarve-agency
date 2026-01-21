@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useRef, useEffect, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,24 +26,54 @@ interface Props {
 export function TaskFilters({ filters }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
-  function updateFilter(key: keyof TaskFiltersState, value: string) {
+  const updateUrl = useCallback((key: keyof TaskFiltersState, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value && value !== 'all') {
       params.set(key, value)
     } else {
       params.delete(key)
     }
-    router.push(`?${params.toString()}`)
+    router.replace(`?${params.toString()}`)
+  }, [router, searchParams])
+
+  const handleSearchChange = useCallback((value: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    debounceRef.current = setTimeout(() => {
+      updateUrl('search', value)
+    }, 300)
+  }, [updateUrl])
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [])
+
+  function updateFilter(key: keyof TaskFiltersState, value: string) {
+    updateUrl(key, value)
   }
 
   function clearFilters() {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
     const params = new URLSearchParams(searchParams.toString())
     params.delete('search')
     params.delete('status')
     params.delete('type')
     params.delete('priority')
-    router.push(`?${params.toString()}`)
+    router.replace(`?${params.toString()}`)
   }
 
   const hasFilters = filters.search || filters.status || filters.type || filters.priority
@@ -52,9 +83,10 @@ export function TaskFilters({ filters }: Props) {
       <div className="relative flex-1 min-w-[200px] max-w-[300px]">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          ref={inputRef}
           placeholder="Search tasks..."
-          value={filters.search}
-          onChange={e => updateFilter('search', e.target.value)}
+          defaultValue={filters.search}
+          onChange={e => handleSearchChange(e.target.value)}
           className="pl-9"
         />
       </div>
