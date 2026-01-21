@@ -14,9 +14,8 @@ import {
 } from '@/components/ui/table'
 import { LeadStatusSelect } from '@/components/lead-status-select'
 import { NewLeadDialog } from '@/components/new-lead-dialog'
-import { UserCircle, LayoutList, Kanban } from 'lucide-react'
+import { LayoutList, Kanban } from 'lucide-react'
 import { LeadsKanban } from '@/components/leads-kanban'
-import { TaskDialog } from '@/components/task-dialog'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
@@ -28,10 +27,11 @@ type Lead = {
   status: string
   source: string
   created_at: string
-  employees?: {
-    name: string
-  }
   message?: string
+  company?: string
+  project_type?: string
+  budget?: string
+  timeline?: string
 }
 
 export default function LeadsPage() {
@@ -42,18 +42,19 @@ export default function LeadsPage() {
 
   useEffect(() => {
     async function fetchLeads() {
-      const { data } = await supabase
+      console.log('[Leads] Fetching leads...')
+      const { data, error } = await supabase
         .from('leads')
-        .select(`
-          *,
-          employees (
-            name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (data) setLeads(data as any) // Type assertion for joined data
+
+      console.log('[Leads] Response:', { data, error })
+
+      if (error) {
+        console.error('[Leads] Error:', error)
+      }
+
+      if (data) setLeads(data)
       setLoading(false)
     }
     fetchLeads()
@@ -64,6 +65,11 @@ export default function LeadsPage() {
     contacted: 'bg-yellow-500',
     converted: 'bg-green-500',
     closed: 'bg-gray-500',
+    default: 'bg-gray-500',
+  }
+
+  function getStatusColor(status: string): string {
+    return statusColors[status] ?? statusColors.default
   }
 
   return (
@@ -109,19 +115,19 @@ export default function LeadsPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Assigned To</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Budget</TableHead>
+                  <TableHead>Timeline</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Tasks</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       {loading ? 'Loading...' : 'No leads yet'}
                     </TableCell>
                   </TableRow>
@@ -137,34 +143,29 @@ export default function LeadsPage() {
                         </Link>
                       </TableCell>
                       <TableCell>{lead.email}</TableCell>
-                      <TableCell>${lead.amount?.toLocaleString() || '0.00'}</TableCell>
+                      <TableCell>{lead.company || '-'}</TableCell>
                       <TableCell>
-                        {lead.source ? (
-                          <Badge variant="outline">{lead.source}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                        {lead.project_type ? (
+                          <Badge variant="outline">{lead.project_type.replace(/_/g, ' ')}</Badge>
+                        ) : '-'}
                       </TableCell>
                       <TableCell>
-                        {lead.employees ? (
-                          <div className="flex items-center gap-2">
-                            <UserCircle className="h-4 w-4 text-muted-foreground" />
-                            <span>{lead.employees.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Unassigned</span>
-                        )}
+                        {lead.budget ? (
+                          <Badge variant="secondary">{lead.budget.replace(/_/g, ' ')}</Badge>
+                        ) : '-'}
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusColors[lead.status] || 'bg-gray-500'}>
+                        {lead.timeline ? (
+                          <Badge variant="outline">{lead.timeline.replace(/_/g, ' ')}</Badge>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(lead.status)}>
                           {lead.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         {new Date(lead.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <TaskDialog leadId={lead.id} triggerLabel="Tasks" />
                       </TableCell>
                       <TableCell>
                         <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} />

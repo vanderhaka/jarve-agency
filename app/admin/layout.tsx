@@ -70,6 +70,12 @@ export default async function AdminLayout({
             My Tasks
           </Link>
           <Link
+            href="/admin"
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            Admin
+          </Link>
+          <Link
             href="/admin/employees"
             className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary transition-colors"
           >
