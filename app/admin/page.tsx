@@ -17,16 +17,18 @@ export default async function AdminDashboardPage() {
     .from('employees')
     .select('role')
     .eq('id', user.id)
+    .is('deleted_at', null)
     .single()
 
   if (employee?.role !== 'admin') {
     redirect('/app')
   }
 
+  // Count only active (non-deleted) records
   const [employeesResult, adminsResult, interactionsResult] = await Promise.all([
-    supabase.from('employees').select('id', { count: 'exact', head: true }),
-    supabase.from('employees').select('id', { count: 'exact', head: true }).eq('role', 'admin'),
-    supabase.from('interactions').select('id', { count: 'exact', head: true }),
+    supabase.from('employees').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('employees').select('id', { count: 'exact', head: true }).eq('role', 'admin').is('deleted_at', null),
+    supabase.from('interactions').select('id', { count: 'exact', head: true }).is('deleted_at', null),
   ])
 
   return (

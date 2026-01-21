@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache'
 
 const DEFAULT_EMPLOYEE_ROLE = 'employee'
 
-async function inviteEmployee(formData: FormData) {
+async function inviteEmployee(formData: FormData): Promise<void> {
   'use server'
 
   const supabase = await createClient()
@@ -27,51 +27,90 @@ async function inviteEmployee(formData: FormData) {
     .from('employees')
     .select('role')
     .eq('id', user.id)
+    .is('deleted_at', null)
     .single()
 
   if (employee?.role !== 'admin') {
     redirect('/app')
   }
 
-  const email = (formData.get('email') as string)?.trim()
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
   const name = (formData.get('name') as string)?.trim()
-  const role = (formData.get('role') as string) || DEFAULT_EMPLOYEE_ROLE
+  const role = (formData.get('role') as string)
+  const effectiveRole = role ? role : DEFAULT_EMPLOYEE_ROLE
 
+  // Validate inputs
   if (!email || !name) {
+    console.error('[inviteEmployee] Missing email or name')
+    return
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    console.error('[inviteEmployee] Invalid email format:', email)
+    return
+  }
+
+  // Validate role
+  if (effectiveRole !== 'employee' && effectiveRole !== 'admin') {
+    console.error('[inviteEmployee] Invalid role:', effectiveRole)
+    return
+  }
+
+  // Check if email is already registered using database function
+  const { data: emailCheck } = await supabase.rpc('check_email_available', { p_email: email })
+  if (emailCheck && !emailCheck.available) {
+    console.error('[inviteEmployee] Email not available:', emailCheck.reason)
     return
   }
 
   const adminClient = createAdminClient()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (!siteUrl) {
-    throw new Error('NEXT_PUBLIC_SITE_URL environment variable is required')
+    console.error('[inviteEmployee] NEXT_PUBLIC_SITE_URL not configured')
+    return
   }
   const redirectTo = `${siteUrl}/auth/confirm?next=/login`
 
-  const { data: inviteData, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    data: { name },
-    redirectTo: redirectTo,
-  })
+  try {
+    // Send invite via Supabase Auth
+    const { data: inviteData, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+      data: { name },
+      redirectTo: redirectTo,
+    })
 
-  if (error) {
-    throw new Error(error.message)
+    if (error) {
+      console.error('[inviteEmployee] Auth invite error:', error)
+      return
+    }
+
+    const newUserId = inviteData.user?.id
+
+    if (!newUserId) {
+      console.error('[inviteEmployee] No user ID returned from invite')
+      return
+    }
+
+    // Use safe database function to create employee record
+    const { data: result, error: dbError } = await supabase.rpc('create_employee_record', {
+      p_user_id: newUserId,
+      p_email: email,
+      p_name: name,
+      p_role: effectiveRole,
+      p_created_by: user.id,
+    })
+
+    if (dbError || (result && !result.success)) {
+      // Employee record creation failed - log but don't fail the invite
+      // The user can still accept the invite and their record will be created
+      console.error('[inviteEmployee] Employee record error:', dbError, result?.error)
+    }
+
+    revalidatePath('/admin/employees')
+  } catch (err) {
+    console.error('[inviteEmployee] Unexpected error:', err)
   }
-
-  const newUserId = inviteData.user?.id
-
-  if (newUserId) {
-    await adminClient
-      .from('employees')
-      .upsert({
-        id: newUserId,
-        email,
-        name,
-        role,
-        created_by: user.id,
-      })
-  }
-
-  revalidatePath('/admin/employees')
 }
 
 export default async function EmployeesAdminPage() {
@@ -88,15 +127,17 @@ export default async function EmployeesAdminPage() {
     .from('employees')
     .select('role')
     .eq('id', user.id)
+    .is('deleted_at', null)
     .single()
 
-  if (employee?.role !== 'admin') {
+  if (!employee || employee.role !== 'admin') {
     redirect('/app')
   }
 
   const { data: employees } = await supabase
     .from('employees')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   return (

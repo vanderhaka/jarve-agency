@@ -35,6 +35,7 @@ export default async function AuditPage() {
     .from('employees')
     .select('role')
     .eq('id', user.id)
+    .is('deleted_at', null)
     .single()
 
   if (!employee || employee.role !== 'admin') {
@@ -44,10 +45,18 @@ export default async function AuditPage() {
   const { data: interactions } = await supabase
     .from('interactions')
     .select(`
-      *,
+      id,
+      type,
+      summary,
+      next_steps,
+      created_at,
+      created_by_name,
+      lead_id,
+      client_id,
       leads (name),
       clients (name)
     `)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(200)
 
@@ -95,7 +104,10 @@ export default async function AuditPage() {
                     {interaction.summary}
                   </TableCell>
                   <TableCell>
-                    {interaction.leads?.name || interaction.clients?.name || '-'}
+                    {(interaction.leads as unknown as { name: string } | null)?.name ||
+                     (interaction.clients as unknown as { name: string } | null)?.name ||
+                     (interaction.lead_id || interaction.client_id ?
+                       <span className="text-muted-foreground italic">Deleted</span> : '-')}
                   </TableCell>
                   <TableCell>
                     {interaction.created_by_name || 'Unknown'}

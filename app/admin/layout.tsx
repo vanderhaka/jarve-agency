@@ -21,9 +21,10 @@ export default async function AdminLayout({
     .from('employees')
     .select('name, email, role')
     .eq('id', user.id)
+    .is('deleted_at', null)
     .single()
 
-  if (employee?.role !== 'admin') {
+  if (!employee || employee.role !== 'admin') {
     redirect('/app')
   }
 
