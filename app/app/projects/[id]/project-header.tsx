@@ -23,6 +23,7 @@ interface Props {
   taskCounts: Record<TaskStatus, number>
   totalTasks: number
   progress: number
+  overdueCount: number
   currentView: 'list' | 'kanban'
 }
 
@@ -38,7 +39,7 @@ function getStatusColor(status: string): string {
   return statusColors[status] ?? statusColors.default
 }
 
-export function ProjectHeader({ project, taskCounts, totalTasks, progress, currentView }: Props) {
+export function ProjectHeader({ project, taskCounts, totalTasks, progress, overdueCount, currentView }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -97,7 +98,7 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, curre
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold">{totalTasks}</div>
@@ -114,6 +115,14 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, curre
           <CardContent className="pt-4">
             <div className="text-2xl font-bold">{taskCounts['Blocked']}</div>
             <div className="text-sm text-muted-foreground">Blocked</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className={`text-2xl font-bold ${overdueCount > 0 ? 'text-red-600' : ''}`}>
+              {overdueCount}
+            </div>
+            <div className="text-sm text-muted-foreground">Overdue</div>
           </CardContent>
         </Card>
         <Card>

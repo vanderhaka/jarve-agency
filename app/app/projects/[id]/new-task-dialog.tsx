@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { createTaskAction } from './actions'
 import { TASK_STATUSES, TASK_TYPES, TASK_PRIORITIES } from '@/lib/tasks/types'
 
@@ -53,10 +54,11 @@ export function NewTaskDialog({ projectId }: Props) {
     setLoading(false)
 
     if (result.success) {
+      toast.success('Task created')
       setOpen(false)
       router.refresh()
     } else {
-      alert(`Failed to create task: ${result.error}`)
+      toast.error(`Failed to create task: ${result.error}`)
     }
   }
 

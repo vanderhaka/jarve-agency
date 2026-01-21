@@ -206,3 +206,25 @@ export async function getTaskCounts(projectId: string): Promise<Record<TaskStatu
 
   return counts
 }
+
+/**
+ * Get count of overdue tasks (past due_date and not Done)
+ */
+export async function getOverdueCount(projectId: string): Promise<number> {
+  const supabase = await createClient()
+
+  const today = new Date().toISOString().split('T')[0]
+
+  const { count, error } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('project_id', projectId)
+    .lt('due_date', today)
+    .neq('status', 'Done')
+
+  if (error) {
+    throw new Error(`Failed to fetch overdue count: ${error.message}`)
+  }
+
+  return count ?? 0
+}

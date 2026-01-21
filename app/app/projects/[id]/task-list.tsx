@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/table'
 
 interface Props {
-  projectId: string
   tasks: Task[]
+  onTaskClick?: (task: Task) => void
 }
 
 const priorityColors: Record<string, string> = {
@@ -40,7 +40,7 @@ const typeColors: Record<string, string> = {
   spike: 'bg-purple-100 text-purple-700',
 }
 
-export function TaskList({ projectId, tasks }: Props) {
+export function TaskList({ tasks, onTaskClick }: Props) {
   if (tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-muted-foreground border-2 border-dashed rounded-lg">
@@ -63,7 +63,11 @@ export function TaskList({ projectId, tasks }: Props) {
         </TableHeader>
         <TableBody>
           {tasks.map(task => (
-            <TableRow key={task.id} className="cursor-pointer hover:bg-muted/50">
+            <TableRow
+              key={task.id}
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => onTaskClick?.(task)}
+            >
               <TableCell className="font-medium">{task.title}</TableCell>
               <TableCell>
                 <Badge className={statusColors[task.status]}>{task.status}</Badge>

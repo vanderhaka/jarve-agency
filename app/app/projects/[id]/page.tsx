@@ -1,12 +1,19 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import { getTasksByProjectGrouped, getTaskCounts } from '@/lib/tasks/data'
+import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
 import { ProjectHeader } from './project-header'
 import { TasksView } from './tasks-view'
+import { parseFiltersFromParams } from './task-filters'
 
 interface Props {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ view?: 'list' | 'kanban' }>
+  searchParams: Promise<{
+    view?: 'list' | 'kanban'
+    search?: string
+    status?: string
+    type?: string
+    priority?: string
+  }>
 }
 
 async function getProject(projectId: string) {
@@ -34,7 +41,15 @@ async function getProject(projectId: string) {
 
 export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { id } = await params
-  const { view = 'kanban' } = await searchParams
+  const resolvedSearchParams = await searchParams
+  const { view = 'kanban' } = resolvedSearchParams
+
+  // Parse filters from URL search params
+  const filters = parseFiltersFromParams(new URLSearchParams(
+    Object.entries(resolvedSearchParams)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, String(v)])
+  ))
 
   const supabase = await createClient()
   const {
@@ -50,9 +65,10 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
     notFound()
   }
 
-  const [tasksByStatus, taskCounts] = await Promise.all([
+  const [tasksByStatus, taskCounts, overdueCount] = await Promise.all([
     getTasksByProjectGrouped(id),
     getTaskCounts(id),
+    getOverdueCount(id),
   ])
 
   const totalTasks = Object.values(taskCounts).reduce((sum, count) => sum + count, 0)
@@ -66,12 +82,14 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         taskCounts={taskCounts}
         totalTasks={totalTasks}
         progress={progress}
+        overdueCount={overdueCount}
         currentView={view}
       />
       <TasksView
         projectId={id}
         tasksByStatus={tasksByStatus}
         currentView={view}
+        filters={filters}
       />
     </div>
   )

@@ -431,7 +431,7 @@ Pass criteria:
 
 ---
 
-## 16) Task Detail Editor
+## 16) Task Detail Editor ✅ COMPLETE
 
 Goal: Edit full details of a task.
 
@@ -446,9 +446,16 @@ Pass criteria:
 - Edits persist after refresh.
 - Canceling a change does not update the database.
 
+**Status: COMPLETE** - Created `task-detail-sheet.tsx` with:
+- Full edit form (title, description, status, type, priority, due date, estimate, acceptance criteria, blockers)
+- Form state resets when task changes (prevents stale state)
+- Cancel button resets to original values
+- Delete with confirmation dialog
+- Save persists to database via updateTaskAction
+
 ---
 
-## 17) Kanban Columns
+## 17) Kanban Columns ✅ COMPLETE
 
 Goal: Render tasks by status in columns.
 
@@ -463,9 +470,15 @@ Pass criteria:
 - All columns render even if empty.
 - Task order matches position values.
 
+**Status: COMPLETE** - `task-kanban.tsx` already implements:
+- Columns for all 7 statuses (TASK_STATUSES array)
+- Tasks ordered by position (via getTasksByProjectGrouped query)
+- Count badge on each column header
+- Empty state placeholder for columns with no tasks
+
 ---
 
-## 18) Drag-and-Drop
+## 18) Drag-and-Drop ✅ COMPLETE
 
 Goal: Enable moving tasks across statuses.
 
@@ -482,9 +495,17 @@ Pass criteria:
 - Moving a task updates its status and order in the DB.
 - Refreshing the page preserves the new order.
 
+**Status: COMPLETE** - Updated `task-kanban.tsx` with:
+- dnd-kit integration (DndContext, SortableContext, useSortable)
+- Drag overlay showing task being dragged
+- Optimistic UI updates during drag
+- Fractional position calculation for smooth ordering
+- Revert on failure with error message
+- Pointer sensor with distance constraint to allow clicks
+
 ---
 
-## 19) Filters + Search
+## 19) Filters + Search ✅ COMPLETE
 
 Goal: Make it easy to focus on relevant tasks.
 
@@ -499,9 +520,18 @@ Pass criteria:
 - Filters produce correct subsets for at least 3 different filter combinations.
 - Search returns expected results for a known task title.
 
+**Status: COMPLETE** - Created `task-filters.tsx` with:
+- Text search filtering title and description
+- Status filter dropdown
+- Type filter dropdown
+- Priority filter dropdown
+- Clear filters button
+- URL-based filter state (shareable links)
+- Client-side filtering (sufficient for V1 scale)
+
 ---
 
-## 20) Project Summary Panel
+## 20) Project Summary Panel ✅ COMPLETE
 
 Goal: Provide at-a-glance project health.
 
@@ -516,9 +546,15 @@ Pass criteria:
 - Summary numbers match the list/kanban counts.
 - Overdue count updates correctly when due dates change.
 
+**Status: COMPLETE** - `project-header.tsx` displays:
+- Total tasks, In Progress, Blocked, Overdue, Done, Progress %
+- Overdue count highlighted in red when > 0
+- Added `getOverdueCount()` in `lib/tasks/data.ts`
+- Efficient parallel queries with Promise.all
+
 ---
 
-## 21) Error Handling + UX Safeguards
+## 21) Error Handling + UX Safeguards ✅ COMPLETE
 
 Goal: Prevent data loss and confusion.
 
@@ -533,6 +569,12 @@ Watch out: Silent failures cause trust loss.
 Pass criteria:
 - A simulated failed save shows an error toast.
 - Delete requires confirmation and can be undone (if implemented).
+
+**Status: COMPLETE** - Implemented:
+- Sonner toasts for success/error feedback
+- Delete confirmation dialog
+- Loading states disable buttons while saving
+- Toast notifications in: new-task-dialog, task-detail-sheet, task-kanban
 
 ---
 
