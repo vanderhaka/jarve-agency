@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/terra-flow/ui/badge'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -61,7 +62,14 @@ export function UserNav({ user, employee }: UserNavProps) {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{employee?.name || 'User'}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium leading-none">{employee?.name || 'User'}</p>
+              {employee?.role && (
+                <Badge variant="outline" className="capitalize">
+                  {employee.role}
+                </Badge>
+              )}
+            </div>
             <p className="text-xs leading-none text-muted-foreground">
               {employee?.email || user.email}
             </p>

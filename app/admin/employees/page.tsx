@@ -2,11 +2,10 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { InviteEmployeeForm } from './invite-employee-form'
+import { EmployeesTableWrapper } from './employees-table-wrapper'
 import {
   performEmployeeInvite,
   resolveSiteUrlFromHeaders,
@@ -149,9 +148,9 @@ export default async function EmployeesAdminPage() {
         <p className="text-muted-foreground">Invite new employees and manage roles</p>
       </div>
 
-      <Card>
+      <Card id="invite-form">
         <CardHeader>
-          <CardTitle>Invite Employee</CardTitle>
+          <CardTitle>Invite Team Member</CardTitle>
           <CardDescription>Send an invite email with login instructions</CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,43 +160,13 @@ export default async function EmployeesAdminPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Employees</CardTitle>
+          <CardTitle>Team Members</CardTitle>
           {employeesError && (
-            <p className="text-sm text-destructive">Unable to load employees right now.</p>
+            <p className="text-sm text-destructive">Unable to load team members right now.</p>
           )}
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Joined</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(!employees || employees.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No team members yet.
-                  </TableCell>
-                </TableRow>
-              )}
-              {employees?.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-medium">{member.name || 'Pending'}</TableCell>
-                  <TableCell>{member.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={member.role === 'admin' ? 'default' : 'secondary'} className="capitalize">
-                      {member.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{member.created_at ? new Date(member.created_at).toLocaleDateString() : '—'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <EmployeesTableWrapper employees={employees || []} currentUserId={user.id} />
         </CardContent>
       </Card>
     </div>
