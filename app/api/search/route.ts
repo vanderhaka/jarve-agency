@@ -39,34 +39,38 @@ export async function GET(request: Request) {
   const isAdmin = currentEmployee?.role === 'admin'
 
   try {
-    // Search across tables in parallel
+    // Search across tables in parallel (exclude soft-deleted records)
     const [leadsData, clientsData, projectsData, employeesData] = await Promise.all([
-      // Search leads
+      // Search leads (exclude deleted)
       supabase
         .from('leads')
         .select('id, name, email, status')
+        .is('deleted_at', null)
         .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
         .limit(5),
 
-      // Search clients
+      // Search clients (exclude deleted)
       supabase
         .from('clients')
         .select('id, name, email, company')
+        .is('deleted_at', null)
         .or(`name.ilike.${searchTerm},email.ilike.${searchTerm},company.ilike.${searchTerm}`)
         .limit(5),
 
-      // Search projects
+      // Search projects (exclude deleted)
       supabase
         .from('agency_projects')
         .select('id, name, type, status')
+        .is('deleted_at', null)
         .ilike('name', searchTerm)
         .limit(5),
 
-      // Search employees (only if admin, otherwise return empty)
+      // Search employees (only if admin, exclude deleted)
       isAdmin
         ? supabase
             .from('employees')
             .select('id, name, email, role')
+            .is('deleted_at', null)
             .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
             .limit(5)
         : Promise.resolve({ data: [], error: null }),

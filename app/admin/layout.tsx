@@ -5,6 +5,7 @@ import { UserNav } from '@/components/user-nav'
 import { UnifiedNav } from '@/components/navigation/unified-nav'
 import { GlobalSearchProvider } from '@/components/search/global-search-provider'
 import { CommandPalette } from '@/components/search/command-palette'
+import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal'
 
 export default async function AdminLayout({
   children,
@@ -48,6 +49,7 @@ export default async function AdminLayout({
         </div>
       </div>
       <CommandPalette />
+      <KeyboardShortcutsModal isAdmin={true} />
     </GlobalSearchProvider>
   )
 }

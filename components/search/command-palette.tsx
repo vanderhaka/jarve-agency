@@ -46,17 +46,21 @@ export function CommandPalette() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Debounced search
+  // Debounced search with AbortController to prevent race conditions
   useEffect(() => {
     if (!search || search.trim().length === 0) {
       setResults([])
       return
     }
 
+    const abortController = new AbortController()
+
     const timeoutId = setTimeout(async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(search)}`)
+        const response = await fetch(`/api/search?q=${encodeURIComponent(search)}`, {
+          signal: abortController.signal,
+        })
         if (!response.ok) {
           console.error('Search request failed:', response.status)
           setResults([])
@@ -65,6 +69,10 @@ export function CommandPalette() {
         const data: SearchResponse = await response.json()
         setResults(data.results || [])
       } catch (error) {
+        // Ignore abort errors - they're expected when user types quickly
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
         console.error('Search failed:', error)
         setResults([])
       } finally {
@@ -72,7 +80,10 @@ export function CommandPalette() {
       }
     }, 300)
 
-    return () => clearTimeout(timeoutId)
+    return () => {
+      clearTimeout(timeoutId)
+      abortController.abort()
+    }
   }, [search])
 
   const handleSelect = useCallback(

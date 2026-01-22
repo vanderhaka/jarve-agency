@@ -27,11 +27,11 @@ export function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
     const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment)
 
     if (isId) {
-      // This is a detail page - use the parent segment name with "Details"
+      // This is a detail page - use the singular form with "Details"
       const parentSegment = cleanSegments[i - 1]
-      const parentLabel = getLabelForSegment(parentSegment)
+      const singularLabel = getSingularLabelForSegment(parentSegment)
       breadcrumbs.push({
-        label: `${parentLabel.slice(0, -1)} Details`, // Remove 's' and add ' Details'
+        label: `${singularLabel} Details`,
       })
     } else {
       // Regular segment
@@ -57,6 +57,19 @@ function getLabelForSegment(segment: string): string {
   }
 
   return labelMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1)
+}
+
+function getSingularLabelForSegment(segment: string): string {
+  const singularMap: Record<string, string> = {
+    leads: 'Lead',
+    clients: 'Client',
+    projects: 'Project',
+    tasks: 'Task',
+    employees: 'Team Member',
+    audit: 'Activity',
+  }
+
+  return singularMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1)
 }
 
 function buildHref(segments: string[]): string {
