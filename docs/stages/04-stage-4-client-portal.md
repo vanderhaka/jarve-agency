@@ -12,7 +12,7 @@ Turn the signing view into a full portal: one chat thread per project, contract 
 - One shared chat thread per project (single source of truth).
 - Contract docs vault list and download.
 - Client uploads area (project files, not contracts).
-- Webhook on new chat message.
+- Internal notification on new chat message (no external webhook).
 - Link revocation and regeneration.
 
 ## Scope (Out)
@@ -44,7 +44,7 @@ CREATE TABLE client_uploads (
 );
 ```
 
-Optional read tracking (simple):
+Read tracking (required):
 ```sql
 CREATE TABLE portal_read_state (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -58,12 +58,14 @@ CREATE TABLE portal_read_state (
 ## Storage
 - `contract-docs` bucket for contracts/invoices (from Stage 3/5).
 - `client-uploads` bucket for client files.
+- Signed URL expiry: 1 hour (regenerate on each request).
+- Clients can download; admins can delete stored files.
 
 ## Server Actions / API
 - `getPortalManifest(token)` (reuse from `jarve-website`, include project list).
-- `postPortalMessage(token, projectId, body)` -> inserts message and triggers webhook.
-- `uploadClientFile(token, projectId, file)` -> stores in bucket + `client_uploads`.
-- `revokePortalLink(clientUserId)` -> sets `revoked_at` and generates new token.
+- `postPortalMessage(token, projectId, body)` -> inserts message and triggers internal notification/timeline entry (no external webhook).
+- `uploadClientFile(token, projectId, file)` -> stores in bucket + `client_uploads` (pdf/docx/jpg/png, max 50MB).
+- `revokePortalLink(clientUserId)` -> sets `revoked_at` and generates new token (one active token per client user).
 
 ## UI Changes
 Client portal:
@@ -77,27 +79,30 @@ Client portal:
 Admin:
 - View portal link per client user.
 - Revoke and regenerate link.
+- Show portal chat in admin UI (owner/admin only).
 
 ## Data Flow
 - Portal link -> token -> client user -> their client + projects.
 - Chat is the source of truth for all client comms (per project).
 - Documents listed in portal come from `contract_docs`.
 - Uploads are stored separately and never mixed with contract docs.
+- Portal read state tracks unread messages per project per user.
 
 ## Tests
 
 ### Automated
 - Unit test: revoked token denies access.
-- Unit test: posting a chat message triggers webhook call (mock).
+- Unit test: posting a chat message triggers internal notification/timeline entry.
 - Unit test: portal manifest includes all projects for the client user.
+- Unit test: read state updates on message view and drives unread counts.
 
 ### Manual
 - `manual-tests/client-portal.md`
 
 ## Known Risks
 - Chat messages stored unencrypted - sensitive info may be visible
-- File uploads without virus scanning could introduce malware
-- Webhook failures may cause missed notifications
+- File uploads without virus scanning could introduce malware (MVP choice)
+- Internal notification failures may cause missed alerts
 - Storage bucket permissions must be carefully configured
 
 ## Rollback Procedure

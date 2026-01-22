@@ -8,8 +8,8 @@ Manage project billing through milestones and approved change requests. Auto-cre
 
 ## Scope (In)
 - Milestones per project (ordered list).
-- Default deposit milestone (50% unless overridden).
-- Auto-create a **Draft** deposit invoice when the project is created.
+ - Default deposit milestone (50% unless overridden; based on proposal total).
+- Auto-create a **Draft** deposit invoice after a proposal is signed (uses proposal total).
 - Auto invoice when a milestone is marked complete.
 - Change requests with client signature (portal) and new milestone creation.
 - Charge for extras through change requests.
@@ -46,6 +46,8 @@ CREATE TABLE change_requests (
   description text,
   amount numeric NOT NULL,
   status text NOT NULL DEFAULT 'draft', -- draft, sent, signed, rejected, archived
+  rejected_at timestamptz,
+  rejection_reason text,
   signed_at timestamptz,
   signer_name text,
   signer_email text,
@@ -58,21 +60,22 @@ CREATE TABLE change_requests (
 ## Server Actions / API
 - `createMilestone(projectId, data)` -> inserts milestone.
 - `insertMilestone(projectId, data, position)` -> inserts and reorders.
-- `completeMilestone(milestoneId)` -> calls `createXeroInvoice`, links invoice.
-- `onProjectCreated(projectId)` -> creates deposit milestone + Draft invoice.
+- `completeMilestone(milestoneId)` -> calls `createXeroInvoice`, links invoice (idempotent).
+- `onProposalSigned(projectId)` -> creates deposit milestone + Draft invoice (uses proposal total).
 - `createChangeRequest(projectId, data)` -> draft request.
 - `sendChangeRequest(changeRequestId)` -> portal link for signing.
 - `signChangeRequest(token, signature)` -> marks signed, creates milestone, creates invoice.
+ - `rejectChangeRequest(changeRequestId, reason)` -> marks rejected with reason.
 
 ## UI Changes
 - Project "Milestones" tab: list, reorder, add, insert mid-stream.
-- Mark milestone complete -> confirm -> invoice created.
+- Mark milestone complete -> confirm -> invoice created (prevent duplicates).
 - Change request form with price and scope details.
 - Client signing view (reuse portal signing pattern).
 
 ## Data Flow
-- Project created -> auto deposit milestone using default or project override.
-- Project created -> Draft deposit invoice created and linked to the deposit milestone (due date = issue date).
+- Proposal signed -> auto deposit milestone using default or project override (uses proposal total).
+- Proposal signed -> Draft deposit invoice created and linked to the deposit milestone (due date = issue date).
 - Milestone complete -> Draft invoice created in Xero (non-deposit milestones).
 - Change request signed -> new milestone inserted (or appended) -> Draft invoice created.
 - Signed change request stored in `contract_docs`.
@@ -81,7 +84,9 @@ CREATE TABLE change_requests (
 
 ### Automated
 - Unit test: deposit milestone uses project override or 50% default.
+- Unit test: proposal signed creates deposit milestone + Draft invoice using proposal total.
 - Unit test: completing milestone triggers Draft invoice creation.
+- Unit test: completing milestone is idempotent (no duplicate invoices).
 - Unit test: signed change request creates milestone + invoice.
 
 ### Manual

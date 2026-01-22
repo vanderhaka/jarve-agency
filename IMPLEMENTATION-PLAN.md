@@ -10,6 +10,7 @@ Start here: `docs/PLAN.md` (master index + stage files).
 - Email is limited to one-off portal access link delivery.
 - Reuse proven modules from `/Users/jamesvanderhaak/Desktop/Development/jarve-website` instead of re‑building.
 - Use Vercel CLI for env management (no manual copy/paste of keys).
+- Enforce RLS with role-based access (owner/admin/employee); employees see only assigned clients/projects; financials are owner-only.
 
 ### Environment + Keys (Vercel CLI Only)
 **Rule:** Use Vercel CLI to sync env vars (pull/add) — do not manually set keys in files.
@@ -30,6 +31,12 @@ Start here: `docs/PLAN.md` (master index + stage files).
 - `RESEND_API_KEY`
 
 ---
+
+## Access + Storage Defaults
+- Portal access links are non-expiring; one active token per client user (regeneration revokes previous; revoked tokens retained for audit).
+- Signed URL expiry: 1 hour (regenerate on each request).
+- Clients can download docs/uploads; only admins can delete stored files.
+- Portal access link email is sent when a proposal is sent (portal access is required to view/sign).
 
 ## Section-by-Section Audit (No Gaps)
 
@@ -81,6 +88,7 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **Gaps / fixes:**
 - Agency settings table doesn’t exist yet.
 - Search only covers leads/clients/projects today; add new entity types when they exist.
+- Implement a `search_index` table with triggers and `tsvector` for unified, fast, RLS-safe search.
 
 **Tests:**
 - Automated: validate settings defaults; search query escape.
@@ -102,6 +110,9 @@ Start here: `docs/PLAN.md` (master index + stage files).
 - Lead tasks dialog uses columns not in `tasks` table (lead tasks should be removed or refactored).
 - Proposal/contract data model not implemented.
 - Interaction timeline should be internal notes only (client comms live in portal chat).
+- Lead conversion requires lead name + email; match existing client by exact email (case-insensitive) only.
+- Project defaults on conversion: `status=planning`, `type=web`, `assigned_to` optional.
+- Archived leads are hidden by default; archive view uses a dedicated toggle/filter/search.
 
 **Tests:**
 - Automated: lead conversion creates client + project + archives lead; proposal signing locks version.
@@ -113,7 +124,7 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **Current:** No invoices/payments in app; Xero is intended source of truth.
 
 **Data flow:**
-- Project created → draft deposit invoice created in Xero.
+- Proposal signed → draft deposit invoice created in Xero (uses proposal total, via milestone system).
 - Milestone completion or approved change request → create invoice in Xero → store `xero_invoice_id` locally → sync status + PDF → show in Docs Vault.
 - Payments recorded in Xero → sync into CRM → update client balance + reminders.
 - Invoices are created in Draft by default.
@@ -127,6 +138,9 @@ Start here: `docs/PLAN.md` (master index + stage files).
 - Invoice status sync + PDF storage needed.
 - Manual “Mark Paid” for bank transfer required.
 - Stripe webhook + payment flow must be ported to match existing implementation.
+- Xero tax rate: use "GST on Income" (exclusive).
+- Support creating/updating Xero contacts directly from the CRM.
+- "Mark Paid" bank account: auto-select first active bank account in Xero.
 
 **Tests:**
 - Automated: Xero API client + webhook/polling sync (mocked), invoice creation from milestone.
@@ -144,6 +158,7 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **Gaps / fixes:**
 - Lead tasks dialog references non-existent columns (remove or migrate).
 - Milestones not implemented.
+- Deposit invoice should be created after proposal is signed (uses proposal total) once milestones exist.
 
 **Tests:**
 - Automated: task move updates status/position; milestone completion triggers invoice create.
@@ -175,6 +190,9 @@ Start here: `docs/PLAN.md` (master index + stage files).
 - Chat system + webhook notifications missing.
 - Client uploads with virus scan + notifications missing.
 - Portal token logic must be adapted from `jarve-website` (per client user, non‑expiring).
+- Uploads: allow pdf/docx/jpg/png; 50MB max; no virus scan for MVP.
+- Portal read state table required for unread badges.
+- New chat message notifications are internal-only (no external webhook).
 
 **Tests:**
 - Automated: magic-link auth, session creation, access revocation.
@@ -235,7 +253,7 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **DoD:** Automated conversion tests pass + `manual-tests/lead-to-project.md`.
 
 ### Stage 2 — Platform Foundations (Agency Settings)
-**Scope:** Agency settings table + UI, default deposit/GST/currency/terms, timesheet lock schedule.
+**Scope:** Agency settings table + UI, default deposit/GST/currency/terms (text + optional days), timesheet lock schedule, reminder schedule settings.
 **DoD:** Settings tests pass + `manual-tests/agency-settings.md` and `manual-tests/search.md`.
 
 ### Stage 3 — Proposals + Contracts (MSA/SOW)
@@ -251,7 +269,7 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **DoD:** Xero integration tests pass + `manual-tests/xero-invoicing-payments.md`.
 
 ### Stage 6 — Milestones + Change Requests
-**Scope:** Milestones, auto-create draft deposit invoice on project creation, auto invoice trigger, change request signing + milestone insertion.
+**Scope:** Milestones, auto-create draft deposit invoice after proposal signing (uses proposal total), auto invoice trigger, change request signing + milestone insertion.
 **DoD:** Milestone + change request tests pass + `manual-tests/milestones.md` and `manual-tests/change-requests.md`.
 
 ### Stage 7 — Reminders & Notifications (In-App)

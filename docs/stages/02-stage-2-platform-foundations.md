@@ -12,8 +12,9 @@ Create a single place to store business defaults (GST, deposit, invoice terms, t
 - Settings UI added to the existing Settings page.
 - Default deposit percent (50%) with per-project override option.
 - GST fixed at 10% (stored for reference).
-- Default currency, timezone, invoice prefix, invoice terms.
+- Default currency, timezone, invoice prefix, invoice terms (text + optional days for future use).
 - Timesheet weekly lock schedule (stored for later use).
+- Reminder schedule settings (daily, configurable in settings) stored for Stage 7.
 - Keep global search working (no regressions).
 - **Early integration file copy** from `jarve-website` into `lib/integrations/` for validation.
 
@@ -26,6 +27,7 @@ Create a single-row table for settings:
 ```sql
 CREATE TABLE agency_settings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  singleton boolean NOT NULL DEFAULT true,
   legal_name text,
   trade_name text,
   abn text,
@@ -34,12 +36,17 @@ CREATE TABLE agency_settings (
   timezone text NOT NULL DEFAULT 'Australia/Adelaide',
   invoice_prefix text NOT NULL DEFAULT 'INV',
   invoice_terms text,
+  invoice_terms_days int, -- optional, not used for due dates yet
   default_deposit_percent numeric NOT NULL DEFAULT 0.50,
   timesheet_lock_weekday int, -- 0=Sun .. 6=Sat
   timesheet_lock_time time,
+  reminder_frequency text NOT NULL DEFAULT 'daily',
+  reminder_time time,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agency_settings_singleton ON agency_settings(singleton);
 ```
 
 Optional project override (only if not already in schema):
@@ -49,12 +56,15 @@ ALTER TABLE agency_projects
 ```
 
 Notes:
-- Use a single settings row. If none exists, create it on first load.
+- Use a single settings row (enforced with `singleton` unique index). If none exists, create it on first load.
 - GST must stay at 10% even if shown in the UI.
+- Currency list should use ISO 4217 values; timezone list should use full IANA set.
+- Invoice due date remains “issue date” for now; `invoice_terms_days` is stored for future use.
+- Deposit override is set only at project creation.
 
 ## UI Changes
 - Extend `app/admin/settings/page.tsx` with a new "Agency Settings" card.
-- Fields: legal name, ABN, currency, timezone, invoice prefix/terms, default deposit %, timesheet lock day/time.
+- Fields: legal name, ABN, currency (ISO list), timezone (IANA list), invoice prefix/terms (text + optional days), default deposit %, timesheet lock day/time, reminder frequency/time.
 - GST field should show 10% and be read-only.
 - Add optional "Deposit %" field to the New Project dialog (defaults to agency settings).
 

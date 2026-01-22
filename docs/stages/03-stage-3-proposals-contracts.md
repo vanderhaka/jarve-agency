@@ -98,17 +98,23 @@ Notes:
 - Reuse token creation/validation logic from `jarve-website`.
 - Tokens do NOT expire (no `expires_at`); use `revoked_at` to disable.
 - Seed 1-2 default templates on first deploy.
+- Proposal content JSON shape:
+  - `sections: [{ id, type: 'text'|'list'|'pricing'|'image', title, body, items, order }]`
+  - `pricing: { lineItems: [{ label, qty, unitPrice, total }], subtotal, gstRate, gstAmount, total }`
+  - `terms: string`
+- PDF generation: HTML → PDF (Chromium) for highest fidelity and consistent rendering.
 
 ## Server Actions / API
 - `createProposal(leadId|projectId, templateData)` -> creates proposal + version 1.
-- `updateProposal(proposalId, content)` -> creates new version and increments version.
-- `sendProposal(proposalId, clientUserId)` -> marks proposal sent and provides portal link.
+- `updateProposal(proposalId, content)` -> creates new version and increments version **on every edit**.
+- `sendProposal(proposalId, clientUserId, version)` -> marks proposal sent and provides portal link; track which version was sent.
 - `signProposal(token, signature)` -> stores signature, locks version, writes SOW to `contract_docs`.
 - `createMSA(clientId)` + `signMSA(token, signature)` -> stores MSA in `contract_docs`.
 
 Access link delivery:
 - When a client user is created, send the portal access link by email (one-off).
 - No ongoing email communication; portal chat is the source of truth.
+ - Proposal send triggers the access link email if the client user does not already have one.
 
 ## UI Changes
 Admin:
@@ -122,6 +128,7 @@ Admin:
 Client (portal signing view only):
 - Open link -> view proposal -> sign with drawn signature.
 - Show IP and timestamp in the signed record.
+- Require signer name + signature; capture IP + signed_at.
 
 ## Data Flow
 - Proposal draft -> sent -> signed.
@@ -129,11 +136,13 @@ Client (portal signing view only):
 - MSA is stored once per client.
 - Project status cannot move to Active until both are signed.
 - Older proposal versions remain read-only for record keeping; only the current version can be signed.
+- Multiple versions can be sent; store which version was sent for audit.
 
 ## Tests
 
 ### Automated
 - Unit test: editing proposal creates new version.
+- Unit test: sending proposal records which version was sent.
 - Unit test: signing locks current version and sets status to signed.
 - Unit test: signed proposal creates SOW doc entry.
 - Unit test: project status blocked until MSA + SOW exist.

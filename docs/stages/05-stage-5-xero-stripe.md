@@ -9,7 +9,7 @@ Make Xero the source of truth for invoices and payments. Create Draft invoices f
 ## Scope (In)
 - Xero OAuth connection and tenant selection.
 - Create invoices in Xero with Draft status.
-- GST 10%, tax exclusive.
+- GST 10%, tax exclusive ("GST on Income").
 - Sync invoice status and PDF to `contract_docs`.
 - Manual "Mark Paid" that writes a payment to Xero.
 - Stripe webhook flow copied from `jarve-website`.
@@ -92,16 +92,18 @@ Adjustments:
 - Xero invoice creation must be Draft + tax exclusive.
 - Stripe webhook must write payments back to Xero.
 - No email sending.
+- Create/update Xero contacts directly from the CRM.
+- "Mark Paid" uses the first active Xero bank account (auto-select).
 
 ## Server Actions / API
 - `connectXero()` -> OAuth flow.
 - `syncXeroInvoices()` -> pulls statuses and PDFs.
-- `createXeroInvoice(payload)` -> Draft invoice with GST exclusive.
-- `markInvoicePaid(invoiceId, amount, date)` -> posts payment to Xero.
+- `createXeroInvoice(payload)` -> Draft invoice with GST exclusive ("GST on Income").
+- `markInvoicePaid(invoiceId, amount, date)` -> posts payment to Xero (auto-select bank account).
 
 ## UI Changes
 - Add "Xero Connection" section in settings.
-- Project finance tab: list invoices, status, due date.
+- Project finance tab: list invoices, status, due date (owner/admin only).
 - Buttons: "Create Draft Invoice", "Mark Paid".
 
 ## Data Flow
@@ -111,7 +113,7 @@ Adjustments:
 ## Tests
 
 ### Automated
-- Unit test: create draft invoice payload is tax exclusive.
+- Unit test: create draft invoice payload is tax exclusive and uses "GST on Income".
 - Unit test: Stripe webhook posts payment to Xero (mock).
 - Unit test: sync stores PDF and creates `contract_docs` entry.
 

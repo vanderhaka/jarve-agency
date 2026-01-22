@@ -54,26 +54,29 @@ CREATE TABLE client_portal_tokens (
 ## Server Actions / API
 Create a server action `convertLeadToProject(leadId, input)` that:
 1) Fetches lead by id.
-2) If a client exists with the same email, use it. Else create a new client.
-3) **Auto-create a `client_user`** from the lead's contact name + email (first user for this client).
-4) Create a new project (`agency_projects`) using lead name/company as default.
-5) Update the lead:
+2) Validate lead has **name + email**; block conversion if missing.
+3) If a client exists with the same email (case-insensitive exact match), use it. Else create a new client.
+4) **Auto-create a `client_user`** from the lead's contact name + email (first user for this client).
+5) Create a new project (`agency_projects`) using lead name/company as default.
+6) Update the lead:
    - `status = 'converted'`
    - `archived_at = now()`
    - `converted_at = now()`
    - `client_id` and `project_id` set
 
 **Note:** This action must be transactional (all-or-nothing). Use Supabase RPC or sequential updates with explicit rollback.
+**Portal token policy:** one active token per client user; regeneration revokes previous (revoked tokens retained for audit).
 
 ## UI Changes
 - Lead detail page: add “Convert to Project” button.
 - Conversion modal fields:
   - Project name (default from lead name/company)
-  - Project type (optional)
-  - Project status (default: “planning”)
+  - Project type (default: `web`)
+  - Project status (default: `planning`)
+  - Assigned owner (optional)
 - Leads list page:
   - Filter out `archived_at IS NOT NULL` by default.
-  - Add “Show archived” toggle.
+  - Add “Show archived” toggle (archived search is separate).
 
 ## Tests
 
@@ -82,6 +85,7 @@ Create a server action `convertLeadToProject(leadId, input)` that:
 - Unit test: conversion reuses existing client if email matches.
 - Unit test: conversion auto-creates client_user from lead contact data.
 - Unit test: lead is archived and linked to client + project.
+- Unit test: conversion blocked if lead name or email is missing.
 
 ### Manual
 - `manual-tests/lead-to-project.md`

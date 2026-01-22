@@ -38,7 +38,8 @@ CREATE UNIQUE INDEX idx_notifications_unique_entity
 ## Scheduler
 - Use a daily cron (Vercel cron or Supabase scheduled function).
 - Rule: if `due_date` < today AND status is not done/paid/signed -> create a reminder **once** (no repeats).
-- Add a setting to adjust the check frequency if needed later.
+- Read `reminder_frequency`/`reminder_time` from `agency_settings` (default daily).
+- Use agency timezone (from settings) for "overdue" calculations.
 
 ## UI Changes
 - Bell icon in header with unread count badge.
@@ -50,6 +51,7 @@ CREATE UNIQUE INDEX idx_notifications_unique_entity
 ## Data Flow
 - Cron job runs daily -> inserts notifications.
 - User sees reminders in app.
+- Immediate notifications are also created for key events (proposal signed, invoice paid, change request signed).
 
 ## Tests
 
