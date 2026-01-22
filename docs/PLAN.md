@@ -38,6 +38,33 @@ SQL changes are extracted to numbered migration files:
 
 > **Note:** Time Tracking moved to `FUTURE-IDEAS.md` - implement when you hire contractors.
 
+## Future Enhancements (Not MVP)
+
+### Real-time Sync (Multi-tab)
+**Status:** Not implemented
+**Why:** The leads page uses client-side `useState` + `useEffect` (fetch on mount only). There's no Supabase Realtime subscription.
+
+**What would be needed:**
+```typescript
+// In leads page useEffect:
+const channel = supabase
+  .channel('leads-changes')
+  .on('postgres_changes',
+    { event: '*', schema: 'public', table: 'leads' },
+    () => fetchLeads() // Refresh on any change
+  )
+  .subscribe()
+
+return () => supabase.removeChannel(channel) // Cleanup
+```
+
+**Also requires:**
+- Supabase Realtime enabled on `leads` table (Dashboard → Database → Replication)
+- RLS policies allowing realtime subscriptions
+- Consider debouncing to avoid excessive refetches
+
+**Priority:** Low - single-user app initially, nice-to-have for team use
+
 ## How to Use This Plan
 1) Read `IMPLEMENTATION-PLAN.md` to understand the full flow.
 2) Work one stage file at a time, in order.
