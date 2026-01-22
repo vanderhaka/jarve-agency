@@ -12,6 +12,26 @@ Start here: `docs/PLAN.md` (master index + stage files).
 - Use Vercel CLI for env management (no manual copy/paste of keys).
 - Enforce RLS with role-based access (owner/admin/employee); employees see only assigned clients/projects; financials are owner-only.
 
+### Clarified Decisions (Jan 2026)
+| Area | Decision |
+|------|----------|
+| Architecture | Single-tenant (one agency owner) |
+| Lead conversion | Link to existing client if email matches (case-insensitive) |
+| Archived leads | Separate `archived_leads` table |
+| Proposal versioning | New version row per change |
+| SOW storage | Generated PDF + DB flag |
+| MSA workflow | Template uploaded once, clients sign |
+| Client users | Multiple users per client allowed |
+| Chat scope | One thread per project |
+| jarve-website reuse | Reference only, rewrite fresh |
+| Xero contacts | Auto-create on first invoice |
+| Invoice authorization | Manual "Authorize" button in CRM |
+| Deposit invoice | % from agency settings, optional per-proposal override |
+| Milestone completion | Both manual toggle AND auto from tasks |
+| Notifications | Bell icon with dropdown |
+| Scheduler | Vercel Cron (cost-effective) |
+| Testing | TDD - tests first |
+
 ### Environment + Keys (Vercel CLI Only)
 **Rule:** Use Vercel CLI to sync env vars (pull/add) — do not manually set keys in files.
 

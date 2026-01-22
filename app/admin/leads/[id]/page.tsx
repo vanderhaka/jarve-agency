@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Mail, DollarSign, UserCircle } from 'lucide-react'
-import { TaskDialog } from '@/components/task-dialog'
 import { InteractionTimeline } from '@/components/interaction-timeline'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 
@@ -51,12 +50,9 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
           </div>
           <p className="text-muted-foreground">Lead overview and audit trail</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/admin/leads">Back to leads</Link>
-          </Button>
-          <TaskDialog leadId={lead.id} triggerLabel="Lead Tasks" />
-        </div>
+        <Button variant="outline" asChild>
+          <Link href="/admin/leads">Back to leads</Link>
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

@@ -125,8 +125,8 @@ export function InteractionTimeline({ leadId, clientId }: InteractionTimelinePro
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Log Interaction</CardTitle>
-          <CardDescription>Capture emails, calls, meetings and notes</CardDescription>
+          <CardTitle>Add Internal Note</CardTitle>
+          <CardDescription>Record internal notes about calls, meetings, and follow-ups (not visible to clients)</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreateInteraction} className="space-y-4">
@@ -185,7 +185,7 @@ export function InteractionTimeline({ leadId, clientId }: InteractionTimelinePro
 
       <Card>
         <CardHeader>
-          <CardTitle>Audit Trail</CardTitle>
+          <CardTitle>Internal Timeline</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 max-h-[60vh] overflow-y-auto">
           {loading ? (
