@@ -86,22 +86,31 @@
 ---
 
 ## 5. Lead Detail Page
-- [ ] Click on a lead in the list
-- [ ] **Expected:** Lead detail page loads at `/admin/leads/[id]`
-- [ ] **Expected:** No "Lead Tasks" button visible (removed in Stage 0)
-- [ ] **Expected:** "Add Internal Note" section visible
-- [ ] **Expected:** "Internal Timeline" section visible
-- [ ] Add an internal note
-- [ ] **Expected:** Note appears in timeline without refresh
+- [x] Click on a lead in the list
+- [x] **Expected:** Lead detail page loads at `/admin/leads/[id]`
+  - *Fixed: URL was `/app/leads/` → changed to `/admin/leads/`*
+  - *Fixed: params needed `await` for Next.js 15+*
+  - *Fixed: employees join query was failing, simplified to `select('*')`*
+- [x] Click on a lead name in Kanban view
+- [x] **Expected:** Lead detail page loads (added Link with stopPropagation)
+- [x] **Expected:** No "Lead Tasks" button visible (removed in Stage 0)
+- [x] **Expected:** "Add Internal Note" section visible
+- [x] **Expected:** "Internal Timeline" section visible
+- [x] Add an internal note
+- [x] **Expected:** Note appears in timeline without refresh
+  - *Verified via browser automation: Note appeared immediately in Internal Timeline*
 
 ---
 
 ## 6. Real-time Sync (Multi-tab)
-- [ ] Open `/admin/leads` in two browser tabs
-- [ ] In Tab 1: Create a new lead
-- [ ] **Expected:** Tab 2 shows the new lead automatically (within 2-3 seconds)
-- [ ] In Tab 1: Drag a lead to change status
-- [ ] **Expected:** Tab 2 reflects the status change automatically
+- [x] Open `/admin/leads` in two browser tabs
+- [ ] ~~In Tab 1: Create a new lead~~
+- [ ] ~~**Expected:** Tab 2 shows the new lead automatically (within 2-3 seconds)~~
+- [ ] ~~In Tab 1: Drag a lead to change status~~
+- [ ] ~~**Expected:** Tab 2 reflects the status change automatically~~
+  - **NOT IMPLEMENTED**: No Supabase real-time subscription in leads page
+  - Leads only refresh via `fetchLeads()` callback (same-tab only)
+  - Future enhancement: Add `supabase.channel('leads').on('postgres_changes', ...)`
 
 ---
 

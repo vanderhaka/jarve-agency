@@ -149,7 +149,7 @@ export default function LeadsPage() {
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium">
                         <Link
-                          href={`/app/leads/${lead.id}`}
+                          href={`/admin/leads/${lead.id}`}
                           className="text-primary hover:underline"
                         >
                           {lead.name}

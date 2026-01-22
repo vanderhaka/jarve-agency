@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 type Lead = {
   id: string
@@ -63,7 +64,13 @@ function SortableLead({ lead }: { lead: Lead }) {
       <Card className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
         <CardContent className="p-4 space-y-2">
           <div className="flex justify-between items-start">
-            <div className="font-medium">{lead.name}</div>
+            <Link
+                href={`/admin/leads/${lead.id}`}
+                className="font-medium text-primary hover:underline"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                {lead.name}
+              </Link>
             {lead.amount > 0 && (
               <Badge variant="secondary" className="text-xs">
                 ${lead.amount.toLocaleString()}

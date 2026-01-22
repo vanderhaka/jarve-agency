@@ -15,7 +15,8 @@ const statusColors: Record<string, string> = {
   closed: 'bg-gray-500',
 }
 
-export default async function LeadDetailPage({ params }: { params: { id: string } }) {
+export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -25,14 +26,8 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
 
   const { data: lead, error } = await supabase
     .from('leads')
-    .select(`
-      *,
-      employees (
-        name,
-        email
-      )
-    `)
-    .eq('id', params.id)
+    .select('*')
+    .eq('id', id)
     .single()
 
   if (error || !lead) {
