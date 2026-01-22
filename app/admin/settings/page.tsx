@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Loader2, UserCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { AgencySettingsCard } from '@/components/agency-settings-card'
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
@@ -69,8 +70,10 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your profile and preferences</p>
+        <p className="text-muted-foreground">Manage your profile and agency preferences</p>
       </div>
+
+      <AgencySettingsCard />
 
       <Card>
         <CardHeader>

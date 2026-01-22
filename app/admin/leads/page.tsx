@@ -14,7 +14,9 @@ import {
 } from '@/components/ui/table'
 import { LeadStatusSelect } from '@/components/lead-status-select'
 import { NewLeadDialog } from '@/components/new-lead-dialog'
-import { LayoutList, Kanban } from 'lucide-react'
+import { LayoutList, Kanban, Archive, Eye, EyeOff } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { LeadsKanban } from '@/components/leads-kanban'
 import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
@@ -33,13 +35,19 @@ type Lead = {
   project_type?: string
   budget?: string
   timeline?: string
+  archived_at?: string | null
+  converted_at?: string | null
+  client_id?: string | null
+  project_id?: string | null
 }
 
 export default function LeadsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const viewParam = searchParams.get('view')
+  const archivedParam = searchParams.get('archived')
   const view = viewParam === 'kanban' ? 'kanban' : 'list'
+  const showArchived = archivedParam === 'true'
 
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,12 +59,33 @@ export default function LeadsPage() {
     router.push(`?${params.toString()}`)
   }
 
+  const setShowArchived = (show: boolean) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (show) {
+      params.set('archived', 'true')
+    } else {
+      params.delete('archived')
+    }
+    router.push(`?${params.toString()}`)
+  }
+
   const fetchLeads = useCallback(async () => {
-    console.log('[Leads] Fetching leads...')
-    const { data, error } = await supabase
+    console.log('[Leads] Fetching leads...', { showArchived })
+    let query = supabase
       .from('leads')
       .select('*')
       .order('created_at', { ascending: false })
+
+    // Filter by archived status
+    if (showArchived) {
+      // Show only archived leads
+      query = query.not('archived_at', 'is', null)
+    } else {
+      // Show only active (non-archived) leads
+      query = query.is('archived_at', null)
+    }
+
+    const { data, error } = await query
 
     console.log('[Leads] Response:', { data, error })
 
@@ -66,7 +95,7 @@ export default function LeadsPage() {
 
     if (data) setLeads(data)
     setLoading(false)
-  }, [supabase])
+  }, [supabase, showArchived])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
@@ -93,6 +122,17 @@ export default function LeadsPage() {
           <p className="text-muted-foreground">Manage and track your leads</p>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-archived"
+              checked={showArchived}
+              onCheckedChange={setShowArchived}
+            />
+            <Label htmlFor="show-archived" className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <Archive className="h-4 w-4" />
+              {showArchived ? 'Showing archived' : 'Show archived'}
+            </Label>
+          </div>
           <div className="flex items-center bg-muted rounded-lg p-1">
             <Button
               variant={view === 'list' ? 'secondary' : 'ghost'}
@@ -120,7 +160,7 @@ export default function LeadsPage() {
       {view === 'list' ? (
         <Card>
           <CardHeader>
-            <CardTitle>All Leads</CardTitle>
+            <CardTitle>{showArchived ? 'Archived Leads' : 'Active Leads'}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -148,12 +188,19 @@ export default function LeadsPage() {
                   leads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium">
-                        <Link
-                          href={`/admin/leads/${lead.id}`}
-                          className="text-primary hover:underline"
-                        >
-                          {lead.name}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/admin/leads/${lead.id}`}
+                            className="text-primary hover:underline"
+                          >
+                            {lead.name}
+                          </Link>
+                          {lead.converted_at && (
+                            <Badge variant="outline" className="text-xs border-green-500 text-green-600">
+                              Converted
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{lead.email}</TableCell>
                       <TableCell>{lead.company || '-'}</TableCell>
