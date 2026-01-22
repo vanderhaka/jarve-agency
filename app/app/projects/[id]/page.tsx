@@ -4,6 +4,7 @@ import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/
 import { ProjectHeader } from './project-header'
 import { TasksView } from './tasks-view'
 import { parseFiltersFromParams } from './filter-utils'
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -77,6 +78,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      <Breadcrumbs />
       <ProjectHeader
         project={project}
         taskCounts={taskCounts}

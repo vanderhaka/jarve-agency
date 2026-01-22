@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ArrowLeft, Mail, Phone, Globe, MapPin, Calendar, Building } from 'lucide-react'
 import Link from 'next/link'
 import { InteractionTimeline } from '@/components/interaction-timeline'
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 
 async function getClient(id: string) {
   const supabase = await createClient()
@@ -44,6 +45,7 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
 
   return (
     <div className="space-y-8">
+      <Breadcrumbs />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/app/clients">

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Mail, DollarSign, UserCircle } from 'lucide-react'
 import { TaskDialog } from '@/components/task-dialog'
 import { InteractionTimeline } from '@/components/interaction-timeline'
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 
 const statusColors: Record<string, string> = {
   new: 'bg-blue-500',
@@ -41,6 +42,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
 
   return (
     <div className="space-y-8">
+      <Breadcrumbs />
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
