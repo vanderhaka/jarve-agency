@@ -126,7 +126,7 @@ export function EmployeesTable({ employees, currentUserId, onInviteClick }: Empl
               <TableCell>
                 <Checkbox
                   checked={isSelected(member.id)}
-                  onCheckedChange={() => toggle(member.id, index, allIds)}
+                  onClick={(e) => toggle(member.id, index, allIds, e.shiftKey)}
                   aria-label={`Select ${member.name || member.email}`}
                 />
               </TableCell>

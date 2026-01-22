@@ -61,8 +61,8 @@ export function KeyboardShortcutsModal({ isAdmin = false }: KeyboardShortcutsMod
 
       if (isInput) return
 
-      // Open modal on "?" key
-      if (event.key === '?' && !event.shiftKey) {
+      // Open modal on "?" key (requires Shift on most keyboards)
+      if (event.key === '?') {
         event.preventDefault()
         setIsOpen(true)
       }

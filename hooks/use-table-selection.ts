@@ -6,7 +6,7 @@ export function useTableSelection() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null)
 
-  const toggle = useCallback((id: string, index?: number, allIds?: string[]) => {
+  const toggle = useCallback((id: string, index?: number, allIds?: string[], shiftKey?: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
 
@@ -15,8 +15,7 @@ export function useTableSelection() {
         index !== undefined &&
         lastSelectedIndex !== null &&
         allIds &&
-        window.event instanceof MouseEvent &&
-        (window.event as MouseEvent).shiftKey
+        shiftKey
       ) {
         const start = Math.min(lastSelectedIndex, index)
         const end = Math.max(lastSelectedIndex, index)

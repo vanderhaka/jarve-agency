@@ -57,6 +57,11 @@ export function CommandPalette() {
       setIsLoading(true)
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(search)}`)
+        if (!response.ok) {
+          console.error('Search request failed:', response.status)
+          setResults([])
+          return
+        }
         const data: SearchResponse = await response.json()
         setResults(data.results || [])
       } catch (error) {

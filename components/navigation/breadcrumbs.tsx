@@ -34,7 +34,7 @@ export function Breadcrumbs() {
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link href={item.href!}>{item.label}</Link>
+                    <Link href={item.href ?? '/app'}>{item.label}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
