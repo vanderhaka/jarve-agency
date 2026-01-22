@@ -44,24 +44,22 @@ export function HeroSection() {
       <div className="container mx-auto text-center space-y-8 max-w-5xl">
         <FadeIn delay={0.2}>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-foreground">
-            <span className="block">
-              Your custom{' '}
-              <span className="inline-block relative">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={rotatingWords[wordIndex].word}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -20, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className={`inline-block bg-gradient-to-r ${rotatingWords[wordIndex].gradient} bg-clip-text text-transparent border-b-4 border-dashed ${rotatingWords[wordIndex].border}`}
-                  >
-                    {rotatingWords[wordIndex].word}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
+            <span className="block">Your custom...</span>
+            <span className="block mt-2">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={rotatingWords[wordIndex].word}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className={`inline-block bg-gradient-to-r ${rotatingWords[wordIndex].gradient} bg-clip-text text-transparent border-b-4 border-dashed ${rotatingWords[wordIndex].border}`}
+                >
+                  {rotatingWords[wordIndex].word}
+                </motion.span>
+              </AnimatePresence>
             </span>
-            <span className="block mt-2">built in weeks, not months.</span>
+            <span className="block mt-2">in weeks, not months.</span>
           </h1>
         </FadeIn>
 
