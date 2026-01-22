@@ -6,6 +6,8 @@ import { UnifiedNav } from '@/components/navigation/unified-nav'
 import { GlobalSearchProvider } from '@/components/search/global-search-provider'
 import { CommandPalette } from '@/components/search/command-palette'
 import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal'
+import { Button } from '@/components/ui/button'
+import { ExternalLink } from 'lucide-react'
 
 export default async function AdminLayout({
   children,
@@ -21,35 +23,45 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
-  const { data: employee } = await supabase
+  const { data: employee, error: employeeError } = await supabase
     .from('employees')
     .select('name, email, role')
     .eq('id', user.id)
     .is('deleted_at', null)
     .single()
 
-  if (!employee || employee.role !== 'admin') {
-    redirect('/app')
+  if (employeeError || !employee) {
+    redirect('/revoked')
   }
+
+  const isAdmin = employee.role === 'admin'
 
   return (
     <GlobalSearchProvider>
       <div className="min-h-screen bg-background">
         <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/app" className="text-2xl font-bold">
+            <Link href="/admin" className="text-2xl font-bold">
               JARVE CRM
             </Link>
-            <UserNav user={user} employee={employee || undefined} />
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/" target="_blank">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Site
+                </Link>
+              </Button>
+              <UserNav user={user} employee={employee || undefined} />
+            </div>
           </div>
         </header>
         <div className="container mx-auto px-4 py-8">
-          <UnifiedNav isAdmin={true} />
+          <UnifiedNav isAdmin={isAdmin} />
           {children}
         </div>
       </div>
       <CommandPalette />
-      <KeyboardShortcutsModal isAdmin={true} />
+      <KeyboardShortcutsModal isAdmin={isAdmin} />
     </GlobalSearchProvider>
   )
 }

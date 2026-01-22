@@ -28,7 +28,7 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
   // Register keyboard shortcuts
   useKeyboardShortcuts({
     combos: [
-      { keys: ['g', 'd'], handler: () => router.push('/app') },
+      { keys: ['g', 'd'], handler: () => router.push('/admin') },
       { keys: ['g', 'l'], handler: () => router.push('/app/leads') },
       { keys: ['g', 'p'], handler: () => router.push('/app/projects') },
       { keys: ['g', 'c'], handler: () => router.push('/app/clients') },

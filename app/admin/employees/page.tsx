@@ -43,7 +43,7 @@ async function inviteEmployee(
     .single()
 
   if (employee?.role !== 'admin') {
-    redirect('/app')
+    redirect('/admin')
   }
 
   const validation = validateInvitePayload(
@@ -128,7 +128,7 @@ export default async function EmployeesAdminPage() {
     .single()
 
   if (!employee || employee.role !== 'admin') {
-    redirect('/app')
+    redirect('/admin')
   }
 
   const { data: employees, error: employeesError } = await supabase

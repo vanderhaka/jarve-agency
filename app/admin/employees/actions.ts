@@ -26,7 +26,7 @@ export async function bulkChangeRole(
     .single()
 
   if (currentEmployee?.role !== 'admin') {
-    redirect('/app')
+    redirect('/admin')
   }
 
   // Validate inputs

@@ -50,7 +50,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
     .single()
 
   if (!employee || employee.role !== 'admin') {
-    redirect('/app')
+    redirect('/admin')
   }
 
   // Parse filter params

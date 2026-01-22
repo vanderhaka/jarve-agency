@@ -33,7 +33,7 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
   const client = await getClient(id)
 
   if (!client) {
-    redirect('/app/clients')
+    redirect('/admin/clients')
   }
 
   const statusColors: Record<string, string> = {
@@ -48,7 +48,7 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
       <Breadcrumbs />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/app/clients">
+          <Link href="/admin/clients">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>

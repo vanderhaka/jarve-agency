@@ -78,7 +78,7 @@ export function UserNav({ user, employee }: UserNavProps) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/app/settings">
+            <Link href="/admin/settings">
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </Link>

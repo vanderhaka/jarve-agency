@@ -37,7 +37,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
     .single()
 
   if (error || !lead) {
-    redirect('/app/leads')
+    redirect('/admin/leads')
   }
 
   return (
@@ -53,7 +53,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
         </div>
         <div className="flex gap-3">
           <Button variant="outline" asChild>
-            <Link href="/app/leads">Back to leads</Link>
+            <Link href="/admin/leads">Back to leads</Link>
           </Button>
           <TaskDialog leadId={lead.id} triggerLabel="Lead Tasks" />
         </div>
