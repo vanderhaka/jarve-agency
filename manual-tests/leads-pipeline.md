@@ -63,33 +63,25 @@
 ---
 
 ## 4. External Lead Submission (Website Integration)
-- [ ] Open a new incognito/private browser window (not logged in)
-- [ ] Navigate to the homepage `/` or wherever contact form lives
-- [ ] Fill out contact form with: name, email, message
-- [ ] Submit form
+- [x] Open a new incognito/private browser window (not logged in)
+- [x] Navigate to the homepage `/` or wherever contact form lives
+- [x] Fill out contact form with: name, email, message
+- [x] Submit form
 
 ### 4.1 Success Case
-- [ ] **Expected:** Success message shown to visitor
-- [ ] Switch to admin session
-- [ ] Visit `/admin/leads`
-- [ ] **Expected:** New lead from external submission appears in list
-- [ ] **Expected:** Lead has `source` field set (if applicable)
+- [x] **Expected:** Success message shown to visitor
+- [x] Switch to admin session
+- [x] Visit `/admin/leads`
+- [x] **Expected:** New lead from external submission appears in list
+- [x] **Expected:** Lead has `source` field set (if applicable)
+  - *Fixed: form.reset() error - captured form ref before async call*
 
 ### 4.2 API Route Test (if using API)
-- [ ] Using curl/Postman, POST to `/api/leads`:
-  ```bash
-  curl -X POST http://localhost:3000/api/leads \
-    -H "Content-Type: application/json" \
-    -d '{"name":"Test Lead","email":"test@example.com","message":"From API"}'
-  ```
-- [ ] **Expected:** Returns 201 with lead ID
-- [ ] **Expected:** Lead appears in admin dashboard
+- [x] N/A - No `/api/leads` route exists
+  - *Contact form submits directly to Supabase via client SDK*
 
 ### 4.3 Validation
-- [ ] POST to `/api/leads` without email
-- [ ] **Expected:** Returns 400 with validation error
-- [ ] POST with invalid email format
-- [ ] **Expected:** Returns 400 with validation error
+- [x] N/A - Validation handled by HTML5 form attributes on contact form
 
 ---
 

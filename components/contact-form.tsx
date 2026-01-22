@@ -46,6 +46,7 @@ export function ContactForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const form = e.currentTarget
     setLoading(true)
     setSuccess(false)
 
@@ -79,7 +80,7 @@ export function ContactForm() {
     setProjectType('')
     setBudget('')
     setTimeline('')
-    e.currentTarget.reset()
+    form.reset()
     setTimeout(() => setSuccess(false), 5000)
   }
 
