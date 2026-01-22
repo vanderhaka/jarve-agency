@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,10 +16,14 @@ import {
 import { createClient } from '@/utils/supabase/client'
 import { EmployeeSelect } from '@/components/employee-select'
 
-export function NewLeadDialog() {
+interface NewLeadDialogProps {
+  onSuccess?: () => void
+}
+
+export function NewLeadDialog({ onSuccess }: NewLeadDialogProps) {
   const [open, setOpen] = useState(false)
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null)
-  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -37,11 +40,19 @@ export function NewLeadDialog() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError(null)
     const formData = new FormData(e.currentTarget)
-    
+
+    const email = formData.get('email') as string
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address (e.g., name@example.com)')
+      return
+    }
+
     const assignedTo = formData.get('assigned_to') as string
-    
-    const { error } = await supabase.from('leads').insert({
+
+    const { error: insertError } = await supabase.from('leads').insert({
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       message: formData.get('message') as string || null,
@@ -52,18 +63,22 @@ export function NewLeadDialog() {
       created_by: currentEmployeeId,
     })
 
-    if (error) {
-      console.error('Error creating lead:', error)
-      alert('Failed to create lead')
+    if (insertError) {
+      console.error('Error creating lead:', insertError)
+      if (insertError.code === '23505') {
+        setError('A lead with this email already exists')
+      } else {
+        setError('Failed to create lead. Please try again.')
+      }
       return
     }
 
     setOpen(false)
-    router.refresh()
+    onSuccess?.()
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (isOpen) setError(null); }}>
       <DialogTrigger asChild>
         <Button>Add Lead</Button>
       </DialogTrigger>
@@ -81,7 +96,14 @@ export function NewLeadDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" required />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+              title="Please enter a valid email address (e.g., name@example.com)"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
@@ -112,6 +134,11 @@ export function NewLeadDialog() {
             <Label htmlFor="message">Message/Notes</Label>
             <Textarea id="message" name="message" rows={4} />
           </div>
+          {error && (
+            <div className="col-span-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+              {error}
+            </div>
+          )}
           <div className="col-span-2">
             <Button type="submit" className="w-full">Create Lead</Button>
           </div>

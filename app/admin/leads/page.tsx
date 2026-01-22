@@ -17,7 +17,7 @@ import { NewLeadDialog } from '@/components/new-lead-dialog'
 import { LayoutList, Kanban } from 'lucide-react'
 import { LeadsKanban } from '@/components/leads-kanban'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type Lead = {
@@ -51,25 +51,27 @@ export default function LeadsPage() {
     router.push(`?${params.toString()}`)
   }
 
-  useEffect(() => {
-    async function fetchLeads() {
-      console.log('[Leads] Fetching leads...')
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false })
+  const fetchLeads = useCallback(async () => {
+    console.log('[Leads] Fetching leads...')
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-      console.log('[Leads] Response:', { data, error })
+    console.log('[Leads] Response:', { data, error })
 
-      if (error) {
-        console.error('[Leads] Error:', error)
-      }
-
-      if (data) setLeads(data)
-      setLoading(false)
+    if (error) {
+      console.error('[Leads] Error:', error)
     }
-    fetchLeads()
-  }, [])
+
+    if (data) setLeads(data)
+    setLoading(false)
+  }, [supabase])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
+    void fetchLeads()
+  }, [fetchLeads])
 
   const statusColors: Record<string, string> = {
     new: 'bg-blue-500',
@@ -111,7 +113,7 @@ export default function LeadsPage() {
               Board
             </Button>
           </div>
-          <NewLeadDialog />
+          <NewLeadDialog onSuccess={fetchLeads} />
         </div>
       </div>
 

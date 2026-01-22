@@ -28,31 +28,37 @@
 - [x] **Expected:** Status badge on card updates to "contacted"
 - [x] Refresh the page (Cmd+R)
 - [x] **Expected:** Lead remains in "contacted" column after refresh
-- [ ] Check database: `SELECT status FROM leads WHERE id = '<lead_id>'`
-- [ ] **Expected:** Database shows `status = 'contacted'`
+- [x] Check database: `SELECT status FROM leads WHERE id = '<lead_id>'`
+- [x] **Expected:** Database shows `status = 'contacted'`
 
 ### 2.2 Error Handling
-- [ ] Disconnect network / pause Supabase
-- [ ] Drag a lead to another column
-- [ ] **Expected:** Either reverts OR shows error notification (not silent failure)
+- [x] Disconnect network / pause Supabase
+- [x] Drag a lead to another column
+- [x] **Expected:** Either reverts OR shows error notification (not silent failure)
+  - *Observed: Redirects to login page (auth check fails without network) — acceptable, not silent*
 
 ---
 
 ## 3. Create Lead (Internal)
-- [ ] Click "New Lead" button
-- [ ] Enter: name, email (required), optional fields
-- [ ] Click Save
+- [x] Click "New Lead" button
+- [x] Enter: name, email (required), optional fields
+- [x] Click Save
 
 ### 3.1 Auto-Refresh
-- [ ] **Expected:** New lead appears in list/kanban WITHOUT manual page refresh
-- [ ] **Expected:** New lead appears within 2 seconds of save
-- [ ] Verify lead is in "new" status column in kanban
+- [x] **Expected:** New lead appears in list/kanban WITHOUT manual page refresh
+  - *Fixed: Added onSuccess callback to trigger refetch*
+- [x] **Expected:** New lead appears within 2 seconds of save
+- [x] Verify lead is in "new" status column in kanban
 
 ### 3.2 Validation
-- [ ] Try to save without email
-- [ ] **Expected:** Form validation error shown
-- [ ] Try invalid email format (e.g., "notanemail")
-- [ ] **Expected:** Form validation error shown
+- [x] Try to save without email
+- [x] **Expected:** Form validation error shown
+- [x] Try invalid email format (e.g., "notanemail")
+- [x] **Expected:** Form validation error shown
+  - *Fixed: Added email pattern validation + JS fallback*
+- [x] Try duplicate email
+- [x] **Expected:** Shows "A lead with this email already exists"
+  - *Fixed: Added specific error message for 23505 constraint violation*
 
 ---
 
