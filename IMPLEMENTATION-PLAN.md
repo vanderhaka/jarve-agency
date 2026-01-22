@@ -127,11 +127,14 @@ Start here: `docs/PLAN.md` (master index + stage files).
 
 **Gaps / fixes:**
 - No lead→project conversion flow.
-- Lead tasks dialog uses columns not in `tasks` table (lead tasks should be removed or refactored).
+- ✅ Lead tasks dialog removed (Stage 0) — used columns not in `tasks` table.
 - Proposal/contract data model not implemented.
-- Interaction timeline should be internal notes only (client comms live in portal chat).
+- ✅ Interaction timeline renamed to "Internal Notes" (Stage 0) — client comms live in portal chat.
 - Lead conversion requires lead name + email; match existing client by exact email (case-insensitive) only.
 - Project defaults on conversion: `status=planning`, `type=web`, `assigned_to` optional.
+- 🔲 Kanban drag-drop broken (Stage 0) — state sync issue.
+- 🔲 New lead doesn't auto-appear (Stage 0) — needs Realtime subscriptions.
+- 🔲 External lead submission blocked (Stage 0) — RLS blocks anon inserts, need API route.
 - Archived leads are hidden by default; archive view uses a dedicated toggle/filter/search.
 
 **Tests:**
@@ -264,9 +267,15 @@ Start here: `docs/PLAN.md` (master index + stage files).
 
 ## Execution Stages (Hard Gates)
 
-### Stage 0 — Fix Current Mismatches
-**Scope:** Remove/replace lead tasks dialog; decide lead tasks strategy; tighten interactions (internal notes only).
-**DoD:** All Stage 0 tests pass + `manual-tests/leads-pipeline.md` signed off.
+### Stage 0 — Foundation Fixes (Expanded)
+**Scope:**
+- ✅ Remove lead tasks dialog (referenced non-existent columns)
+- ✅ Rename interactions to "Internal Notes" (client comms via portal only)
+- 🔲 Fix kanban drag-and-drop (state sync issue between page and component)
+- 🔲 Fix new lead auto-refresh (add Supabase Realtime subscriptions)
+- 🔲 Enable external lead submission (API route for website integration)
+
+**DoD:** All Stage 0 tests pass + `manual-tests/leads-pipeline.md` signed off (including drag-drop, auto-refresh, and external submission tests).
 
 ### Stage 1 — Lead → Project Conversion
 **Scope:** Archive lead, create client + project, proposal links, activity log.

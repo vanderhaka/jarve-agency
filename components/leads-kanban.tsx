@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useId } from 'react'
+import { useState, useId, useEffect } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -84,8 +84,14 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
   const dndId = useId()
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [originalStatus, setOriginalStatus] = useState<string | null>(null)
   const supabase = createClient()
   const router = useRouter()
+
+  // Sync leads when initialLeads changes (e.g., after parent fetches data)
+  useEffect(() => {
+    setLeads(initialLeads)
+  }, [initialLeads])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -96,33 +102,59 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
-    
-    if (!over) return
+
+    console.log('[DragEnd] active:', active.id, 'over:', over?.id, 'originalStatus:', originalStatus)
+
+    if (!over) {
+      console.log('[DragEnd] No over target, aborting')
+      setActiveId(null)
+      setOriginalStatus(null)
+      return
+    }
 
     const activeLead = leads.find((l) => l.id === active.id)
-    const overContainer = over.id as string
+    const overId = over.id as string
 
-    if (activeLead && activeLead.status !== overContainer && stages.includes(overContainer)) {
-      // Moved to a different column (status change)
-      setLeads((prev) => {
-        return prev.map((l) => {
-          if (l.id === activeLead.id) {
-            return { ...l, status: overContainer }
-          }
-          return l
-        })
-      })
+    // Determine target status: if dropped on a lead, use that lead's status
+    // If dropped on the column itself, use the column id (stage name)
+    const overLead = leads.find((l) => l.id === overId)
+    const targetStatus = overLead ? overLead.status : overId
+
+    console.log('[DragEnd] activeLead:', activeLead?.id, 'overId:', overId, 'targetStatus:', targetStatus)
+    console.log('[DragEnd] Check: activeLead exists?', !!activeLead, 'originalStatus?', originalStatus, 'different?', originalStatus !== targetStatus, 'valid stage?', stages.includes(targetStatus))
+
+    // Use originalStatus to check if we actually moved to a different column
+    // (handleDragOver already updated local state, so we can't use activeLead.status)
+    if (activeLead && originalStatus && originalStatus !== targetStatus && stages.includes(targetStatus)) {
+      console.log('[DragEnd] Updating DB: lead', activeLead.id, 'from', originalStatus, 'to', targetStatus)
 
       // Update in DB
-      await supabase
+      const { data, error } = await supabase
         .from('leads')
-        .update({ status: overContainer })
+        .update({ status: targetStatus })
         .eq('id', activeLead.id)
-        
-      router.refresh()
+        .select()
+
+      console.log('[DragEnd] DB response - data:', data, 'error:', error)
+
+      if (error) {
+        console.error('[DragEnd] Failed to update lead status:', error)
+        // Revert local state on error
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === activeLead.id ? { ...l, status: originalStatus } : l
+          )
+        )
+      } else {
+        console.log('[DragEnd] Success! Refreshing...')
+        router.refresh()
+      }
+    } else {
+      console.log('[DragEnd] Skipping DB update - conditions not met')
     }
-    
+
     setActiveId(null)
+    setOriginalStatus(null)
   }
 
   function handleDragOver(event: DragOverEvent) {
@@ -158,7 +190,12 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
       id={dndId}
       sensors={sensors}
       collisionDetection={closestCorners}
-      onDragStart={(event) => setActiveId(event.active.id as string)}
+      onDragStart={(event) => {
+        const leadId = event.active.id as string
+        const lead = leads.find((l) => l.id === leadId)
+        setActiveId(leadId)
+        setOriginalStatus(lead?.status || null)
+      }}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >

@@ -18,6 +18,7 @@ import { LayoutList, Kanban } from 'lucide-react'
 import { LeadsKanban } from '@/components/leads-kanban'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type Lead = {
   id: string
@@ -35,10 +36,20 @@ type Lead = {
 }
 
 export default function LeadsPage() {
-  const [view, setView] = useState<'list' | 'kanban'>('list')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const viewParam = searchParams.get('view')
+  const view = viewParam === 'kanban' ? 'kanban' : 'list'
+
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  const setView = (newView: 'list' | 'kanban') => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('view', newView)
+    router.push(`?${params.toString()}`)
+  }
 
   useEffect(() => {
     async function fetchLeads() {
@@ -177,6 +188,10 @@ export default function LeadsPage() {
             </Table>
           </CardContent>
         </Card>
+      ) : loading ? (
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
+          Loading leads...
+        </div>
       ) : (
         <LeadsKanban initialLeads={leads} />
       )}
