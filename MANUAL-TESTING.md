@@ -1,5 +1,178 @@
 # Manual Testing Checklist
 
+---
+
+# Stage 2: Agency Settings
+
+**Feature:** Agency Settings Configuration
+**Date:** 2026-01-23
+**Tester:** _______________
+
+## Prerequisites
+
+- [ ] Dev server running (`npm run dev`)
+- [ ] Logged in as admin user
+- [ ] Database migration applied (agency_settings table exists)
+
+---
+
+## 1. Settings Page Load
+
+### 1.1 Navigate to Settings
+- [ ] Go to `/admin/settings`
+- [ ] **Expected:** Page loads without errors
+
+### 1.2 Agency Settings Card Visible
+- [ ] Verify "Agency Settings" card appears above "Profile Information"
+- [ ] Verify card header shows "Configure your business defaults"
+- [ ] **Expected:** All form sections visible (may need to scroll)
+
+---
+
+## 2. Business Details Section
+
+### 2.1 Legal Name Field
+- [ ] Enter legal name: "Test Company Pty Ltd"
+- [ ] **Expected:** Field accepts text input
+
+### 2.2 Trade Name Field
+- [ ] Enter trade name: "TestCo"
+- [ ] **Expected:** Field accepts text input
+
+### 2.3 ABN Field
+- [ ] Enter ABN: "12 345 678 901"
+- [ ] **Expected:** Field accepts formatted ABN
+
+### 2.4 GST Rate (Read-only)
+- [ ] Verify GST Rate shows "10%"
+- [ ] Verify field is disabled/read-only
+- [ ] **Expected:** Cannot modify GST rate, shows "Fixed at 10% for Australian GST"
+
+---
+
+## 3. Regional Settings Section
+
+### 3.1 Default Currency Dropdown
+- [ ] Click currency dropdown
+- [ ] Verify options include: AUD, USD, EUR, GBP, NZD, etc.
+- [ ] Select "USD - US Dollar"
+- [ ] **Expected:** Dropdown updates to show selected currency
+
+### 3.2 Timezone Dropdown
+- [ ] Click timezone dropdown
+- [ ] Verify Australian timezones listed (Sydney, Melbourne, Adelaide, etc.)
+- [ ] Select "Australia/Sydney"
+- [ ] **Expected:** Dropdown updates to show selected timezone
+
+---
+
+## 4. Invoice Settings Section
+
+### 4.1 Invoice Prefix
+- [ ] Modify prefix to "TEST-INV"
+- [ ] **Expected:** Field accepts alphanumeric text
+
+### 4.2 Default Deposit %
+- [ ] Change deposit to "25"
+- [ ] **Expected:** Field accepts numeric value
+
+### 4.3 Invoice Terms
+- [ ] Enter "Net 30 days"
+- [ ] **Expected:** Field accepts text
+
+### 4.4 Payment Due (days)
+- [ ] Enter "30"
+- [ ] **Expected:** Field accepts numeric value
+
+---
+
+## 5. Timesheet Lock Schedule
+
+### 5.1 Lock Day Dropdown
+- [ ] Click Lock Day dropdown
+- [ ] Verify weekdays listed (Sunday through Saturday)
+- [ ] Select "Monday"
+- [ ] **Expected:** Dropdown updates
+
+### 5.2 Lock Time Field
+- [ ] Enter time (e.g., "09:00")
+- [ ] **Expected:** Field accepts time format
+
+---
+
+## 6. Reminder Settings
+
+### 6.1 Reminder Frequency Dropdown
+- [ ] Click Reminder Frequency dropdown
+- [ ] Verify options: Daily, Weekly, Off
+- [ ] Select "Weekly"
+- [ ] **Expected:** Dropdown updates
+
+### 6.2 Reminder Time Field
+- [ ] Enter time (e.g., "08:00")
+- [ ] **Expected:** Field accepts time format
+
+---
+
+## 7. Save Settings
+
+### 7.1 Save Button Click
+- [ ] Click "Save Settings" button
+- [ ] **Expected:**
+  - Button shows loading state
+  - Success message appears
+  - No error in console
+
+### 7.2 Verify Persistence
+- [ ] Refresh the page (F5 or Cmd+R)
+- [ ] **Expected:** All saved values are retained
+
+### 7.3 Verify Database Update
+- [ ] Check database via Supabase Dashboard
+- [ ] **Expected:** agency_settings row updated with new values
+
+---
+
+## 8. Error Handling
+
+### 8.1 Network Error
+- [ ] Disconnect network
+- [ ] Click "Save Settings"
+- [ ] **Expected:** Error message displayed
+
+### 8.2 Invalid Data
+- [ ] Enter non-numeric value in "Default Deposit %"
+- [ ] Click Save
+- [ ] **Expected:** Validation error or rejection
+
+---
+
+## Stage 2 Test Summary
+
+| Section | Pass | Fail | Blocked |
+|---------|------|------|---------|
+| 1. Page Load | | | |
+| 2. Business Details | | | |
+| 3. Regional Settings | | | |
+| 4. Invoice Settings | | | |
+| 5. Timesheet Lock | | | |
+| 6. Reminder Settings | | | |
+| 7. Save Settings | | | |
+| 8. Error Handling | | | |
+
+**Overall Result:** [ ] PASS  [ ] FAIL
+
+**Notes:**
+_____________________________________________________
+_____________________________________________________
+
+**Signed off by:** _______________ **Date:** _______________
+
+---
+---
+
+# Project Tasks (Kanban + List Views)
+
 **Feature:** Project Tasks (Kanban + List Views)
 **Date:** 2026-01-21
 **Tester:** _______________
