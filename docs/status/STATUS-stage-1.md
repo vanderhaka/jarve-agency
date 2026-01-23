@@ -2,11 +2,11 @@
 
 ## Current Task
 - [x] Apply migration via Supabase (DONE - 2026-01-23)
-- [ ] Manual test conversion flow
-- [ ] Sign off stage 1
+- [x] Manual test conversion flow (DONE - 2026-01-23)
+- [x] Sign off stage 1 (DONE - 2026-01-23)
 
 ## Blockers
-- None - ready for testing
+- None - STAGE 1 COMPLETE ✅
 
 ## Completed
 - [x] Database migration created (20260123000001_stage_1_lead_to_project.sql)
@@ -26,13 +26,21 @@
   - Toggle in leads list header
   - Filters both list and kanban views
   - URL parameter ?archived=true for direct linking
+- [x] Manual UI Testing (2026-01-23)
+  - Convert dialog opens correctly
+  - Form pre-fills project name from lead
+  - Conversion creates client + project
+  - Lead archived and marked as converted
+  - Archived filter toggle works (?archived=true URL)
+  - Converted lead shows status badges
+  - View Client/Project links functional
+  - Convert button hidden on converted leads
 
 ## Not Started
-- [ ] Unit tests for conversion logic
-- [ ] Manual testing
+- [ ] Unit tests for conversion logic (deferred to later)
 
 ## Known Issues
-- None yet
+- None
 
 ## Files Changed
 - `supabase/migrations/20260123000001_stage_1_lead_to_project.sql` (new)
@@ -42,10 +50,8 @@
 - `app/admin/leads/page.tsx` (updated - archived filter toggle)
 
 ## Next Steps
-1. Apply migration to Supabase
-2. Run manual test checklist
-3. Write unit tests if time permits
-4. Sign off stage 1
+- Stage 1 complete - proceed to Stage 2
 
 ---
 *Last updated: 2026-01-23*
+*Signed off: 2026-01-23*
