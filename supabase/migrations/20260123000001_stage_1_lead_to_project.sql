@@ -96,7 +96,7 @@ CREATE POLICY "Employees can view client_users" ON client_users
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -107,7 +107,7 @@ CREATE POLICY "Employees can insert client_users" ON client_users
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -118,7 +118,7 @@ CREATE POLICY "Employees can update client_users" ON client_users
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -129,7 +129,7 @@ CREATE POLICY "Employees can delete client_users" ON client_users
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -141,7 +141,7 @@ CREATE POLICY "Employees can view client_portal_tokens" ON client_portal_tokens
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -152,7 +152,7 @@ CREATE POLICY "Employees can insert client_portal_tokens" ON client_portal_token
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -163,7 +163,7 @@ CREATE POLICY "Employees can update client_portal_tokens" ON client_portal_token
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -174,7 +174,7 @@ CREATE POLICY "Employees can delete client_portal_tokens" ON client_portal_token
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );

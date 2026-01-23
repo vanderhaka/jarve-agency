@@ -1,12 +1,12 @@
 # Stage 1 Status - Lead to Project Conversion
 
 ## Current Task
-- [x] Apply migration via Supabase MCP
-- [ ] Manual test conversion flow (Claude in Chrome)
+- [x] Apply migration via Supabase (DONE - 2026-01-23)
+- [ ] Manual test conversion flow
 - [ ] Sign off stage 1
 
 ## Blockers
-- None
+- None - ready for testing
 
 ## Completed
 - [x] Database migration created (20260123000001_stage_1_lead_to_project.sql)

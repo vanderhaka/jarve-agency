@@ -44,7 +44,7 @@ export async function convertLeadToProject(
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
-    .eq('auth_id', user.id)
+    .eq('id', user.id)
     .is('deleted_at', null)
     .single()
 
@@ -201,7 +201,7 @@ export async function archiveLead(leadId: string): Promise<{ success: boolean; m
   const { data: employee } = await supabase
     .from('employees')
     .select('id')
-    .eq('auth_id', user.id)
+    .eq('id', user.id)
     .is('deleted_at', null)
     .single()
 
