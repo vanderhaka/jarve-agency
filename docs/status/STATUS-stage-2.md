@@ -1,21 +1,25 @@
 # Stage 2 Status - Platform Foundations (Agency Settings)
 
 ## Current Task
-- [ ] Run migration in Supabase Dashboard
-- [ ] Test settings save/load end-to-end
+- [x] Run migration in Supabase Dashboard
+- [x] Test settings page loads correctly
+- [ ] Test settings save/load end-to-end (manual test needed)
 - [ ] Complete manual testing checklist
 
 ## Blockers
-- Migration needs to be applied to Supabase
+None
 
 ## Completed
-- [x] Database migration created (20260123000002_stage_2_agency_settings.sql)
-  - agency_settings table with singleton constraint
-  - deposit_percent column on agency_projects
-  - RLS policies (view for all employees, edit for admins)
-  - Auto-create default row on first load
-  - updated_at trigger
-- [x] Agency Settings UI card (components/agency-settings-card.tsx)
+- [x] Database migration applied to Supabase
+  - agency_settings table created
+  - RLS policies (SELECT for employees, INSERT/UPDATE for admins)
+  - Fixed column reference (employees.id instead of auth_id)
+  - Default settings row inserted
+  - updated_at trigger working
+- [x] Fixed "use server" export error
+  - Moved interfaces and constants to constants.ts
+  - Server actions file now only exports async functions
+- [x] Agency Settings UI card verified working
   - Business details: legal name, trade name, ABN
   - GST rate: read-only at 10%
   - Regional: currency (ISO), timezone (IANA)
@@ -42,20 +46,20 @@
 - Early integration file copy from jarve-website
 
 ## Files Changed
-- `supabase/migrations/20260123000002_stage_2_agency_settings.sql` (new)
-- `app/admin/settings/actions.ts` (new)
+- `supabase/migrations/20260123000002_stage_2_agency_settings.sql` (updated - fixed employees.id)
+- `app/admin/settings/actions.ts` (updated - removed non-async exports)
+- `app/admin/settings/constants.ts` (new - types and constants)
 - `app/admin/settings/page.tsx` (updated - added AgencySettingsCard)
-- `components/agency-settings-card.tsx` (new)
+- `components/agency-settings-card.tsx` (updated - import from constants)
 - `lib/integrations/xero/client.ts` (new)
 - `lib/integrations/stripe/client.ts` (new)
 - `lib/integrations/portal/client.ts` (new)
 - `lib/integrations/portal/types.ts` (new)
 
 ## Next Steps
-1. Apply migration to Supabase Dashboard
-2. Test settings page loads and saves
-3. Run manual test checklist
-4. Sign off stage 2
+1. Manually test settings save/load
+2. Run manual test checklist
+3. Sign off stage 2
 
 ---
 *Last updated: 2026-01-23*

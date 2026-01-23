@@ -74,7 +74,7 @@ CREATE POLICY "Employees can view agency_settings" ON agency_settings
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
     )
   );
@@ -86,7 +86,7 @@ CREATE POLICY "Admins can insert agency_settings" ON agency_settings
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
       AND employees.role = 'admin'
     )
@@ -98,7 +98,15 @@ CREATE POLICY "Admins can update agency_settings" ON agency_settings
   USING (
     EXISTS (
       SELECT 1 FROM employees
-      WHERE employees.auth_id = auth.uid()
+      WHERE employees.id = auth.uid()
+      AND employees.deleted_at IS NULL
+      AND employees.role = 'admin'
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM employees
+      WHERE employees.id = auth.uid()
       AND employees.deleted_at IS NULL
       AND employees.role = 'admin'
     )

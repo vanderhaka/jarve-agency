@@ -13,15 +13,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2, Building2 } from 'lucide-react'
+import { getAgencySettings, updateAgencySettings } from '@/app/admin/settings/actions'
 import {
-  getAgencySettings,
-  updateAgencySettings,
   type AgencySettings,
   CURRENCIES,
   TIMEZONES,
   WEEKDAYS,
   REMINDER_FREQUENCIES,
-} from '@/app/admin/settings/actions'
+} from '@/app/admin/settings/constants'
 
 const LOAD_ERROR_MESSAGE = 'Failed to load agency settings'
 
