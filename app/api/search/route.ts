@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   try {
     // Search across tables in parallel (exclude soft-deleted records)
-    const [leadsData, clientsData, projectsData, employeesData, proposalsData, contractDocsData] = await Promise.all([
+    const [leadsData, clientsData, projectsData, employeesData, proposalsData, contractDocsData, invoicesData] = await Promise.all([
       // Search leads (exclude deleted)
       supabase
         .from('leads')
@@ -88,6 +88,13 @@ export async function GET(request: Request) {
         .from('contract_docs')
         .select('id, title, doc_type, client:clients(name)')
         .ilike('title', searchTerm)
+        .limit(5),
+
+      // Search invoices by invoice number
+      supabase
+        .from('invoices')
+        .select('id, invoice_number, total, xero_status, client:clients(name)')
+        .ilike('invoice_number', searchTerm)
         .limit(5),
     ])
 
@@ -138,7 +145,18 @@ export async function GET(request: Request) {
           name: doc.title,
           subtitle: client?.name || doc.doc_type,
           type: 'contract' as const,
-          href: `/admin/proposals`, // Link to proposals page as contracts are embedded
+          href: `/admin/proposals`,
+        }
+      }),
+      ...(invoicesData.data || []).map(invoice => {
+        const clientData = invoice.client
+        const client = Array.isArray(clientData) ? clientData[0] : clientData
+        return {
+          id: invoice.id,
+          name: invoice.invoice_number || 'Draft Invoice',
+          subtitle: client?.name || `$${invoice.total?.toFixed(2) || '0.00'}`,
+          type: 'invoice' as const,
+          href: `/admin/invoices/${invoice.id}`,
         }
       }),
     ]
