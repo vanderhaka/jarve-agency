@@ -56,3 +56,88 @@ export type ProjectStatus =
   | 'proposal_declined'
   | 'project_active'
   | 'project_completed'
+
+/**
+ * Portal message (chat)
+ */
+export interface PortalMessage {
+  id: string
+  project_id: string
+  author_type: 'owner' | 'client'
+  author_id: string | null
+  body: string
+  created_at: string
+}
+
+/**
+ * Client upload (file)
+ */
+export interface ClientUpload {
+  id: string
+  project_id: string
+  uploaded_by_type: 'owner' | 'client'
+  uploaded_by_id: string | null
+  file_name: string
+  file_path: string
+  file_size: number | null
+  mime_type: string | null
+  created_at: string
+}
+
+/**
+ * Portal read state for tracking unread messages
+ */
+export interface PortalReadState {
+  id: string
+  project_id: string
+  user_type: 'owner' | 'client'
+  user_id: string | null
+  last_read_at: string | null
+}
+
+/**
+ * Project summary for portal manifest
+ */
+export interface PortalProject {
+  id: string
+  name: string
+  status: string
+  created_at: string
+  unread_count: number
+}
+
+/**
+ * Client information for portal
+ */
+export interface PortalClient {
+  id: string
+  name: string
+  company: string | null
+}
+
+/**
+ * Full portal manifest returned after token validation
+ */
+export interface PortalManifest {
+  clientUser: {
+    id: string
+    name: string
+    email: string
+  }
+  client: PortalClient
+  projects: PortalProject[]
+}
+
+/**
+ * Contract document for docs vault
+ */
+export interface ContractDoc {
+  id: string
+  project_id: string | null
+  client_id: string | null
+  name: string
+  type: 'msa' | 'proposal' | 'contract' | 'invoice' | 'signed'
+  file_path: string
+  created_at: string
+  signed_at: string | null
+}
