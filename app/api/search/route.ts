@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   try {
     // Search across tables in parallel (exclude soft-deleted records)
-    const [leadsData, clientsData, projectsData, employeesData] = await Promise.all([
+    const [leadsData, clientsData, projectsData, employeesData, invoicesData] = await Promise.all([
       // Search leads (exclude deleted)
       supabase
         .from('leads')
@@ -74,6 +74,13 @@ export async function GET(request: Request) {
             .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
             .limit(5)
         : Promise.resolve({ data: [], error: null }),
+
+      // Search invoices by invoice number or client name
+      supabase
+        .from('invoices')
+        .select('id, invoice_number, total, xero_status, client:clients(name)')
+        .ilike('invoice_number', searchTerm)
+        .limit(5),
     ])
 
     // Format results
@@ -106,6 +113,16 @@ export async function GET(request: Request) {
         type: 'employee' as const,
         href: `/admin/employees/${employee.id}`,
       })),
+      ...(invoicesData.data || []).map(invoice => {
+        const client = invoice.client as { name: string } | null
+        return {
+          id: invoice.id,
+          name: invoice.invoice_number || 'Draft Invoice',
+          subtitle: client?.name || `$${invoice.total?.toFixed(2) || '0.00'}`,
+          type: 'invoice' as const,
+          href: `/app/invoices/${invoice.id}`,
+        }
+      }),
     ]
 
     return NextResponse.json({ results })
