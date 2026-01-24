@@ -1,8 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
+import { getMilestonesByProject } from '@/lib/milestones/data'
+import { getChangeRequestsByProject } from '@/lib/change-requests/data'
 import { ProjectHeader } from './project-header'
 import { TasksView } from './tasks-view'
+import { ProjectTabs } from './project-tabs'
 import { parseFiltersFromParams } from './filter-utils'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 
@@ -10,6 +13,7 @@ interface Props {
   params: Promise<{ id: string }>
   searchParams: Promise<{
     view?: 'list' | 'kanban'
+    tab?: 'tasks' | 'milestones' | 'change-requests'
     search?: string
     status?: string
     type?: string
@@ -43,7 +47,7 @@ async function getProject(projectId: string) {
 export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { id } = await params
   const resolvedSearchParams = await searchParams
-  const { view = 'kanban' } = resolvedSearchParams
+  const { view = 'kanban', tab = 'tasks' } = resolvedSearchParams
 
   // Parse filters from URL search params
   const filters = parseFiltersFromParams(new URLSearchParams(
@@ -66,10 +70,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
     notFound()
   }
 
-  const [tasksByStatus, taskCounts, overdueCount] = await Promise.all([
+  const [tasksByStatus, taskCounts, overdueCount, milestones, changeRequests] = await Promise.all([
     getTasksByProjectGrouped(id),
     getTaskCounts(id),
     getOverdueCount(id),
+    getMilestonesByProject(id),
+    getChangeRequestsByProject(id),
   ])
 
   const totalTasks = Object.values(taskCounts).reduce((sum, count) => sum + count, 0)
@@ -87,11 +93,14 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         overdueCount={overdueCount}
         currentView={view}
       />
-      <TasksView
+      <ProjectTabs
         projectId={id}
-        tasksByStatus={tasksByStatus}
+        currentTab={tab}
         currentView={view}
+        tasksByStatus={tasksByStatus}
         filters={filters}
+        milestones={milestones}
+        changeRequests={changeRequests}
       />
     </div>
   )

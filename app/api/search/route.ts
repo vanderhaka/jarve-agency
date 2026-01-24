@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   try {
     // Search across tables in parallel (exclude soft-deleted records)
-    const [leadsData, clientsData, projectsData, employeesData] = await Promise.all([
+    const [leadsData, clientsData, projectsData, employeesData, milestonesData, changeRequestsData] = await Promise.all([
       // Search leads (exclude deleted)
       supabase
         .from('leads')
@@ -74,6 +74,20 @@ export async function GET(request: Request) {
             .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
             .limit(5)
         : Promise.resolve({ data: [], error: null }),
+
+      // Search milestones
+      supabase
+        .from('milestones')
+        .select('id, title, project_id, status, amount, agency_projects(name)')
+        .ilike('title', searchTerm)
+        .limit(5),
+
+      // Search change requests
+      supabase
+        .from('change_requests')
+        .select('id, title, project_id, status, amount, agency_projects(name)')
+        .ilike('title', searchTerm)
+        .limit(5),
     ])
 
     // Format results
@@ -106,6 +120,28 @@ export async function GET(request: Request) {
         type: 'employee' as const,
         href: `/admin/employees/${employee.id}`,
       })),
+      ...(milestonesData.data || []).map((milestone) => {
+        const project = Array.isArray(milestone.agency_projects) ? milestone.agency_projects[0] : milestone.agency_projects
+        const projectName = project?.name
+        return {
+          id: milestone.id,
+          name: milestone.title,
+          subtitle: projectName ? `${projectName} - $${milestone.amount}` : `$${milestone.amount}`,
+          type: 'milestone' as const,
+          href: `/admin/projects/${milestone.project_id}?tab=milestones`,
+        }
+      }),
+      ...(changeRequestsData.data || []).map((cr) => {
+        const project = Array.isArray(cr.agency_projects) ? cr.agency_projects[0] : cr.agency_projects
+        const projectName = project?.name
+        return {
+          id: cr.id,
+          name: cr.title,
+          subtitle: projectName ? `${projectName} - $${cr.amount}` : `$${cr.amount}`,
+          type: 'change_request' as const,
+          href: `/admin/projects/${cr.project_id}?tab=change-requests`,
+        }
+      }),
     ]
 
     return NextResponse.json({ results })
