@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   try {
     // Search across tables in parallel (exclude soft-deleted records)
-    const [leadsData, clientsData, projectsData, employeesData] = await Promise.all([
+    const [leadsData, clientsData, projectsData, employeesData, proposalsData, contractDocsData] = await Promise.all([
       // Search leads (exclude deleted)
       supabase
         .from('leads')
@@ -74,6 +74,21 @@ export async function GET(request: Request) {
             .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
             .limit(5)
         : Promise.resolve({ data: [], error: null }),
+
+      // Search proposals
+      supabase
+        .from('proposals')
+        .select('id, title, status, client:clients(name)')
+        .is('archived_at', null)
+        .ilike('title', searchTerm)
+        .limit(5),
+
+      // Search contract docs
+      supabase
+        .from('contract_docs')
+        .select('id, title, doc_type, client:clients(name)')
+        .ilike('title', searchTerm)
+        .limit(5),
     ])
 
     // Format results
@@ -105,6 +120,20 @@ export async function GET(request: Request) {
         subtitle: employee.role || employee.email,
         type: 'employee' as const,
         href: `/admin/employees/${employee.id}`,
+      })),
+      ...(proposalsData.data || []).map((proposal: { id: string; title: string; status: string; client?: { name: string } | null }) => ({
+        id: proposal.id,
+        name: proposal.title,
+        subtitle: proposal.client?.name || proposal.status,
+        type: 'proposal' as const,
+        href: `/admin/proposals/${proposal.id}`,
+      })),
+      ...(contractDocsData.data || []).map((doc: { id: string; title: string; doc_type: string; client?: { name: string } | null }) => ({
+        id: doc.id,
+        name: doc.title,
+        subtitle: doc.client?.name || doc.doc_type,
+        type: 'contract' as const,
+        href: `/admin/proposals`, // Link to proposals page as contracts are embedded
       })),
     ]
 

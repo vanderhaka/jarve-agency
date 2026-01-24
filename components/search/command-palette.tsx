@@ -11,13 +11,13 @@ import {
   CommandGroup,
   CommandItem,
 } from '@/components/terra-flow/ui/command'
-import { Users, UserCircle, Briefcase, Shield, Loader2 } from 'lucide-react'
+import { Users, UserCircle, Briefcase, Shield, Loader2, FileText, FileSignature } from 'lucide-react'
 
 interface SearchResult {
   id: string
   name: string
   subtitle: string
-  type: 'lead' | 'client' | 'project' | 'employee'
+  type: 'lead' | 'client' | 'project' | 'employee' | 'proposal' | 'contract'
   href: string
 }
 
@@ -30,6 +30,8 @@ const typeIcons = {
   client: UserCircle,
   project: Briefcase,
   employee: Shield,
+  proposal: FileText,
+  contract: FileSignature,
 }
 
 const typeLabels = {
@@ -37,6 +39,8 @@ const typeLabels = {
   client: 'Clients',
   project: 'Projects',
   employee: 'Team',
+  proposal: 'Proposals',
+  contract: 'Contracts',
 }
 
 export function CommandPalette() {
