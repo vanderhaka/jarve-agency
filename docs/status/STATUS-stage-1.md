@@ -36,8 +36,14 @@
   - View Client/Project links functional
   - Convert button hidden on converted leads
 
-## Not Started
-- [ ] Unit tests for conversion logic (deferred to later)
+## Automated Tests
+- [x] Unit tests for conversion logic (tests/lead-conversion.test.ts)
+  - validateLeadForConversion: 7 tests
+  - normalizeEmail: 3 tests
+  - performLeadConversion: 15 tests
+  - performArchiveLead: 2 tests
+  - performRestoreLead: 3 tests
+  - Total: 30 tests
 
 ## Known Issues
 - None
@@ -48,6 +54,8 @@
 - `components/convert-lead-dialog.tsx` (new)
 - `app/admin/leads/[id]/page.tsx` (updated - convert button, archived badges)
 - `app/admin/leads/page.tsx` (updated - archived filter toggle)
+- `lib/leads/conversion.ts` (new - testable business logic)
+- `tests/lead-conversion.test.ts` (new - 30 unit tests)
 
 ## Next Steps
 - Stage 1 complete - proceed to Stage 2

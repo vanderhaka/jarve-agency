@@ -55,11 +55,21 @@ None - **STAGE 2 COMPLETE** ✅
 - `lib/integrations/stripe/client.ts` (new)
 - `lib/integrations/portal/client.ts` (new)
 - `lib/integrations/portal/types.ts` (new)
+- `lib/settings/agency.ts` (new - testable business logic)
+- `tests/agency-settings.test.ts` (new - 36 unit tests)
+
+## Automated Tests
+- [x] Unit tests for settings logic (tests/agency-settings.test.ts)
+  - DEFAULT_SETTINGS: 4 tests
+  - FIXED_GST_RATE: 1 test
+  - stripGstRate: 3 tests
+  - validateSettingsInput: 17 tests
+  - performGetAgencySettings: 4 tests
+  - performUpdateAgencySettings: 7 tests
+  - Total: 36 tests
 
 ## Next Steps
-1. Manually test settings save/load
-2. Run manual test checklist
-3. Sign off stage 2
+None - Stage 2 complete
 
 ---
 *Last updated: 2026-01-23*
