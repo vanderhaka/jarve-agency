@@ -35,6 +35,23 @@ async function getMessages(projectId: string) {
   const supabase = await createClient()
   console.log('[AdminChat] Fetching messages for project:', projectId)
   
+  // Check if user is in employees table for debugging
+  const { data: { user } } = await supabase.auth.getUser()
+  console.log('[AdminChat] Current user:', user?.id, user?.email)
+  
+  const { data: employee, error: empError } = await supabase
+    .from('employees')
+    .select('id, deleted_at')
+    .eq('id', user?.id)
+    .single()
+  console.log('[AdminChat] Employee record:', employee, 'Error:', empError)
+  
+  // Debug: Count all messages in the table
+  const { count: totalCount, error: countErr } = await supabase
+    .from('portal_messages')
+    .select('*', { count: 'exact', head: true })
+  console.log('[AdminChat] Total messages in table:', totalCount, 'Error:', countErr)
+  
   const { data, error } = await supabase
     .from('portal_messages')
     .select('*')
@@ -46,7 +63,7 @@ async function getMessages(projectId: string) {
     return []
   }
 
-  console.log('[AdminChat] Messages found:', data?.length || 0, data)
+  console.log('[AdminChat] Messages found for this project:', data?.length || 0, data)
   return data || []
 }
 
