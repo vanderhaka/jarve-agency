@@ -18,6 +18,7 @@ export default async function UploadsPage({ params }: UploadsPageProps) {
   const { manifest } = result
 
   // Get uploads for the first project
+  const firstProjectId = manifest.projects[0]?.id || null
   let uploads: {
     id: string
     file_name: string
@@ -26,12 +27,12 @@ export default async function UploadsPage({ params }: UploadsPageProps) {
     uploaded_by_type: string
     created_at: string
   }[] = []
-  if (manifest.projects.length > 0) {
-    const uploadsResult = await getClientUploads(token, manifest.projects[0].id)
+  if (firstProjectId) {
+    const uploadsResult = await getClientUploads(token, firstProjectId)
     if (uploadsResult.success) {
       uploads = uploadsResult.uploads
     }
   }
 
-  return <UploadsManager initialUploads={uploads} />
+  return <UploadsManager initialUploads={uploads} initialProjectId={firstProjectId} />
 }

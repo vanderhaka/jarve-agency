@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Upload, Download, FileText, Image, File, Trash2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Upload, Download, FileText, Image, File, Trash2, Loader2 } from 'lucide-react'
 import { usePortal } from './portal-context'
-import { uploadClientFile, getUploadSignedUrl } from '@/lib/integrations/portal'
+import { uploadClientFile, getUploadSignedUrl, getClientUploads } from '@/lib/integrations/portal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +20,7 @@ interface UploadItem {
 
 interface UploadsManagerProps {
   initialUploads: UploadItem[]
+  initialProjectId: string | null
 }
 
 function formatFileSize(bytes: number | null): string {
@@ -36,12 +37,41 @@ function getFileIcon(mimeType: string | null) {
   return File
 }
 
-export function UploadsManager({ initialUploads }: UploadsManagerProps) {
+export function UploadsManager({ initialUploads, initialProjectId }: UploadsManagerProps) {
   const { token, selectedProject } = usePortal()
   const [uploads, setUploads] = useState<UploadItem[]>(initialUploads)
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const currentProjectIdRef = useRef<string | null>(initialProjectId)
+
+  // Fetch uploads when project changes
+  useEffect(() => {
+    if (!selectedProject) return
+    
+    // Skip if this is the initial project (data already loaded from server)
+    if (selectedProject.id === currentProjectIdRef.current) return
+    
+    async function fetchUploads() {
+      setLoading(true)
+      try {
+        const result = await getClientUploads(token, selectedProject!.id)
+        if (result.success) {
+          setUploads(result.uploads)
+          currentProjectIdRef.current = selectedProject!.id
+        } else {
+          toast.error(result.error || 'Failed to load uploads')
+        }
+      } catch (error) {
+        toast.error('Failed to load uploads')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchUploads()
+  }, [token, selectedProject])
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -128,7 +158,7 @@ export function UploadsManager({ initialUploads }: UploadsManagerProps) {
             onChange={handleFileSelect}
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
           />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          <Button onClick={() => fileInputRef.current?.click()} disabled={uploading || loading}>
             <Upload className="h-4 w-4 mr-2" />
             {uploading ? 'Uploading...' : 'Upload File'}
           </Button>
@@ -145,7 +175,12 @@ export function UploadsManager({ initialUploads }: UploadsManagerProps) {
       </Card>
 
       {/* Uploads list */}
-      {uploads.length === 0 ? (
+      {loading ? (
+        <Card className="p-8 text-center">
+          <Loader2 className="h-12 w-12 mx-auto text-muted-foreground mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading uploads...</p>
+        </Card>
+      ) : uploads.length === 0 ? (
         <Card className="p-8 text-center">
           <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">No uploads yet</p>

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Loader2 } from 'lucide-react'
 import { usePortal } from './portal-context'
-import { postPortalMessage, updateReadState } from '@/lib/integrations/portal'
+import { postPortalMessage, updateReadState, getPortalMessages } from '@/lib/integrations/portal'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
@@ -19,14 +19,44 @@ interface Message {
 
 interface ChatInterfaceProps {
   initialMessages: Message[]
+  initialProjectId: string | null
 }
 
-export function ChatInterface({ initialMessages }: ChatInterfaceProps) {
+export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfaceProps) {
   const { token, selectedProject, manifest } = usePortal()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const currentProjectIdRef = useRef<string | null>(initialProjectId)
+
+  // Fetch messages when project changes
+  useEffect(() => {
+    if (!selectedProject) return
+    
+    // Skip if this is the initial project (data already loaded from server)
+    if (selectedProject.id === currentProjectIdRef.current) return
+    
+    async function fetchMessages() {
+      setLoading(true)
+      try {
+        const result = await getPortalMessages(token, selectedProject!.id, 100)
+        if (result.success) {
+          setMessages(result.messages)
+          currentProjectIdRef.current = selectedProject!.id
+        } else {
+          toast.error(result.error || 'Failed to load messages')
+        }
+      } catch (error) {
+        toast.error('Failed to load messages')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchMessages()
+  }, [token, selectedProject])
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -85,7 +115,11 @@ export function ChatInterface({ initialMessages }: ChatInterfaceProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto py-4 space-y-4">
-        {messages.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             No messages yet. Start the conversation!
           </div>

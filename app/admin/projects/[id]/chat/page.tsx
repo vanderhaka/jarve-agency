@@ -33,6 +33,8 @@ async function getProject(projectId: string) {
 
 async function getMessages(projectId: string) {
   const supabase = await createClient()
+  console.log('[AdminChat] Fetching messages for project:', projectId)
+  
   const { data, error } = await supabase
     .from('portal_messages')
     .select('*')
@@ -40,10 +42,11 @@ async function getMessages(projectId: string) {
     .order('created_at', { ascending: true })
 
   if (error) {
-    console.error('Error fetching messages:', error)
+    console.error('[AdminChat] Error fetching messages:', error)
     return []
   }
 
+  console.log('[AdminChat] Messages found:', data?.length || 0, data)
   return data || []
 }
 

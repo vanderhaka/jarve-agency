@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { FileText, Download, Check, Clock } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { FileText, Download, Check, Clock, Loader2 } from 'lucide-react'
 import { usePortal } from './portal-context'
-import { getContractDocSignedUrl } from '@/lib/integrations/portal'
+import { getContractDocSignedUrl, getContractDocs } from '@/lib/integrations/portal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,6 +19,7 @@ interface Doc {
 
 interface DocsVaultProps {
   initialDocs: Doc[]
+  initialProjectId: string | null
 }
 
 const docTypeLabels: Record<string, string> = {
@@ -29,9 +30,39 @@ const docTypeLabels: Record<string, string> = {
   signed: 'Signed Document',
 }
 
-export function DocsVault({ initialDocs }: DocsVaultProps) {
+export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
   const { token, selectedProject } = usePortal()
+  const [docs, setDocs] = useState<Doc[]>(initialDocs)
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const currentProjectIdRef = useRef<string | null>(initialProjectId)
+
+  // Fetch docs when project changes
+  useEffect(() => {
+    if (!selectedProject) return
+    
+    // Skip if this is the initial project (data already loaded from server)
+    if (selectedProject.id === currentProjectIdRef.current) return
+    
+    async function fetchDocs() {
+      setLoading(true)
+      try {
+        const result = await getContractDocs(token, selectedProject!.id)
+        if (result.success) {
+          setDocs(result.docs)
+          currentProjectIdRef.current = selectedProject!.id
+        } else {
+          toast.error(result.error || 'Failed to load documents')
+        }
+      } catch (error) {
+        toast.error('Failed to load documents')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchDocs()
+  }, [token, selectedProject])
 
   async function handleDownload(docId: string, docName: string) {
     setDownloading(docId)
@@ -70,7 +101,12 @@ export function DocsVault({ initialDocs }: DocsVaultProps) {
       </div>
 
       {/* Documents list */}
-      {initialDocs.length === 0 ? (
+      {loading ? (
+        <Card className="p-8 text-center">
+          <Loader2 className="h-12 w-12 mx-auto text-muted-foreground mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading documents...</p>
+        </Card>
+      ) : docs.length === 0 ? (
         <Card className="p-8 text-center">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">No documents yet</p>
@@ -80,7 +116,7 @@ export function DocsVault({ initialDocs }: DocsVaultProps) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {initialDocs.map((doc) => (
+          {docs.map((doc) => (
             <Card key={doc.id}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
