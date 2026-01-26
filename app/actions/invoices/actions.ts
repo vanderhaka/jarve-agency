@@ -5,9 +5,16 @@ import { revalidatePath } from 'next/cache'
 import {
   createXeroInvoice,
   getXeroInvoice,
+  getXeroInvoicePdf,
   xeroApiCall,
   XeroInvoice,
 } from '@/lib/integrations/xero/client'
+import {
+  generatePdfStoragePath,
+  buildContractDocEntry,
+  shouldSyncPdf,
+  isValidPdfBuffer,
+} from '@/lib/invoices/pdf-sync-helpers'
 
 // ============================================================
 // Types
@@ -298,16 +305,17 @@ export async function syncInvoiceToXero(
 
 /**
  * Sync invoice status from Xero
+ * Also syncs PDF and creates contract_docs entry if status allows
  */
 export async function syncInvoiceStatus(
   invoiceId: string
-): Promise<{ success: boolean; status?: string; error?: string }> {
+): Promise<{ success: boolean; status?: string; pdfSynced?: boolean; error?: string }> {
   const supabase = await createClient()
 
   try {
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
-      .select('xero_invoice_id')
+      .select('xero_invoice_id, invoice_number, client_id, project_id')
       .eq('id', invoiceId)
       .single()
 
@@ -332,10 +340,97 @@ export async function syncInvoiceStatus(
 
     await supabase.from('invoices').update(updates).eq('id', invoiceId)
 
-    return { success: true, status: xeroInvoice.Status }
+    // Sync PDF if status allows (not DRAFT)
+    let pdfSynced = false
+    if (shouldSyncPdf(xeroInvoice.Status)) {
+      pdfSynced = await syncInvoicePdf(invoiceId, invoice.xero_invoice_id, {
+        invoiceId,
+        invoiceNumber: invoice.invoice_number,
+        clientId: invoice.client_id,
+        projectId: invoice.project_id,
+      })
+    }
+
+    return { success: true, status: xeroInvoice.Status, pdfSynced }
   } catch (error) {
     console.error('Sync invoice status error', { error })
     return { success: false, error: 'Failed to sync status' }
+  }
+}
+
+/**
+ * Sync invoice PDF from Xero and store in contract_docs
+ */
+async function syncInvoicePdf(
+  invoiceId: string,
+  xeroInvoiceId: string,
+  params: {
+    invoiceId: string
+    invoiceNumber: string | null
+    clientId: string | null
+    projectId: string | null
+  }
+): Promise<boolean> {
+  const supabase = await createClient()
+
+  try {
+    // Check if we already have this PDF
+    const { data: existingDoc } = await supabase
+      .from('contract_docs')
+      .select('id')
+      .eq('source_table', 'invoices')
+      .eq('source_id', invoiceId)
+      .eq('doc_type', 'invoice')
+      .maybeSingle()
+
+    if (existingDoc) {
+      // PDF already synced
+      return true
+    }
+
+    // Fetch PDF from Xero
+    const pdfBuffer = await getXeroInvoicePdf(xeroInvoiceId)
+    if (!isValidPdfBuffer(pdfBuffer)) {
+      console.warn('Invalid or empty PDF received from Xero', { invoiceId })
+      return false
+    }
+
+    // Generate storage path and upload
+    const storagePath = generatePdfStoragePath(params)
+    const { error: uploadError } = await supabase.storage
+      .from('contract-docs')
+      .upload(storagePath, pdfBuffer!, {
+        contentType: 'application/pdf',
+        upsert: true,
+      })
+
+    if (uploadError) {
+      console.error('Failed to upload invoice PDF', { invoiceId, error: uploadError })
+      return false
+    }
+
+    // Create contract_docs entry
+    const docEntry = buildContractDocEntry(params, storagePath)
+    const { error: docError } = await supabase.from('contract_docs').insert({
+      client_id: docEntry.clientId,
+      project_id: docEntry.projectId,
+      doc_type: docEntry.docType,
+      title: docEntry.title,
+      file_path: docEntry.filePath,
+      source_table: docEntry.sourceTable,
+      source_id: docEntry.sourceId,
+    })
+
+    if (docError) {
+      console.error('Failed to create contract_docs entry', { invoiceId, error: docError })
+      return false
+    }
+
+    console.info('Invoice PDF synced successfully', { invoiceId, storagePath })
+    return true
+  } catch (error) {
+    console.error('Error syncing invoice PDF', { invoiceId, error })
+    return false
   }
 }
 

@@ -149,7 +149,8 @@ export async function GET(request: Request) {
         }
       }),
       ...(invoicesData.data || []).map(invoice => {
-        const clientData = invoice.client
+        // Handle the client join - it could be an object, array, or null
+        const clientData = invoice.client as { name: string } | { name: string }[] | null
         const client = Array.isArray(clientData) ? clientData[0] : clientData
         return {
           id: invoice.id,
