@@ -12,6 +12,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createAnonClient } from '@/utils/supabase/anon'
 import type {
   PortalManifest,
   PortalMessage,
@@ -28,7 +29,13 @@ export async function getPortalManifest(
   token: string
 ): Promise<{ success: true; manifest: PortalManifest } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
+
+    // Debug: Log token lookup (first/last 4 chars for security)
+    const tokenPreview = token.length > 8 
+      ? `${token.slice(0, 4)}...${token.slice(-4)}` 
+      : token
+    console.log(`[Portal] Looking up token: ${tokenPreview} (length: ${token.length})`)
 
     // Look up the token
     const { data: tokenData, error: tokenError } = await supabase
@@ -39,6 +46,7 @@ export async function getPortalManifest(
       .single()
 
     if (tokenError || !tokenData) {
+      console.log(`[Portal] Token lookup failed:`, tokenError?.message || 'No token found')
       return { success: false, error: 'Invalid or revoked token' }
     }
 
@@ -78,7 +86,6 @@ export async function getPortalManifest(
       .from('agency_projects')
       .select('id, name, status, created_at')
       .eq('client_id', client.id)
-      .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     if (projectsError) {
@@ -130,7 +137,7 @@ export async function getPortalManifest(
  * Get unread message count for a project/user
  */
 async function getUnreadCount(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAnonClient>,
   projectId: string,
   userType: 'owner' | 'client',
   userId: string
@@ -168,7 +175,7 @@ export async function getPortalMessages(
   offset: number = 0
 ): Promise<{ success: true; messages: PortalMessage[] } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -204,13 +211,16 @@ export async function postPortalMessage(
   body: string
 ): Promise<{ success: true; message: PortalMessage } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    console.log('[Portal] postPortalMessage called with projectId:', projectId, 'body length:', body.length)
+    const supabase = createAnonClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
     if (!validation.valid) {
+      console.log('[Portal] Token validation failed:', validation.error)
       return { success: false, error: validation.error }
     }
+    console.log('[Portal] Token validated, clientUserId:', validation.clientUserId)
 
     // Insert message
     const { data: message, error } = await supabase
@@ -225,9 +235,11 @@ export async function postPortalMessage(
       .single()
 
     if (error || !message) {
+      console.log('[Portal] Insert message error:', error)
       return { success: false, error: 'Failed to post message' }
     }
 
+    console.log('[Portal] Message posted successfully:', message.id)
     return { success: true, message: message as PortalMessage }
   } catch (error) {
     console.error('Error posting portal message:', error)
@@ -277,7 +289,7 @@ export async function updateReadState(
   projectId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -354,7 +366,7 @@ export async function getClientUploads(
   projectId: string
 ): Promise<{ success: true; uploads: ClientUpload[] } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -389,7 +401,7 @@ export async function uploadClientFile(
   formData: FormData
 ): Promise<{ success: true; upload: ClientUpload } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -472,7 +484,7 @@ export async function getUploadSignedUrl(
   uploadId: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Get the upload record
     const { data: upload, error: uploadError } = await supabase
@@ -515,7 +527,7 @@ export async function getContractDocs(
   projectId: string
 ): Promise<{ success: true; docs: ContractDoc[] } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -557,7 +569,7 @@ export async function getContractDocSignedUrl(
   docId: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = createAnonClient()
 
     // Get the doc record
     const { data: doc, error: docError } = await supabase
@@ -646,7 +658,7 @@ export async function deleteClientUpload(
  * Validate a token has access to a specific project
  */
 async function validateTokenForProject(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAnonClient>,
   token: string,
   projectId: string
 ): Promise<{ valid: true; clientUserId: string; clientId: string } | { valid: false; error: string }> {
@@ -679,7 +691,6 @@ async function validateTokenForProject(
     .select('id')
     .eq('id', projectId)
     .eq('client_id', clientUser.client_id)
-    .is('deleted_at', null)
     .single()
 
   if (projectError || !project) {

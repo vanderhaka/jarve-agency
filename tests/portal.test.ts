@@ -12,6 +12,10 @@ vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
 }))
 
+vi.mock('@/utils/supabase/anon', () => ({
+  createAnonClient: vi.fn(() => mockSupabaseClient),
+}))
+
 // Helper to create chainable query mocks
 function createQueryMock(data: unknown, error: { message: string } | null = null) {
   const mock = {
