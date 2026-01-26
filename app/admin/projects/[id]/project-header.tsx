@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, LayoutGrid, List } from 'lucide-react'
+import { ArrowLeft, LayoutGrid, List, MessageSquare } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { TaskStatus } from '@/lib/tasks/types'
 import { NewTaskDialog } from './new-task-dialog'
@@ -79,6 +79,12 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, overd
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link href={`/admin/projects/${project.id}/chat`}>
+            <Button variant="outline" size="sm">
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Chat
+            </Button>
+          </Link>
           <div className="flex rounded-md border">
             <Button
               variant={currentView === 'kanban' ? 'secondary' : 'ghost'}

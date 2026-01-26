@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Mail, Phone, Globe, MapPin, Calendar, Building, FileSignature, Plus } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Globe, MapPin, Calendar, Building } from 'lucide-react'
 import Link from 'next/link'
 import { InteractionTimeline } from '@/components/interaction-timeline'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 import { ContractDocsList } from '@/components/contract-docs-list'
 import { ClientMSACard } from '@/components/client-msa-card'
+import { PortalManagement } from '@/components/admin/portal/portal-management'
 
 async function getClient(id: string) {
   const supabase = await createClient()
@@ -77,7 +78,8 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="contracts">Contracts</TabsTrigger>
+<TabsTrigger value="contracts">Contracts</TabsTrigger>
+              <TabsTrigger value="portal">Portal</TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
             
@@ -156,9 +158,13 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
               </Card>
             </TabsContent>
             
-            <TabsContent value="contracts" className="space-y-6">
+<TabsContent value="contracts" className="space-y-6">
               <ClientMSACard clientId={client.id} clientName={client.name} />
               <ContractDocsList clientId={client.id} showProject />
+            </TabsContent>
+
+            <TabsContent value="portal">
+              <PortalManagement clientId={client.id} clientName={client.name} />
             </TabsContent>
 
             <TabsContent value="activity">
