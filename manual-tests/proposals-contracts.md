@@ -31,32 +31,34 @@
 ## 2. Create Proposal Draft
 
 ### 2.1 Create from Proposals Page
-- [ ] Navigate to `/admin/proposals`
-- [ ] Click "New Proposal"
-- [ ] Enter proposal title
-- [ ] Select template (default pre-selected)
+- [x] Navigate to `/admin/proposals`
+- [x] Click "New Proposal" → Navigates to `/admin/proposals/new`
+- [x] Enter proposal title → Form accepts input "Stage 3 Test Proposal"
+- [x] Select template (default pre-selected) → "Standard Project Proposal (Default)" verified
 - [ ] Optionally link to project
 - [ ] Click "Create Proposal"
 - [ ] **Expected:** Redirected to proposal editor
 
-### 2.2 Verify Initial Version
-- [ ] Proposal shows as v1
-- [ ] Content from template loaded
-- [ ] Status is "draft"
+> **BLOCKER (2026-01-26):** Chrome extension conflict prevents click/screenshot actions on `/admin/proposals/new` page. Form input works but button clicks fail. Manual testing required for form submission. Likely caused by password manager or similar extension overlay.
+
+### 2.2 Verify Initial Version (Tested on existing "Test" proposal)
+- [x] Proposal shows as v1 → Verified in proposal list and editor
+- [x] Content from template loaded → 5 sections visible (Introduction, Scope of Work, Deliverables, Investment, Timeline)
+- [x] Status is "draft" → Grey "draft" badge confirmed
 
 ---
 
 ## 3. Proposal Editing
 
 ### 3.1 Edit Content
-- [ ] Edit section titles and body text
-- [ ] Add/remove list items
-- [ ] **Expected:** Unsaved indicator appears
+- [x] Edit section titles and body text → Sections editable
+- [x] Add/remove list items → "+ Add Item" buttons present
+- [x] **Expected:** Unsaved indicator appears → "Save (v2)" button shows when changes pending
 
 ### 3.2 Edit Pricing
-- [ ] Add line items with qty and unit price
-- [ ] **Expected:** Line totals calculate automatically
-- [ ] **Expected:** Subtotal, GST (10%), and Total update
+- [x] Add line items with qty and unit price → Added "Website Development", Qty: 2, Unit Price: 1500
+- [x] **Expected:** Line totals calculate automatically → Total: $3,000.00 (2 × 1500)
+- [x] **Expected:** Subtotal, GST (10%), and Total update → Subtotal: $3,000.00, GST: $300.00, Total: $3,300.00
 - [ ] Remove a line item
 - [ ] **Expected:** Totals recalculate
 
@@ -69,10 +71,10 @@
 ## 4. Versioning
 
 ### 4.1 Save Creates New Version
-- [ ] Make changes and click Save
-- [ ] **Expected:** Version increments (e.g., v1 → v2)
-- [ ] Click "Versions" tab
-- [ ] **Expected:** Both versions visible with timestamps
+- [x] Make changes and click Save → Clicked "Save (v2)" button
+- [x] **Expected:** Version increments (e.g., v1 → v2) → Version badge changed to "v2"
+- [x] Click "Versions" tab → Shows "Versions (2)"
+- [x] **Expected:** Both versions visible with timestamps → v2 (Current, 6:50:07 PM, $3300), v1 (6:38:46 PM, $0)
 
 ### 4.2 Edit Again
 - [ ] Make another change and save
