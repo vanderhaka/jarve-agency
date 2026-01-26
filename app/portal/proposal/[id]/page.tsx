@@ -199,16 +199,40 @@ export default function PortalProposalPage() {
 
   if (signed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-lg">
           <CardContent className="pt-6">
-            <div className="flex flex-col items-center text-center gap-4">
-              <CheckCircle className="h-12 w-12 text-green-500" />
+            <div className="flex flex-col items-center text-center gap-6">
+              <div className="bg-green-100 p-4 rounded-full">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
               <div>
-                <h2 className="text-xl font-semibold">Proposal Signed</h2>
+                <h2 className="text-2xl font-semibold">Proposal Signed Successfully</h2>
                 <p className="text-muted-foreground mt-2">
-                  Thank you! This proposal has been signed successfully.
+                  Thank you for signing <span className="font-medium">{proposal?.title}</span>
                 </p>
+              </div>
+
+              <div className="w-full border-t pt-6 space-y-4 text-left">
+                <h3 className="font-medium text-center">What happens next?</h3>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">1</span>
+                    <span>You&apos;ll receive a confirmation email with a copy of the signed proposal</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">2</span>
+                    <span>Our team will review and reach out within 1-2 business days to begin the project</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">3</span>
+                    <span>You can close this window - no further action needed</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="w-full pt-2 text-center text-sm text-muted-foreground">
+                <p>Questions? Contact us at <a href="mailto:hello@jarve.agency" className="text-primary hover:underline">hello@jarve.agency</a></p>
               </div>
             </div>
           </CardContent>

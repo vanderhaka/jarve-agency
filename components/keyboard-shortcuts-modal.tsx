@@ -24,6 +24,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ['g', 'p'], description: 'Go to Projects', category: 'Navigation' },
   { keys: ['g', 'c'], description: 'Go to Clients', category: 'Navigation' },
   { keys: ['g', 't'], description: 'Go to My Tasks', category: 'Navigation' },
+  { keys: ['g', 'o'], description: 'Go to Proposals', category: 'Navigation' },
   {
     keys: ['g', 'm'],
     description: 'Go to Team Management',

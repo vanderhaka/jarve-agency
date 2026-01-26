@@ -9,6 +9,7 @@ import {
   CheckSquare,
   Shield,
   FileText,
+  FileSignature,
   Search,
 } from 'lucide-react'
 import { Button } from '@/components/terra-flow/ui/button'
@@ -33,6 +34,7 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
       { keys: ['g', 'p'], handler: () => router.push('/app/projects') },
       { keys: ['g', 'c'], handler: () => router.push('/app/clients') },
       { keys: ['g', 't'], handler: () => router.push('/app/tasks') },
+      { keys: ['g', 'o'], handler: () => router.push('/admin/proposals') },
       ...(isAdmin
         ? [
             { keys: ['g', 'm'], handler: () => router.push('/admin/employees') },
@@ -60,6 +62,9 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
         </NavLink>
         <NavLink href="/app/tasks" icon={CheckSquare}>
           My Tasks
+        </NavLink>
+        <NavLink href="/admin/proposals" icon={FileSignature}>
+          Proposals
         </NavLink>
 
         {/* Admin-only items with visual separator */}
