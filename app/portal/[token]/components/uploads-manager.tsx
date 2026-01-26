@@ -50,23 +50,34 @@ export function UploadsManager({ initialUploads, initialProjectId }: UploadsMana
   useEffect(() => {
     if (!selectedProject) return
     
+    const projectId = selectedProject.id
+    
     // Skip if this is the initial project (data already loaded from server)
-    if (selectedProject.id === currentProjectIdRef.current) return
+    if (projectId === currentProjectIdRef.current) return
+    
+    // Update ref immediately to track which project we're fetching for
+    currentProjectIdRef.current = projectId
     
     async function fetchUploads() {
       setLoading(true)
       try {
-        const result = await getClientUploads(token, selectedProject!.id)
+        const result = await getClientUploads(token, projectId)
+        // Check if this is still the current project before updating state
+        if (currentProjectIdRef.current !== projectId) return
         if (result.success) {
           setUploads(result.uploads)
-          currentProjectIdRef.current = selectedProject!.id
         } else {
           toast.error(result.error || 'Failed to load uploads')
         }
       } catch (error) {
+        // Check if this is still the current project before showing error
+        if (currentProjectIdRef.current !== projectId) return
         toast.error('Failed to load uploads')
       } finally {
-        setLoading(false)
+        // Only update loading state if this is still the current project
+        if (currentProjectIdRef.current === projectId) {
+          setLoading(false)
+        }
       }
     }
     

@@ -41,23 +41,34 @@ export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
   useEffect(() => {
     if (!selectedProject) return
     
+    const projectId = selectedProject.id
+    
     // Skip if this is the initial project (data already loaded from server)
-    if (selectedProject.id === currentProjectIdRef.current) return
+    if (projectId === currentProjectIdRef.current) return
+    
+    // Update ref immediately to track which project we're fetching for
+    currentProjectIdRef.current = projectId
     
     async function fetchDocs() {
       setLoading(true)
       try {
-        const result = await getContractDocs(token, selectedProject!.id)
+        const result = await getContractDocs(token, projectId)
+        // Check if this is still the current project before updating state
+        if (currentProjectIdRef.current !== projectId) return
         if (result.success) {
           setDocs(result.docs)
-          currentProjectIdRef.current = selectedProject!.id
         } else {
           toast.error(result.error || 'Failed to load documents')
         }
       } catch (error) {
+        // Check if this is still the current project before showing error
+        if (currentProjectIdRef.current !== projectId) return
         toast.error('Failed to load documents')
       } finally {
-        setLoading(false)
+        // Only update loading state if this is still the current project
+        if (currentProjectIdRef.current === projectId) {
+          setLoading(false)
+        }
       }
     }
     
