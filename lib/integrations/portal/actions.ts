@@ -183,19 +183,20 @@ export async function getPortalMessages(
       return { success: false, error: validation.error }
     }
 
-    // Fetch messages
+    // Fetch messages - order descending to get the N most recent, then reverse for chronological display
     const { data: messages, error } = await supabase
       .from('portal_messages')
       .select('*')
       .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
     if (error) {
       return { success: false, error: 'Failed to fetch messages' }
     }
 
-    return { success: true, messages: messages as PortalMessage[] }
+    // Reverse to restore chronological order (oldest to newest) for display
+    return { success: true, messages: (messages as PortalMessage[]).reverse() }
   } catch (error) {
     console.error('Error getting portal messages:', error)
     return { success: false, error: 'An unexpected error occurred' }
