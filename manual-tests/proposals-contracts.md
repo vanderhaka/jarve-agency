@@ -126,7 +126,7 @@
 - [x] **Expected:** Status shows "signed" (green badge) → "signed" badge visible
 - [x] **Expected:** Signed date displayed → "1/26/2026, 7:41:33 PM"
 - [x] **Expected:** Signer name and email visible → "James Van Der Haak", "jamesvanderhaak+5@gmail.com"
-- [ ] **Expected:** Cannot edit signed proposal
+- [x] **Expected:** Cannot edit signed proposal → No action buttons visible, content is read-only
 
 ---
 
@@ -222,11 +222,10 @@
 - [x] **Expected:** "Already signed" message → Shows "Proposal Signed Successfully" screen, no signing form displayed
 
 ### 11.3 Archive Proposal
-- [ ] Archive a draft proposal → Browser extension conflict prevents form submission
-- [ ] **Expected:** Status changes to "archived"
-- [ ] **Expected:** Cannot edit archived proposal
-
-**BLOCKER:** Extension conflicts prevent clicking "Create Proposal" button. Manual testing required.
+- [x] Archive a draft proposal → Created "Archive Test Proposal" via database, clicked Archive button
+- [x] **Expected:** Status changes to "archived" → Orange "archived" badge displayed
+- [x] **Expected:** Cannot edit archived proposal → No action buttons visible, content is read-only
+- [x] **Expected:** Archived proposal filtered from default list → Only non-archived proposals shown
 
 ---
 
@@ -258,7 +257,7 @@
 | 10. Global Search | ✅ PASS | Proposals searchable via ⌘K |
 | 11.1 Invalid Token | ✅ PASS | Access error displayed |
 | 11.2 Already Signed | ✅ PASS | Shows signed state, no re-sign form |
-| 11.3 Archive Proposal | ⏸️ BLOCKED | Extension conflict on form submit |
+| 11.3 Archive Proposal | ✅ PASS | Status changes to archived, no edit allowed |
 
 ### Fixes Implemented During Testing
 1. Added "Proposals" to main navigation bar
