@@ -7,6 +7,7 @@ import {
   getXeroInvoice,
   getXeroInvoicePdf,
   xeroApiCall,
+  postPaymentToXero,
   XeroInvoice,
 } from '@/lib/integrations/xero/client'
 import {
@@ -194,7 +195,7 @@ export async function createInvoice(
     // Try to sync to Xero
     await syncInvoiceToXero(invoice.id)
 
-    revalidatePath('/app/projects')
+    revalidatePath('/admin/projects')
     revalidatePath('/admin/invoices')
 
     return { success: true, invoiceId: invoice.id }
@@ -552,7 +553,7 @@ export async function markInvoicePaid(
       await postPaymentToXero(invoice.xero_invoice_id, paymentAmount, date)
     }
 
-    revalidatePath('/app/projects')
+    revalidatePath('/admin/projects')
     revalidatePath('/admin/invoices')
 
     return { success: true }
@@ -602,56 +603,6 @@ async function createOrGetXeroContact(client: {
   }
 
   return { success: true, contactId: createResult.data.Contacts[0].ContactID }
-}
-
-/**
- * Post a payment to Xero
- */
-async function postPaymentToXero(
-  xeroInvoiceId: string,
-  amount: number,
-  paymentDate: string
-): Promise<boolean> {
-  try {
-    // Get the first active bank account
-    const accountsResult = await xeroApiCall<{
-      Accounts: Array<{ AccountID: string; Name: string; Type: string; Status: string }>
-    }>('/Accounts?where=Type=="BANK"&&Status=="ACTIVE"')
-
-    if (!accountsResult.success || !accountsResult.data?.Accounts?.length) {
-      console.warn('No active bank account found in Xero')
-      return false
-    }
-
-    const bankAccount = accountsResult.data.Accounts[0]
-
-    // Post the payment
-    const paymentResult = await xeroApiCall('/Payments', {
-      method: 'POST',
-      body: {
-        Payments: [
-          {
-            Invoice: { InvoiceID: xeroInvoiceId },
-            Account: { AccountID: bankAccount.AccountID },
-            Amount: amount,
-            Date: paymentDate,
-            Reference: 'Manual payment',
-          },
-        ],
-      },
-    })
-
-    if (!paymentResult.success) {
-      console.error('Failed to post payment to Xero', { error: paymentResult.error })
-      return false
-    }
-
-    console.info('Payment posted to Xero', { xeroInvoiceId, amount })
-    return true
-  } catch (error) {
-    console.error('Error posting payment to Xero', { error })
-    return false
-  }
 }
 
 /**

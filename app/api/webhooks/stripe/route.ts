@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { verifyWebhookSignature, getPaymentIntent } from '@/lib/integrations/stripe/client'
-import { xeroApiCall } from '@/lib/integrations/xero/client'
+import { postPaymentToXero } from '@/lib/integrations/xero/client'
 import { NextResponse } from 'next/server'
 
 /**
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
 
         if (paymentError) {
           console.error('Failed to record Stripe payment', { error: paymentError })
+          return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
         }
 
         // Update invoice status
@@ -120,55 +121,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Stripe webhook error', { error, eventType: event.type })
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
-  }
-}
-
-/**
- * Post a payment to Xero for the invoice
- */
-async function postPaymentToXero(
-  xeroInvoiceId: string,
-  amount: number,
-  paymentDate: string
-): Promise<boolean> {
-  try {
-    // Get the first bank account from Xero
-    const accountsResult = await xeroApiCall<{
-      Accounts: Array<{ AccountID: string; Name: string; Type: string; Status: string }>
-    }>('/Accounts?where=Type=="BANK"&&Status=="ACTIVE"')
-
-    if (!accountsResult.success || !accountsResult.data?.Accounts?.length) {
-      console.warn('No active bank account found in Xero')
-      return false
-    }
-
-    const bankAccount = accountsResult.data.Accounts[0]
-
-    // Post the payment
-    const paymentResult = await xeroApiCall('/Payments', {
-      method: 'POST',
-      body: {
-        Payments: [
-          {
-            Invoice: { InvoiceID: xeroInvoiceId },
-            Account: { AccountID: bankAccount.AccountID },
-            Amount: amount,
-            Date: paymentDate,
-            Reference: 'Stripe payment',
-          },
-        ],
-      },
-    })
-
-    if (!paymentResult.success) {
-      console.error('Failed to post payment to Xero', { error: paymentResult.error })
-      return false
-    }
-
-    console.info('Payment posted to Xero', { xeroInvoiceId, amount })
-    return true
-  } catch (error) {
-    console.error('Error posting payment to Xero', { error })
-    return false
   }
 }

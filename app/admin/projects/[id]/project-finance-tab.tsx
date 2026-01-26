@@ -75,6 +75,7 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showMarkPaidDialog, setShowMarkPaidDialog] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [gstRate, setGstRate] = useState(0.1)
   const supabase = createClient()
 
   // Form state for creating invoice
@@ -84,8 +85,20 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
 
   useEffect(() => {
     fetchInvoices()
+    fetchGstRate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
+
+  async function fetchGstRate() {
+    const { data: settings } = await supabase
+      .from('agency_settings')
+      .select('gst_rate')
+      .single()
+    
+    if (settings?.gst_rate !== null && settings?.gst_rate !== undefined) {
+      setGstRate(settings.gst_rate)
+    }
+  }
 
   async function fetchInvoices() {
     setLoading(true)
@@ -196,7 +209,7 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
     (sum, item) => sum + item.quantity * item.unitPrice,
     0
   )
-  const gstAmount = totalAmount * 0.1
+  const gstAmount = totalAmount * gstRate
   const grandTotal = totalAmount + gstAmount
 
   if (loading) {
@@ -329,7 +342,7 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
                     <span>${totalAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>GST (10%)</span>
+                    <span>GST ({(gstRate * 100).toFixed(0)}%)</span>
                     <span>${gstAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-bold">
@@ -380,7 +393,7 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
                   <TableRow key={invoice.id}>
                     <TableCell>
                       <Link
-                        href={`/app/invoices/${invoice.id}`}
+                        href={`/admin/invoices/${invoice.id}`}
                         className="font-medium hover:underline"
                       >
                         {invoice.invoiceNumber || 'Draft'}
@@ -492,7 +505,7 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
                             </DialogContent>
                           </Dialog>
                         )}
-                        <Link href={`/app/invoices/${invoice.id}`}>
+                        <Link href={`/admin/invoices/${invoice.id}`}>
                           <Button variant="ghost" size="sm" title="View details">
                             <ExternalLink className="h-4 w-4" />
                           </Button>

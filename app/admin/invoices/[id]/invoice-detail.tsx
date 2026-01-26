@@ -117,10 +117,22 @@ export function InvoiceDetail({ invoice }: Props) {
       const result = await markInvoicePaid(invoice.id)
 
       if (result.success) {
+        const paymentDate = new Date().toISOString().split('T')[0]
+        const paymentAmount = currentInvoice.total || 0
         setCurrentInvoice((prev) => ({
           ...prev,
           xero_status: 'PAID',
           paid_at: new Date().toISOString(),
+          payments: [
+            ...prev.payments,
+            {
+              id: `temp-${Date.now()}`,
+              amount: paymentAmount,
+              payment_date: paymentDate,
+              method: 'manual',
+              reference: null,
+            },
+          ],
         }))
         setShowMarkPaidDialog(false)
       } else {

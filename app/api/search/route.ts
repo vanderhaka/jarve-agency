@@ -122,7 +122,7 @@ export async function GET(request: Request) {
           name: invoice.invoice_number || 'Draft Invoice',
           subtitle: client?.name || `$${invoice.total?.toFixed(2) || '0.00'}`,
           type: 'invoice' as const,
-          href: `/app/invoices/${invoice.id}`,
+          href: `/admin/invoices/${invoice.id}`,
         }
       }),
     ]
