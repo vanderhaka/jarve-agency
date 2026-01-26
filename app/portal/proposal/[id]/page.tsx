@@ -102,14 +102,25 @@ export default function PortalProposalPage() {
       return
     }
 
-    setProposal(data as Proposal)
+    // Transform data - Supabase joins return arrays
+    const clientData = Array.isArray(data.client) ? data.client[0] : data.client
+    const versionsData = Array.isArray(data.versions) ? data.versions : []
+    const transformedProposal: Proposal = {
+      id: data.id,
+      title: data.title,
+      status: data.status,
+      current_version: data.current_version,
+      client: clientData,
+      versions: versionsData
+    }
+    setProposal(transformedProposal)
 
     if (data.status === 'signed') {
       setSigned(true)
     }
 
     // Find the version that was sent
-    const version = data.versions?.find(
+    const version = versionsData.find(
       (v: ProposalVersion) => v.version === data.current_version
     )
     if (version) {

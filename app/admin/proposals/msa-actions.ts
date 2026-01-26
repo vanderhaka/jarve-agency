@@ -350,11 +350,12 @@ export async function signMSA(msaId: string, input: SignMSAInput) {
     return { success: false, message: 'Access token has been revoked' }
   }
 
-  const clientUser = tokenData.client_users as {
-    id: string
-    name: string
-    email: string
-    client_id: string
+  // Supabase joins return arrays - extract first element
+  const clientUsersData = tokenData.client_users
+  const clientUser = Array.isArray(clientUsersData) ? clientUsersData[0] : clientUsersData
+
+  if (!clientUser) {
+    return { success: false, message: 'Invalid client user' }
   }
 
   // Get MSA and verify it belongs to this client

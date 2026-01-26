@@ -86,21 +86,31 @@ export default function NewProposalPage() {
       }
 
       if (leadsRes.data) setLeads(leadsRes.data)
-      if (projectsRes.data) setProjects(projectsRes.data as Project[])
+
+      // Transform projects - Supabase returns client as array
+      if (projectsRes.data) {
+        const transformedProjects = projectsRes.data.map(p => ({
+          id: p.id,
+          name: p.name,
+          client_id: p.client_id,
+          client: Array.isArray(p.client) ? p.client[0] : p.client
+        }))
+        setProjects(transformedProjects)
+
+        // If projectId is provided, get project name for title
+        if (projectId) {
+          const project = transformedProjects.find(p => p.id === projectId)
+          if (project) {
+            setTitle(`Proposal for ${project.name}`)
+          }
+        }
+      }
 
       // If leadId is provided, get lead name for title
       if (leadId && leadsRes.data) {
         const lead = leadsRes.data.find(l => l.id === leadId)
         if (lead) {
           setTitle(`Proposal for ${lead.name}`)
-        }
-      }
-
-      // If projectId is provided, get project name for title
-      if (projectId && projectsRes.data) {
-        const project = projectsRes.data.find((p: Project) => p.id === projectId)
-        if (project) {
-          setTitle(`Proposal for ${project.name}`)
         }
       }
 

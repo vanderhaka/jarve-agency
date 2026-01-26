@@ -442,6 +442,7 @@ export async function signProposal(input: SignProposalInput) {
       id,
       client_user_id,
       revoked_at,
+      view_count,
       client_users (
         id,
         name,
@@ -460,11 +461,12 @@ export async function signProposal(input: SignProposalInput) {
     return { success: false, message: 'Access token has been revoked' }
   }
 
-  const clientUser = tokenData.client_users as {
-    id: string
-    name: string
-    email: string
-    client_id: string
+  // Supabase joins return arrays - extract first element
+  const clientUsersData = tokenData.client_users
+  const clientUser = Array.isArray(clientUsersData) ? clientUsersData[0] : clientUsersData
+
+  if (!clientUser) {
+    return { success: false, message: 'Invalid client user' }
   }
 
   // Get the proposal that was sent to this client user
@@ -491,10 +493,12 @@ export async function signProposal(input: SignProposalInput) {
     return { success: false, message: 'No proposal found for signing' }
   }
 
-  const proposal = sentVersion.proposals as {
-    id: string
-    status: string
-    client_id: string
+  // Supabase joins return arrays - extract first element
+  const proposalsData = sentVersion.proposals
+  const proposal = Array.isArray(proposalsData) ? proposalsData[0] : proposalsData
+
+  if (!proposal) {
+    return { success: false, message: 'Proposal not found' }
   }
 
   if (proposal.status === 'signed') {

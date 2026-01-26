@@ -121,20 +121,26 @@ export async function GET(request: Request) {
         type: 'employee' as const,
         href: `/admin/employees/${employee.id}`,
       })),
-      ...(proposalsData.data || []).map((proposal: { id: string; title: string; status: string; client?: { name: string } | null }) => ({
-        id: proposal.id,
-        name: proposal.title,
-        subtitle: proposal.client?.name || proposal.status,
-        type: 'proposal' as const,
-        href: `/admin/proposals/${proposal.id}`,
-      })),
-      ...(contractDocsData.data || []).map((doc: { id: string; title: string; doc_type: string; client?: { name: string } | null }) => ({
-        id: doc.id,
-        name: doc.title,
-        subtitle: doc.client?.name || doc.doc_type,
-        type: 'contract' as const,
-        href: `/admin/proposals`, // Link to proposals page as contracts are embedded
-      })),
+      ...(proposalsData.data || []).map((proposal) => {
+        const client = Array.isArray(proposal.client) ? proposal.client[0] : proposal.client
+        return {
+          id: proposal.id,
+          name: proposal.title,
+          subtitle: client?.name || proposal.status,
+          type: 'proposal' as const,
+          href: `/admin/proposals/${proposal.id}`,
+        }
+      }),
+      ...(contractDocsData.data || []).map((doc) => {
+        const client = Array.isArray(doc.client) ? doc.client[0] : doc.client
+        return {
+          id: doc.id,
+          name: doc.title,
+          subtitle: client?.name || doc.doc_type,
+          type: 'contract' as const,
+          href: `/admin/proposals`, // Link to proposals page as contracts are embedded
+        }
+      }),
     ]
 
     return NextResponse.json({ results })

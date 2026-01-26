@@ -39,7 +39,13 @@ async function getProposals() {
     return []
   }
 
-  return data || []
+  // Transform data - Supabase joins return arrays, extract first element
+  return (data || []).map(p => ({
+    ...p,
+    client: Array.isArray(p.client) ? p.client[0] : p.client,
+    project: Array.isArray(p.project) ? p.project[0] : p.project,
+    lead: Array.isArray(p.lead) ? p.lead[0] : p.lead,
+  }))
 }
 
 async function getTemplates() {

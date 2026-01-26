@@ -63,13 +63,21 @@ export default function PortalMSAPage() {
       return
     }
 
-    const clientUser = tokenData.client_users as { client_id: string }
+    // Supabase joins return arrays - extract first element
+    const clientUsersData = tokenData.client_users
+    const clientUser = Array.isArray(clientUsersData) ? clientUsersData[0] : clientUsersData
+
+    if (!clientUser) {
+      setError('Invalid client user')
+      setLoading(false)
+      return
+    }
 
     // Fetch MSA
     const { data, error: msaError } = await supabase
       .from('client_msas')
       .select(`
-        id, title, status, content,
+        id, title, status, content, client_id,
         client:clients(name)
       `)
       .eq('id', msaId)
@@ -88,7 +96,15 @@ export default function PortalMSAPage() {
       return
     }
 
-    setMsa(data as MSA)
+    // Transform client from array to object
+    const clientData = Array.isArray(data.client) ? data.client[0] : data.client
+    setMsa({
+      id: data.id,
+      title: data.title,
+      status: data.status,
+      content: data.content,
+      client: clientData
+    })
 
     if (data.status === 'signed') {
       setSigned(true)
