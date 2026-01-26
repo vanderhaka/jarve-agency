@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { verifyWebhookSignature, getPaymentIntent } from '@/lib/integrations/stripe/client'
-import { xeroApiCall } from '@/lib/integrations/xero/client'
+import { postPaymentToXero } from '@/lib/integrations/xero/payments'
+import { calculatePaymentAmount } from '@/lib/invoices/stripe-webhook-helpers'
 import { NextResponse } from 'next/server'
 
 /**
@@ -39,6 +40,22 @@ export async function POST(request: Request) {
           return NextResponse.json({ received: true })
         }
 
+        // Check for existing payment (idempotency check)
+        if (session.payment_intent) {
+          const { data: existingPayment } = await supabase
+            .from('payments')
+            .select('id')
+            .eq('stripe_payment_intent_id', session.payment_intent)
+            .single()
+
+          if (existingPayment) {
+            console.info('Payment already processed (duplicate webhook)', { 
+              paymentIntentId: session.payment_intent 
+            })
+            return NextResponse.json({ received: true })
+          }
+        }
+
         // Get the invoice
         const { data: invoice, error: invoiceError } = await supabase
           .from('invoices')
@@ -51,8 +68,14 @@ export async function POST(request: Request) {
           return NextResponse.json({ received: true })
         }
 
-        const paymentAmount = session.amount_total ? session.amount_total / 100 : invoice.total
+        const paymentAmount = calculatePaymentAmount(session.amount_total, invoice.total)
         const paymentDate = new Date().toISOString().split('T')[0]
+
+        // Validate payment amount is not null
+        if (paymentAmount == null) {
+          console.error('Invalid payment amount: invoice total is null', { invoiceId })
+          return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 })
+        }
 
         // Record the payment locally
         const { error: paymentError } = await supabase.from('payments').insert({
@@ -81,7 +104,7 @@ export async function POST(request: Request) {
 
         // Post payment to Xero if connected and invoice has xero_invoice_id
         if (invoice.xero_invoice_id) {
-          await postPaymentToXero(invoice.xero_invoice_id, paymentAmount, paymentDate)
+          await postPaymentToXero(invoice.xero_invoice_id, paymentAmount, paymentDate, 'Stripe payment')
         }
 
         console.info('Stripe payment processed', {
@@ -123,52 +146,3 @@ export async function POST(request: Request) {
   }
 }
 
-/**
- * Post a payment to Xero for the invoice
- */
-async function postPaymentToXero(
-  xeroInvoiceId: string,
-  amount: number,
-  paymentDate: string
-): Promise<boolean> {
-  try {
-    // Get the first bank account from Xero
-    const accountsResult = await xeroApiCall<{
-      Accounts: Array<{ AccountID: string; Name: string; Type: string; Status: string }>
-    }>('/Accounts?where=Type=="BANK"&&Status=="ACTIVE"')
-
-    if (!accountsResult.success || !accountsResult.data?.Accounts?.length) {
-      console.warn('No active bank account found in Xero')
-      return false
-    }
-
-    const bankAccount = accountsResult.data.Accounts[0]
-
-    // Post the payment
-    const paymentResult = await xeroApiCall('/Payments', {
-      method: 'POST',
-      body: {
-        Payments: [
-          {
-            Invoice: { InvoiceID: xeroInvoiceId },
-            Account: { AccountID: bankAccount.AccountID },
-            Amount: amount,
-            Date: paymentDate,
-            Reference: 'Stripe payment',
-          },
-        ],
-      },
-    })
-
-    if (!paymentResult.success) {
-      console.error('Failed to post payment to Xero', { error: paymentResult.error })
-      return false
-    }
-
-    console.info('Payment posted to Xero', { xeroInvoiceId, amount })
-    return true
-  } catch (error) {
-    console.error('Error posting payment to Xero', { error })
-    return false
-  }
-}

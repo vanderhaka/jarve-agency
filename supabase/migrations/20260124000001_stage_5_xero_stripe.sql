@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoices(client_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_project_id ON invoices(project_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_xero_invoice_id ON invoices(xero_invoice_id) WHERE xero_invoice_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_invoices_xero_status ON invoices(xero_status);
-CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number ON invoices(invoice_number);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_invoice_number_unique ON invoices(invoice_number) WHERE invoice_number IS NOT NULL;
 
 -- ============================================================
 -- PART 4: Create invoice_line_items table

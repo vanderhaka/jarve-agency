@@ -57,6 +57,7 @@ export interface XeroInvoice {
   Total?: number
   AmountDue?: number
   AmountPaid?: number
+  FullyPaidOnDate?: string
   Reference?: string
 }
 

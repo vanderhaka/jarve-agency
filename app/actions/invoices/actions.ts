@@ -8,6 +8,11 @@ import {
   xeroApiCall,
   XeroInvoice,
 } from '@/lib/integrations/xero/client'
+import { postPaymentToXero } from '@/lib/integrations/xero/payments'
+import { 
+  calculateInvoiceTotals, 
+  generateInvoiceNumber 
+} from '@/lib/invoices/helpers'
 
 // ============================================================
 // Types
@@ -106,13 +111,8 @@ export async function createInvoice(
     const invoicePrefix = settings?.invoice_prefix ?? 'INV'
     const termsDays = settings?.invoice_terms_days ?? 14
 
-    // Calculate totals
-    const subtotal = payload.lineItems.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
-      0
-    )
-    const gstAmount = subtotal * gstRate
-    const total = subtotal + gstAmount
+    // Calculate totals using helper function (includes rounding)
+    const { subtotal, gstAmount, total } = calculateInvoiceTotals(payload.lineItems, gstRate)
 
     // Determine dates
     const issueDate = payload.issueDate || new Date().toISOString().split('T')[0]
@@ -122,46 +122,66 @@ export async function createInvoice(
         .toISOString()
         .split('T')[0]
 
-    // Get next invoice number
-    const { data: lastInvoice } = await supabase
-      .from('invoices')
-      .select('invoice_number')
-      .ilike('invoice_number', `${invoicePrefix}-%`)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+    // Retry logic for invoice number generation (handles race condition)
+    let invoice: { id: string } | null = null
+    let lastError: unknown = null
+    const maxRetries = 3
 
-    let nextNumber = 1
-    if (lastInvoice?.invoice_number) {
-      const match = lastInvoice.invoice_number.match(/-(\d+)$/)
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Get next invoice number
+        const { data: lastInvoice } = await supabase
+          .from('invoices')
+          .select('invoice_number')
+          .ilike('invoice_number', `${invoicePrefix}-%`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        const invoiceNumber = generateInvoiceNumber(invoicePrefix, lastInvoice?.invoice_number || null)
+
+        // Create the invoice
+        const { data: invoiceData, error: invoiceError } = await supabase
+          .from('invoices')
+          .insert({
+            client_id: payload.clientId,
+            project_id: payload.projectId || null,
+            invoice_number: invoiceNumber,
+            currency,
+            subtotal,
+            gst_rate: gstRate,
+            gst_amount: gstAmount,
+            total,
+            issue_date: issueDate,
+            due_date: dueDate,
+            xero_status: 'DRAFT',
+            created_by: user.id,
+          })
+          .select('id')
+          .single()
+
+        if (invoiceError) {
+          // Check if it's a unique constraint violation
+          if (invoiceError.code === '23505' && attempt < maxRetries - 1) {
+            // Retry on duplicate invoice number
+            continue
+          }
+          throw invoiceError
+        }
+
+        invoice = invoiceData
+        break
+      } catch (error) {
+        lastError = error
+        if (attempt === maxRetries - 1) {
+          console.error('Failed to create invoice after retries', { error: lastError })
+          return { success: false, error: 'Failed to create invoice' }
+        }
       }
     }
-    const invoiceNumber = `${invoicePrefix}-${String(nextNumber).padStart(4, '0')}`
 
-    // Create the invoice
-    const { data: invoice, error: invoiceError } = await supabase
-      .from('invoices')
-      .insert({
-        client_id: payload.clientId,
-        project_id: payload.projectId || null,
-        invoice_number: invoiceNumber,
-        currency,
-        subtotal,
-        gst_rate: gstRate,
-        gst_amount: gstAmount,
-        total,
-        issue_date: issueDate,
-        due_date: dueDate,
-        xero_status: 'DRAFT',
-        created_by: user.id,
-      })
-      .select('id')
-      .single()
-
-    if (invoiceError || !invoice) {
-      console.error('Failed to create invoice', { error: invoiceError })
+    if (!invoice) {
+      console.error('Failed to create invoice', { error: lastError })
       return { success: false, error: 'Failed to create invoice' }
     }
 
@@ -327,7 +347,8 @@ export async function syncInvoiceStatus(
     }
 
     if (xeroInvoice.Status === 'PAID' && xeroInvoice.AmountPaid) {
-      updates.paid_at = new Date().toISOString()
+      // Use Xero's actual payment date if available, otherwise use current time
+      updates.paid_at = xeroInvoice.FullyPaidOnDate || new Date().toISOString()
     }
 
     await supabase.from('invoices').update(updates).eq('id', invoiceId)
@@ -429,6 +450,11 @@ export async function markInvoicePaid(
     const paymentAmount = amount ?? invoice.total
     const date = paymentDate || new Date().toISOString().split('T')[0]
 
+    // Validate payment amount is not null
+    if (paymentAmount == null) {
+      return { success: false, error: 'Invalid payment amount: invoice total is null' }
+    }
+
     // Record the payment locally
     const { error: paymentError } = await supabase.from('payments').insert({
       invoice_id: invoiceId,
@@ -454,7 +480,7 @@ export async function markInvoicePaid(
 
     // Post payment to Xero if connected
     if (invoice.xero_invoice_id) {
-      await postPaymentToXero(invoice.xero_invoice_id, paymentAmount, date)
+      await postPaymentToXero(invoice.xero_invoice_id, paymentAmount, date, 'Manual payment')
     }
 
     revalidatePath('/app/projects')
@@ -507,56 +533,6 @@ async function createOrGetXeroContact(client: {
   }
 
   return { success: true, contactId: createResult.data.Contacts[0].ContactID }
-}
-
-/**
- * Post a payment to Xero
- */
-async function postPaymentToXero(
-  xeroInvoiceId: string,
-  amount: number,
-  paymentDate: string
-): Promise<boolean> {
-  try {
-    // Get the first active bank account
-    const accountsResult = await xeroApiCall<{
-      Accounts: Array<{ AccountID: string; Name: string; Type: string; Status: string }>
-    }>('/Accounts?where=Type=="BANK"&&Status=="ACTIVE"')
-
-    if (!accountsResult.success || !accountsResult.data?.Accounts?.length) {
-      console.warn('No active bank account found in Xero')
-      return false
-    }
-
-    const bankAccount = accountsResult.data.Accounts[0]
-
-    // Post the payment
-    const paymentResult = await xeroApiCall('/Payments', {
-      method: 'POST',
-      body: {
-        Payments: [
-          {
-            Invoice: { InvoiceID: xeroInvoiceId },
-            Account: { AccountID: bankAccount.AccountID },
-            Amount: amount,
-            Date: paymentDate,
-            Reference: 'Manual payment',
-          },
-        ],
-      },
-    })
-
-    if (!paymentResult.success) {
-      console.error('Failed to post payment to Xero', { error: paymentResult.error })
-      return false
-    }
-
-    console.info('Payment posted to Xero', { xeroInvoiceId, amount })
-    return true
-  } catch (error) {
-    console.error('Error posting payment to Xero', { error })
-    return false
-  }
 }
 
 /**
