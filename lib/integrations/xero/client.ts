@@ -317,3 +317,36 @@ export async function getXeroInvoice(invoiceId: string): Promise<XeroInvoice | n
   const result = await xeroApiCall<{ Invoices: XeroInvoice[] }>(`/Invoices/${invoiceId}`)
   return result.data?.Invoices?.[0] || null
 }
+
+/**
+ * Fetch invoice PDF from Xero
+ * Returns the PDF as a Buffer, or null if failed
+ */
+export async function getXeroInvoicePdf(invoiceId: string): Promise<Buffer | null> {
+  const credentials = await getValidAccessToken()
+  if (!credentials) {
+    console.warn('Cannot fetch PDF: Not connected to Xero')
+    return null
+  }
+
+  try {
+    const response = await fetch(`${XERO_API_URL}/Invoices/${invoiceId}`, {
+      headers: {
+        Authorization: `Bearer ${credentials.accessToken}`,
+        'xero-tenant-id': credentials.tenantId,
+        Accept: 'application/pdf',
+      },
+    })
+
+    if (!response.ok) {
+      console.error('Failed to fetch Xero invoice PDF', { invoiceId, status: response.status })
+      return null
+    }
+
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  } catch (error) {
+    console.error('Error fetching Xero invoice PDF', { invoiceId, error })
+    return null
+  }
+}

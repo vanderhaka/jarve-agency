@@ -114,7 +114,9 @@ export async function GET(request: Request) {
         href: `/admin/employees/${employee.id}`,
       })),
       ...(invoicesData.data || []).map(invoice => {
-        const client = invoice.client as { name: string } | null
+        // Handle the client join - it could be an object, array, or null
+        const clientData = invoice.client as { name: string } | { name: string }[] | null
+        const client = Array.isArray(clientData) ? clientData[0] : clientData
         return {
           id: invoice.id,
           name: invoice.invoice_number || 'Draft Invoice',
