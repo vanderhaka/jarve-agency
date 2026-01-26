@@ -169,8 +169,9 @@ export default function ProposalDetailPage() {
   }, [supabase, proposalId, router])
 
   useEffect(() => {
-    fetchProposal()
-  }, [fetchProposal])
+    void fetchProposal()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Section handlers
   const updateSection = (sectionId: string, updates: Partial<ProposalSection>) => {
@@ -214,7 +215,7 @@ export default function ProposalDetailPage() {
   const addLineItem = () => {
     if (!content) return
     const newItem: PricingLineItem = {
-      id: `item_${Date.now()}`,
+      id: crypto.randomUUID(),
       label: '',
       qty: 1,
       unitPrice: 0,

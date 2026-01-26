@@ -54,8 +54,8 @@ export default function NewProposalPage() {
 
   const [title, setTitle] = useState('')
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
-  const [selectedLeadId, setSelectedLeadId] = useState(leadId || '')
-  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '')
+  const [selectedLeadId, setSelectedLeadId] = useState(leadId ? leadId : '__none__')
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId ? projectId : '__none__')
 
   const supabase = createClient()
 
@@ -134,9 +134,9 @@ export default function NewProposalPage() {
 
     const result = await createProposal({
       title: title.trim(),
-      templateId: selectedTemplateId || undefined,
-      leadId: selectedLeadId || undefined,
-      projectId: selectedProjectId || undefined
+      templateId: selectedTemplateId ? selectedTemplateId : undefined,
+      leadId: selectedLeadId !== '__none__' ? selectedLeadId : undefined,
+      projectId: selectedProjectId !== '__none__' ? selectedProjectId : undefined
     })
 
     if (result.success && result.proposalId) {
@@ -228,7 +228,7 @@ export default function NewProposalPage() {
                     <SelectValue placeholder="Select a lead (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="__none__">None</SelectItem>
                     {leads.map((lead) => (
                       <SelectItem key={lead.id} value={lead.id}>
                         {lead.name} {lead.company ? `(${lead.company})` : ''}
@@ -245,7 +245,7 @@ export default function NewProposalPage() {
                     <SelectValue placeholder="Select a project (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="__none__">None</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name} {project.client?.name ? `(${project.client.name})` : ''}

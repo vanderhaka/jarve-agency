@@ -1,30 +1,30 @@
 # Manual Testing Checklist — Proposals & Contracts (MSA + SOW)
 
 **Feature:** Proposal builder + signing, MSA management, Contract Docs Vault
-**Date:** __________
-**Tester:** __________
+**Date:** 2026-01-26
+**Tester:** Claude Code (Automated)
 
 ## Prerequisites
-- [ ] Logged in as admin
-- [ ] Stage 3 migration applied to database
-- [ ] At least one client exists with a client_user
-- [ ] At least one project exists linked to that client
+- [x] Logged in as admin
+- [x] Stage 3 migration applied to database
+- [x] At least one client exists with a client_user
+- [x] At least one project exists linked to that client
 
 ---
 
 ## 1. Proposal Templates
 
 ### 1.1 View Templates
-- [ ] Navigate to `/admin/proposals`
-- [ ] Click "Templates" tab
-- [ ] Default template "Standard Project Proposal" appears
-- [ ] Template shows section count
+- [x] Navigate to `/admin/proposals`
+- [x] Click "Templates" tab
+- [x] Default template "Standard Project Proposal" appears
+- [x] Template shows section count (5 sections)
 
 ### 1.2 Create Template (Optional)
-- [ ] Click "New Template"
-- [ ] Add sections and terms
-- [ ] Save template
-- [ ] Template appears in list
+- [x] Click "New Template"
+- [x] Add sections and terms
+- [x] Save template
+- [x] Template appears in list
 
 ---
 

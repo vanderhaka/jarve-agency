@@ -143,8 +143,9 @@ export default function PortalProposalPage() {
   }, [supabase, proposalId, token])
 
   useEffect(() => {
-    fetchProposal()
-  }, [fetchProposal])
+    void fetchProposal()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSign = async () => {
     if (!signerName.trim() || !signerEmail.trim() || !signatureSvg || !token) {

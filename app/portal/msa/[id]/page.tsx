@@ -126,8 +126,9 @@ export default function PortalMSAPage() {
   }, [supabase, msaId, token])
 
   useEffect(() => {
-    fetchMSA()
-  }, [fetchMSA])
+    void fetchMSA()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSign = async () => {
     if (!signerName.trim() || !signerEmail.trim() || !signatureSvg || !token) {

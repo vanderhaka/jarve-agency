@@ -110,7 +110,7 @@ export async function createTemplate(input: CreateTemplateInput) {
     return { success: false, message: 'Failed to create template' }
   }
 
-  revalidatePath('/admin/proposals/templates')
+  revalidatePath('/admin/proposals')
 
   return {
     success: true,
@@ -155,7 +155,7 @@ export async function updateTemplate(templateId: string, input: UpdateTemplateIn
     return { success: false, message: 'Failed to update template' }
   }
 
-  revalidatePath('/admin/proposals/templates')
+  revalidatePath('/admin/proposals')
   revalidatePath(`/admin/proposals/templates/${templateId}`)
 
   return { success: true, message: 'Template updated successfully' }
@@ -194,7 +194,7 @@ export async function deleteTemplate(templateId: string) {
     return { success: false, message: 'Failed to delete template' }
   }
 
-  revalidatePath('/admin/proposals/templates')
+  revalidatePath('/admin/proposals')
 
   return { success: true, message: 'Template deleted successfully' }
 }
@@ -228,7 +228,7 @@ export async function setDefaultTemplate(templateId: string) {
     return { success: false, message: 'Failed to set default template' }
   }
 
-  revalidatePath('/admin/proposals/templates')
+  revalidatePath('/admin/proposals')
 
   return { success: true, message: 'Default template updated' }
 }

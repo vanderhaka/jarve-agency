@@ -117,7 +117,7 @@ export async function createProposal(input: CreateProposalInput) {
   }
 
   // Get template content if provided
-  let initialContent: ProposalContent = {
+  const initialContent: ProposalContent = {
     sections: [],
     pricing: {
       lineItems: [],
@@ -138,7 +138,7 @@ export async function createProposal(input: CreateProposalInput) {
 
     if (template) {
       initialContent.sections = template.sections as ProposalSection[]
-      initialContent.terms = template.default_terms || ''
+      initialContent.terms = template.default_terms ? template.default_terms : ''
     }
   } else {
     // Use default template
