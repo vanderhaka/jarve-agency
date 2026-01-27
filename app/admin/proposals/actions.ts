@@ -388,8 +388,7 @@ export async function convertLeadAndSend(proposalId: string, leadId: string) {
       .insert({
         client_id: clientId,
         name: lead.name,
-        email: lead.email,
-        role: 'primary'
+        email: lead.email
       })
       .select('id')
       .single()
