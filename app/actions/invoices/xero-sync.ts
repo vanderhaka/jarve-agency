@@ -8,15 +8,30 @@ import {
   XeroInvoice,
 } from '@/lib/integrations/xero/client'
 import { shouldSyncPdf } from '@/lib/invoices/pdf-sync-helpers'
-import { syncInvoicePdf } from './pdf'
+import { syncInvoicePdfInternal } from './pdf'
+
+// ============================================================
+// Internal Helpers (not exported from index.ts)
+// These have 'export' for module use but aren't meant for client calls.
+// Auth is checked in the public functions that call them.
+// ============================================================
 
 /**
  * Create or get a Xero contact for a client
+ * INTERNAL: Called from syncInvoiceToXero after auth check
+ * Has own auth check for defense-in-depth
  */
 export async function createOrGetXeroContact(client: {
   name: string
   email: string | null
 }): Promise<{ success: boolean; contactId?: string; error?: string }> {
+  // Defense-in-depth: verify auth even for internal calls
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   // First check if contact exists by name
   const searchResult = await xeroApiCall<{
     Contacts: Array<{ ContactID: string; Name: string }>
@@ -50,12 +65,22 @@ export async function createOrGetXeroContact(client: {
 
 /**
  * Post a payment to Xero
+ * INTERNAL: Called from markInvoicePaid after auth check
+ * Has own auth check for defense-in-depth
  */
 export async function postPaymentToXero(
   xeroInvoiceId: string,
   amount: number,
   paymentDate: string
 ): Promise<boolean> {
+  // Defense-in-depth: verify auth even for internal calls
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    console.error('Unauthorized postPaymentToXero call')
+    return false
+  }
+
   try {
     // Get the first active bank account
     const accountsResult = await xeroApiCall<{
@@ -98,6 +123,10 @@ export async function postPaymentToXero(
   }
 }
 
+// ============================================================
+// Public Server Actions (with authentication)
+// ============================================================
+
 /**
  * Sync an invoice to Xero as a Draft
  */
@@ -105,6 +134,15 @@ export async function syncInvoiceToXero(
   invoiceId: string
 ): Promise<{ success: boolean; xeroInvoiceId?: string; error?: string }> {
   const supabase = await createClient()
+
+  // Verify authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
 
   try {
     // Get the invoice with client info
@@ -206,6 +244,15 @@ export async function syncInvoiceStatus(
 ): Promise<{ success: boolean; status?: string; pdfSynced?: boolean; error?: string }> {
   const supabase = await createClient()
 
+  // Verify authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   try {
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
@@ -237,7 +284,7 @@ export async function syncInvoiceStatus(
     // Sync PDF if status allows (not DRAFT)
     let pdfSynced = false
     if (shouldSyncPdf(xeroInvoice.Status)) {
-      pdfSynced = await syncInvoicePdf(invoiceId, invoice.xero_invoice_id, {
+      pdfSynced = await syncInvoicePdfInternal(invoiceId, invoice.xero_invoice_id, {
         invoiceId,
         invoiceNumber: invoice.invoice_number,
         clientId: invoice.client_id,

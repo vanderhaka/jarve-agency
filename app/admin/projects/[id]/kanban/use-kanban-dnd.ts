@@ -135,12 +135,15 @@ export function useKanbanDnd({ projectId, tasksByStatus }: UseKanbanDndProps) {
       }
     }
 
-    // Optimistic update
-    const updatedTasksByStatus = { ...localTasksByStatus }
+    // Optimistic update - create deep copy to avoid mutating original state
+    const updatedTasksByStatus = Object.fromEntries(
+      Object.entries(localTasksByStatus).map(([status, tasks]) => [status, [...tasks]])
+    ) as Record<TaskStatus, TaskWithAssignee[]>
+
     const task = findTask(activeId)
     if (!task) return
 
-    // Remove from old status
+    // Remove from old status (array is already a new copy)
     updatedTasksByStatus[activeStatus] = updatedTasksByStatus[activeStatus].filter(
       t => t.id !== activeId
     )
@@ -166,6 +169,7 @@ export function useKanbanDnd({ projectId, tasksByStatus }: UseKanbanDndProps) {
         ? overIndex
         : overIndex
 
+    // Insert at position (array is already a new copy, safe to mutate)
     updatedTasksByStatus[overStatus].splice(insertIndex, 0, updatedTask)
 
     // Sort by position

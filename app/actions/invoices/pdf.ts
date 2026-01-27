@@ -10,8 +10,11 @@ import {
 
 /**
  * Sync invoice PDF from Xero and store in contract_docs
+ * INTERNAL: Called from syncInvoiceStatus after auth check
+ * Not exported from index.ts - use syncInvoiceStatus instead
+ * Has own auth check for defense-in-depth
  */
-export async function syncInvoicePdf(
+export async function syncInvoicePdfInternal(
   invoiceId: string,
   xeroInvoiceId: string,
   params: {
@@ -22,6 +25,13 @@ export async function syncInvoicePdf(
   }
 ): Promise<boolean> {
   const supabase = await createClient()
+
+  // Defense-in-depth: verify auth even for internal calls
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    console.error('Unauthorized syncInvoicePdfInternal call')
+    return false
+  }
 
   try {
     // Check if we already have this PDF

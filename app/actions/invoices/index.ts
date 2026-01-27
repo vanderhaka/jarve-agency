@@ -12,16 +12,16 @@ export type {
 // CRUD operations
 export { createInvoice, getProjectInvoices, getAllInvoices } from './crud'
 
-// Xero sync
+// Xero sync (public actions with auth)
+// NOTE: createOrGetXeroContact, postPaymentToXero are internal helpers
+// and intentionally NOT exported here to prevent unauthenticated access
 export {
   syncInvoiceToXero,
   syncInvoiceStatus,
-  createOrGetXeroContact,
-  postPaymentToXero,
 } from './xero-sync'
 
-// PDF operations
-export { syncInvoicePdf } from './pdf'
+// NOTE: syncInvoicePdf is internal (called from syncInvoiceStatus)
+// and intentionally NOT exported here to prevent unauthenticated access
 
 // Payments
 export { markInvoicePaid } from './payments'
