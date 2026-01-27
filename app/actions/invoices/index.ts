@@ -16,12 +16,7 @@ export { createInvoice, getProjectInvoices, getAllInvoices } from './crud'
 export {
   syncInvoiceToXero,
   syncInvoiceStatus,
-  createOrGetXeroContact,
-  postPaymentToXero,
 } from './xero-sync'
-
-// PDF operations
-export { syncInvoicePdf } from './pdf'
 
 // Payments
 export { markInvoicePaid } from './payments'

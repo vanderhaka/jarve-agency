@@ -166,6 +166,11 @@ export function useKanbanDnd({ projectId, tasksByStatus }: UseKanbanDndProps) {
         ? overIndex
         : overIndex
 
+    // Create a copy of the destination array to avoid mutating the original state
+    if (activeStatus !== overStatus) {
+      updatedTasksByStatus[overStatus] = [...updatedTasksByStatus[overStatus]]
+    }
+
     updatedTasksByStatus[overStatus].splice(insertIndex, 0, updatedTask)
 
     // Sort by position

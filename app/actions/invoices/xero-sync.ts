@@ -13,7 +13,7 @@ import { syncInvoicePdf } from './pdf'
 /**
  * Create or get a Xero contact for a client
  */
-export async function createOrGetXeroContact(client: {
+async function createOrGetXeroContact(client: {
   name: string
   email: string | null
 }): Promise<{ success: boolean; contactId?: string; error?: string }> {
