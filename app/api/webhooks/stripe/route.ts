@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { verifyWebhookSignature, getPaymentIntent } from '@/lib/integrations/stripe/client'
 import { xeroApiCall } from '@/lib/integrations/xero/client'
+import { notifyInvoicePaid } from '@/lib/notifications/actions'
 import { NextResponse } from 'next/server'
 
 /**
@@ -82,6 +83,24 @@ export async function POST(request: Request) {
         // Post payment to Xero if connected and invoice has xero_invoice_id
         if (invoice.xero_invoice_id) {
           await postPaymentToXero(invoice.xero_invoice_id, paymentAmount, paymentDate)
+        }
+
+        // Create notification for invoice paid
+        // Get the project owner for the notification
+        const { data: project } = await supabase
+          .from('agency_projects')
+          .select('owner_id')
+          .eq('client_id', invoice.client_id)
+          .single()
+
+        if (project?.owner_id) {
+          await notifyInvoicePaid(
+            invoiceId,
+            invoice.invoice_number || `INV-${invoiceId.slice(0, 8)}`,
+            (invoice.client as { name: string })?.name || 'Unknown Client',
+            paymentAmount,
+            project.owner_id
+          )
         }
 
         console.info('Stripe payment processed', {

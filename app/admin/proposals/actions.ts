@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { notifyProposalSigned } from '@/lib/notifications/actions'
 
 // ============================================================
 // Types
@@ -569,6 +570,33 @@ export async function signProposal(input: SignProposalInput) {
         view_count: tokenData.view_count + 1
       })
       .eq('id', tokenData.id)
+
+    // Create notification for proposal signed
+    // Get proposal title and project info for notification
+    const { data: proposalDetails } = await supabase
+      .from('proposals')
+      .select(`
+        title,
+        project_id,
+        agency_projects(name, owner_id)
+      `)
+      .eq('id', proposal.id)
+      .single()
+
+    if (proposalDetails) {
+      const projectData = Array.isArray(proposalDetails.agency_projects)
+        ? proposalDetails.agency_projects[0]
+        : proposalDetails.agency_projects
+
+      if (projectData?.owner_id) {
+        await notifyProposalSigned(
+          proposal.id,
+          proposalDetails.title,
+          projectData.name || 'Project',
+          projectData.owner_id
+        )
+      }
+    }
 
     return {
       success: true,

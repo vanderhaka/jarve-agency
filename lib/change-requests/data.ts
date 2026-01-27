@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { createMilestone } from '@/lib/milestones/data'
+import { notifyChangeRequestSigned } from '@/lib/notifications/actions'
 import type {
   ChangeRequest,
   CreateChangeRequestInput,
@@ -244,6 +245,23 @@ export async function signChangeRequest(
   if (error) {
     console.error('[signChangeRequest] Error:', error)
     throw new Error('Failed to sign change request')
+  }
+
+  // Create notification for change request signed
+  // Get project info for notification
+  const { data: projectData } = await supabase
+    .from('agency_projects')
+    .select('name, owner_id')
+    .eq('id', changeRequest.project_id)
+    .single()
+
+  if (projectData?.owner_id) {
+    await notifyChangeRequestSigned(
+      changeRequestId,
+      changeRequest.title,
+      projectData.name || 'Project',
+      projectData.owner_id
+    )
   }
 
   // TODO: In Stage 5, create Xero invoice for the milestone here
