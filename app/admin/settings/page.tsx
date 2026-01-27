@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Loader2, UserCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { AgencySettingsCard } from '@/components/agency-settings-card'
+import { XeroConnectionCard } from '@/components/xero-connection-card'
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
@@ -74,6 +75,8 @@ export default function SettingsPage() {
       </div>
 
       <AgencySettingsCard />
+
+      <XeroConnectionCard />
 
       <Card>
         <CardHeader>

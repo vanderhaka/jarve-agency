@@ -3,12 +3,15 @@ import { redirect, notFound } from 'next/navigation'
 import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
 import { ProjectHeader } from './project-header'
 import { TasksView } from './tasks-view'
+import { ProjectFinanceTab } from './project-finance-tab'
 import { parseFiltersFromParams } from './filter-utils'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
+import { ProjectTabs } from './project-tabs'
 
 interface Props {
   params: Promise<{ id: string }>
   searchParams: Promise<{
+    tab?: 'tasks' | 'finance'
     view?: 'list' | 'kanban'
     search?: string
     status?: string
@@ -43,7 +46,7 @@ async function getProject(projectId: string) {
 export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { id } = await params
   const resolvedSearchParams = await searchParams
-  const { view = 'kanban' } = resolvedSearchParams
+  const { tab = 'tasks', view = 'kanban' } = resolvedSearchParams
 
   // Parse filters from URL search params
   const filters = parseFiltersFromParams(new URLSearchParams(
@@ -86,13 +89,23 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         progress={progress}
         overdueCount={overdueCount}
         currentView={view}
+        currentTab={tab}
       />
-      <TasksView
-        projectId={id}
-        tasksByStatus={tasksByStatus}
-        currentView={view}
-        filters={filters}
-      />
+      <ProjectTabs currentTab={tab} />
+      {tab === 'tasks' ? (
+        <TasksView
+          projectId={id}
+          tasksByStatus={tasksByStatus}
+          currentView={view}
+          filters={filters}
+        />
+      ) : (
+        <ProjectFinanceTab
+          projectId={id}
+          clientId={project.client_id || null}
+          clientName={project.clients?.name || null}
+        />
+      )}
     </div>
   )
 }
