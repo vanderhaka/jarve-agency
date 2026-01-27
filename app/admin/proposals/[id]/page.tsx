@@ -360,76 +360,84 @@ export default function ProposalDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {canEdit && hasChanges && (
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Save (v{proposal.current_version + 1})
-            </Button>
-          )}
-          {canEdit && proposal.client_id && (
-            <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Send className="h-4 w-4 mr-2" /> Send to Client
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Send Proposal</DialogTitle>
-                  <DialogDescription>
-                    Select a client contact to send this proposal to.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Send to</Label>
-                    <Select
-                      value={selectedClientUserId}
-                      onValueChange={setSelectedClientUserId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a contact" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clientUsers.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.email})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setSendDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSend}
-                    disabled={!selectedClientUserId || sending}
-                  >
-                    {sending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Send className="h-4 w-4 mr-2" />
-                    )}
-                    Send
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
           {canEdit && (
-            <Button variant="ghost" onClick={handleArchive}>
-              Archive
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={handleSave}
+                disabled={saving || !hasChanges}
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save
+              </Button>
+              {proposal.client_id ? (
+                <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Send className="h-4 w-4 mr-2" /> Send
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Send Proposal</DialogTitle>
+                      <DialogDescription>
+                        Select a client contact to send this proposal to.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Send to</Label>
+                        <Select
+                          value={selectedClientUserId}
+                          onValueChange={setSelectedClientUserId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a contact" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clientUsers.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.name} ({user.email})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSendDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSend}
+                        disabled={!selectedClientUserId || sending}
+                      >
+                        {sending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Send
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <Button disabled title="Link a client to send this proposal">
+                  <Send className="h-4 w-4 mr-2" /> Send
+                </Button>
+              )}
+              <Button variant="ghost" onClick={handleArchive}>
+                Archive
+              </Button>
+            </>
           )}
         </div>
       </div>
