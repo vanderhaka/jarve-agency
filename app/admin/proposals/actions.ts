@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
-import { sendProposalEmail } from '@/lib/email/resend'
+import { sendProposalEmail, sendProposalSignedEmail } from '@/lib/email/resend'
 
 // ============================================================
 // Types
@@ -617,6 +617,20 @@ export async function signProposal(input: SignProposalInput) {
           projectData.name || 'Project',
           projectData.owner_id
         )
+      }
+
+      // Send confirmation email to signer
+      try {
+        const portalUrl = `/portal/${input.token}`
+        await sendProposalSignedEmail({
+          to: input.signerEmail,
+          recipientName: input.signerName,
+          proposalTitle: proposalDetails.title,
+          portalUrl
+        })
+      } catch (emailError) {
+        console.error('[signProposal] Confirmation email error:', emailError)
+        // Non-critical, continue
       }
     }
 
