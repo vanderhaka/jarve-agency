@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Link from 'next/link'
 import { ArrowRight, FileText, Settings, Plus } from 'lucide-react'
+import { ProposalActions } from './proposal-actions'
 
 async function getProposals() {
   const supabase = await createClient()
@@ -27,6 +28,7 @@ async function getProposals() {
       created_at,
       updated_at,
       signed_at,
+      client_id,
       client:clients(id, name),
       project:agency_projects(id, name),
       lead:leads(id, name)
@@ -160,11 +162,12 @@ export default async function ProposalsPage() {
                           {new Date(proposal.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" asChild>
-                            <Link href={`/admin/proposals/${proposal.id}`}>
-                              View <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                          </Button>
+                          <ProposalActions
+                            proposalId={proposal.id}
+                            proposalTitle={proposal.title}
+                            status={proposal.status}
+                            clientId={proposal.client_id}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

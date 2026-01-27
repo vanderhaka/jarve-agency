@@ -374,40 +374,64 @@ export default function ProposalDetailPage() {
                 )}
                 Save
               </Button>
-              {proposal.client_id ? (
-                <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Send className="h-4 w-4 mr-2" /> Send
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Send Proposal</DialogTitle>
-                      <DialogDescription>
-                        Select a client contact to send this proposal to.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label>Send to</Label>
-                        <Select
-                          value={selectedClientUserId}
-                          onValueChange={setSelectedClientUserId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a contact" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {clientUsers.map((user) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.name} ({user.email})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+              <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Send className="h-4 w-4 mr-2" /> Send
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Send Proposal</DialogTitle>
+                    <DialogDescription>
+                      {proposal.client_id
+                        ? 'Select a client contact to send this proposal to.'
+                        : 'Link a client to this proposal before sending.'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  {proposal.client_id ? (
+                    <>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Send to</Label>
+                          <Select
+                            value={selectedClientUserId}
+                            onValueChange={setSelectedClientUserId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a contact" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {clientUsers.map((user) => (
+                                <SelectItem key={user.id} value={user.id}>
+                                  {user.name} ({user.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setSendDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleSend}
+                          disabled={!selectedClientUserId || sending}
+                        >
+                          {sending ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <Send className="h-4 w-4 mr-2" />
+                          )}
+                          Send
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  ) : (
                     <DialogFooter>
                       <Button
                         variant="outline"
@@ -415,25 +439,15 @@ export default function ProposalDetailPage() {
                       >
                         Cancel
                       </Button>
-                      <Button
-                        onClick={handleSend}
-                        disabled={!selectedClientUserId || sending}
-                      >
-                        {sending ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Send className="h-4 w-4 mr-2" />
-                        )}
-                        Send
+                      <Button asChild>
+                        <Link href={`/admin/proposals/${proposal.id}`}>
+                          Link Client
+                        </Link>
                       </Button>
                     </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              ) : (
-                <Button disabled title="Link a client to send this proposal">
-                  <Send className="h-4 w-4 mr-2" /> Send
-                </Button>
-              )}
+                  )}
+                </DialogContent>
+              </Dialog>
               <Button variant="ghost" onClick={handleArchive}>
                 Archive
               </Button>
