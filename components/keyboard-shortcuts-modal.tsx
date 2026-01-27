@@ -18,6 +18,15 @@ interface Shortcut {
 }
 
 const SHORTCUTS: Shortcut[] = [
+  // Quick Actions
+  { keys: ['/'], description: 'Open search', category: 'Quick Actions' },
+  { keys: ['n'], description: 'Open create menu', category: 'Quick Actions' },
+  { keys: ['?'], description: 'Show keyboard shortcuts', category: 'Quick Actions' },
+  { keys: ['Esc'], description: 'Close dialog / Go back', category: 'Quick Actions' },
+  // Search
+  { keys: ['⌘', 'k'], description: 'Open search (Mac)', category: 'Search' },
+  { keys: ['ctrl', 'k'], description: 'Open search (Windows/Linux)', category: 'Search' },
+  { keys: ['#'], description: 'Search by ID (type #uuid)', category: 'Search' },
   // Navigation
   { keys: ['g', 'd'], description: 'Go to Dashboard', category: 'Navigation' },
   { keys: ['g', 'l'], description: 'Go to Leads', category: 'Navigation' },
@@ -37,11 +46,6 @@ const SHORTCUTS: Shortcut[] = [
     category: 'Navigation',
     adminOnly: true,
   },
-  // Search
-  { keys: ['⌘', 'k'], description: 'Open search', category: 'Search' },
-  { keys: ['ctrl', 'k'], description: 'Open search (Windows/Linux)', category: 'Search' },
-  // Help
-  { keys: ['?'], description: 'Show keyboard shortcuts', category: 'Help' },
 ]
 
 interface KeyboardShortcutsModalProps {

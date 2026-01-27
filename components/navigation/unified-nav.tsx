@@ -86,7 +86,7 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={openSearch}
+          onClick={() => openSearch()}
           className="gap-2"
         >
           <Search className="h-4 w-4" />
