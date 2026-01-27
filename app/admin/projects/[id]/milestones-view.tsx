@@ -343,7 +343,7 @@ export function MilestonesView({ projectId, milestones: initialMilestones }: Pro
                   <div className="text-right">
                     <div className="font-medium">{formatCurrency(Number(milestone.amount))}</div>
                     <div className="text-xs text-muted-foreground">
-                      + {formatCurrency(Number(milestone.amount) * 0.10)} GST
+                      + {formatCurrency(Number(milestone.amount) * milestone.gst_rate)} GST
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground w-24">

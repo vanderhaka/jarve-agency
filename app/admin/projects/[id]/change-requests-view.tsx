@@ -267,7 +267,7 @@ export function ChangeRequestsView({ projectId, changeRequests: initialChangeReq
                 />
                 {amount && (
                   <p className="text-sm text-muted-foreground">
-                    Total with GST: {formatCurrency(parseFloat(amount) * 1.10)}
+                    Total with GST: {formatCurrency(parseFloat(amount) * 1.10)} (assuming 10% GST)
                   </p>
                 )}
               </div>
@@ -322,7 +322,7 @@ export function ChangeRequestsView({ projectId, changeRequests: initialChangeReq
                   <div className="text-right">
                     <div className="font-medium">{formatCurrency(Number(cr.amount))}</div>
                     <div className="text-xs text-muted-foreground">
-                      + {formatCurrency(Number(cr.amount) * 0.10)} GST
+                      + {formatCurrency(Number(cr.amount) * cr.gst_rate)} GST
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground w-24">
@@ -445,7 +445,7 @@ export function ChangeRequestsView({ projectId, changeRequests: initialChangeReq
               />
               {amount && (
                 <p className="text-sm text-muted-foreground">
-                  Total with GST: {formatCurrency(parseFloat(amount) * 1.10)}
+                  Total with GST: {formatCurrency(parseFloat(amount) * 1.10)} (assuming 10% GST)
                 </p>
               )}
             </div>

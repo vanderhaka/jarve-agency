@@ -216,6 +216,31 @@ CREATE POLICY "Anonymous can view change_requests by token" ON change_requests
     AND status = 'sent'
   );
 
+-- Trigger to prevent anonymous users from modifying protected fields
+CREATE OR REPLACE FUNCTION prevent_anon_change_request_field_modification()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only apply to anonymous users
+  IF auth.role() = 'anon' THEN
+    -- Ensure protected fields are not modified
+    IF OLD.amount IS DISTINCT FROM NEW.amount OR
+       OLD.title IS DISTINCT FROM NEW.title OR
+       OLD.description IS DISTINCT FROM NEW.description OR
+       OLD.gst_rate IS DISTINCT FROM NEW.gst_rate OR
+       OLD.project_id IS DISTINCT FROM NEW.project_id THEN
+      RAISE EXCEPTION 'Anonymous users cannot modify protected fields';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS check_anon_change_request_fields ON change_requests;
+CREATE TRIGGER check_anon_change_request_fields
+  BEFORE UPDATE ON change_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_anon_change_request_field_modification();
+
 -- Anonymous users can update change requests to sign them
 DROP POLICY IF EXISTS "Anonymous can sign change_requests" ON change_requests;
 CREATE POLICY "Anonymous can sign change_requests" ON change_requests

@@ -243,6 +243,12 @@ export async function signChangeRequest(
 
   if (error) {
     console.error('[signChangeRequest] Error:', error)
+    // Clean up the orphaned milestone
+    try {
+      await supabase.from('milestones').delete().eq('id', milestone.id)
+    } catch (cleanupError) {
+      console.error('[signChangeRequest] Failed to clean up orphaned milestone:', cleanupError)
+    }
     throw new Error('Failed to sign change request')
   }
 
