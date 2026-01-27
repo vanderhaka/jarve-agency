@@ -411,7 +411,7 @@ export default function PortalProposalPage() {
                 !signerEmail.trim() ||
                 !signatureSvg
               }
-              className="w-full"
+              className={`w-full ${signatureSvg && signerName.trim() && signerEmail.trim() ? 'bg-green-600 hover:bg-green-700' : ''}`}
               size="lg"
             >
               {signing ? (

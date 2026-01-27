@@ -160,12 +160,61 @@ export function SignatureCapture({
     }
   }, [paths, hasSignature, onSignatureChange, pathsToSvg])
 
-  // Handle mouse leaving canvas
-  const handleMouseLeave = useCallback(() => {
-    if (isDrawing) {
-      stopDrawing()
+  // Add document-level event listeners for drawing outside canvas
+  useEffect(() => {
+    if (!isDrawing) return
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!isDrawing || disabled) return
+      const coords = getCoordinates(e)
+      if (coords) {
+        setCurrentPath((prev) => [...prev, coords])
+      }
     }
-  }, [isDrawing, stopDrawing])
+
+    const handleGlobalMouseUp = () => {
+      if (isDrawing) {
+        setIsDrawing(false)
+        if (currentPath.length > 1) {
+          setPaths((prev) => [...prev, currentPath])
+          setHasSignature(true)
+        }
+        setCurrentPath([])
+      }
+    }
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (!isDrawing || disabled) return
+      e.preventDefault()
+      const coords = getCoordinates(e)
+      if (coords) {
+        setCurrentPath((prev) => [...prev, coords])
+      }
+    }
+
+    const handleGlobalTouchEnd = () => {
+      if (isDrawing) {
+        setIsDrawing(false)
+        if (currentPath.length > 1) {
+          setPaths((prev) => [...prev, currentPath])
+          setHasSignature(true)
+        }
+        setCurrentPath([])
+      }
+    }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false })
+    document.addEventListener('touchend', handleGlobalTouchEnd)
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+      document.removeEventListener('touchmove', handleGlobalTouchMove)
+      document.removeEventListener('touchend', handleGlobalTouchEnd)
+    }
+  }, [isDrawing, disabled, getCoordinates, currentPath])
 
   return (
     <div className="space-y-2">
@@ -181,12 +230,7 @@ export function SignatureCapture({
           className="w-full touch-none"
           style={{ maxWidth: `${width}px` }}
           onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={handleMouseLeave}
           onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
         />
         {!hasSignature && !disabled && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
