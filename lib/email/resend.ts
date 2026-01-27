@@ -171,7 +171,13 @@ export async function sendProposalSignedEmail({
             </a>
           </div>
 
-          <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280; text-align: center;">
+          <div style="background: #f9fafb; border-radius: 6px; padding: 12px 16px; margin: 0 0 24px 0; text-align: center;">
+            <p style="margin: 0; font-size: 13px; color: #6b7280;">
+              📌 <strong>Bookmark this email</strong> — it's your key to the portal anytime.
+            </p>
+          </div>
+
+          <p style="margin: 0 0 0 0; font-size: 13px; color: #6b7280; text-align: center;">
             Questions? Jump into the portal and message the team directly — or reply to this email if you need.
           </p>
 
@@ -198,6 +204,8 @@ Thanks for signing — we're excited to work with you! Your Client Portal is rea
 
 Open your Client Portal:
 ${fullPortalUrl}
+
+📌 Bookmark this email — it's your key to the portal anytime.
 
 Questions? Jump into the portal and message the team directly — or reply to this email if you need.
 
