@@ -172,7 +172,7 @@ export async function sendProposalSignedEmail({
           </div>
 
           <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280; text-align: center;">
-            Questions? Just reply to this email — we're here to help.
+            Questions? Jump into the portal and message the team directly — or reply to this email if you need.
           </p>
 
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
@@ -199,7 +199,7 @@ Thanks for signing — we're excited to work with you! Your Client Portal is rea
 Open your Client Portal:
 ${fullPortalUrl}
 
-Questions? Just reply to this email — we're here to help.
+Questions? Jump into the portal and message the team directly — or reply to this email if you need.
 
 This link is unique to you. Please don't share it with others.
 `
