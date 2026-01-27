@@ -205,19 +205,15 @@ export default function PortalMSAPage() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">2</span>
-                    <span>This MSA covers all future projects - you won&apos;t need to sign it again</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">3</span>
-                    <span>You can close this window - no further action needed</span>
+                    <span>Your Client Portal is now active - all documents, updates, and team communication will be there</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="w-full pt-2 flex flex-col items-center gap-3">
+              <div className="w-full pt-4 flex flex-col items-center gap-4">
                 <a
                   href={`/portal/${token}`}
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="w-full inline-flex items-center justify-center rounded-md bg-primary px-8 py-4 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   Go to Client Portal
                 </a>
