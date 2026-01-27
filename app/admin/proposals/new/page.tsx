@@ -132,6 +132,12 @@ export default function NewProposalPage() {
       return
     }
 
+    if (selectedLeadId === '__none__' && selectedProjectId === '__none__') {
+      setError('Please link this proposal to a lead or project')
+      setSubmitting(false)
+      return
+    }
+
     const result = await createProposal({
       title: title.trim(),
       templateId: selectedTemplateId ? selectedTemplateId : undefined,
@@ -220,15 +226,18 @@ export default function NewProposalPage() {
               </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="lead">Link to Lead</Label>
+            <div className="space-y-2">
+              <Label>Link to Lead or Project *</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Select at least one to send the proposal
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
                 <Select value={selectedLeadId} onValueChange={setSelectedLeadId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a lead (optional)" />
+                    <SelectValue placeholder="Select a lead" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">None</SelectItem>
+                    <SelectItem value="__none__">No lead</SelectItem>
                     {leads.map((lead) => (
                       <SelectItem key={lead.id} value={lead.id}>
                         {lead.name} {lead.company ? `(${lead.company})` : ''}
@@ -236,16 +245,13 @@ export default function NewProposalPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="project">Link to Project</Label>
                 <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a project (optional)" />
+                    <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">None</SelectItem>
+                    <SelectItem value="__none__">No project</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name} {project.client?.name ? `(${project.client.name})` : ''}
