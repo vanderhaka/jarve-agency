@@ -48,6 +48,7 @@ import {
   Clock
 } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import {
   updateProposal,
   sendProposal,
@@ -296,10 +297,9 @@ export default function ProposalDetailPage() {
     if (result.success) {
       setSendDialogOpen(false)
       fetchProposal()
-      // Could show portal URL or copy to clipboard
-      alert(`Proposal sent! Portal URL: ${result.portalUrl}`)
+      toast.success(result.message)
     } else {
-      alert(result.message)
+      toast.error(result.message)
     }
 
     setSending(false)

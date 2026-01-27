@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
+import { sendProposalEmail } from '@/lib/email/resend'
 
 // ============================================================
 // Types
@@ -319,6 +320,7 @@ export async function sendProposal(proposalId: string, input: SendProposalInput)
     .from('proposals')
     .select(`
       id,
+      title,
       current_version,
       status,
       client_id,
@@ -417,11 +419,31 @@ export async function sendProposal(proposalId: string, input: SendProposalInput)
     // Generate portal URL
     const portalUrl = `/portal/proposal/${proposalId}?token=${portalToken}`
 
+    // Send email to client
+    try {
+      await sendProposalEmail({
+        to: clientUser.email,
+        recipientName: clientUser.name,
+        proposalTitle: proposal.title,
+        portalUrl
+      })
+    } catch (emailError) {
+      console.error('[sendProposal] Email error:', emailError)
+      return {
+        success: true,
+        message: `Proposal v${versionToSend} sent but email delivery failed. Portal URL: ${portalUrl}`,
+        portalUrl,
+        clientUserEmail: clientUser.email,
+        emailSent: false
+      }
+    }
+
     return {
       success: true,
-      message: `Proposal v${versionToSend} sent to ${clientUser.name}`,
+      message: `Proposal v${versionToSend} emailed to ${clientUser.name}`,
       portalUrl,
-      clientUserEmail: clientUser.email
+      clientUserEmail: clientUser.email,
+      emailSent: true
     }
   } catch (error) {
     console.error('[sendProposal] Unexpected error:', error)
