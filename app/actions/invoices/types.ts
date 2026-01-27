@@ -17,6 +17,14 @@ export interface CreateInvoicePayload {
   notes?: string
 }
 
+export interface CreateDepositInvoiceParams {
+  clientId: string
+  projectId: string
+  projectName: string
+  proposalTotal: number
+  gstRate: number
+}
+
 export interface InvoiceWithDetails {
   id: string
   clientId: string | null

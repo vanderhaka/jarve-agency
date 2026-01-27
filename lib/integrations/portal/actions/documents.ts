@@ -36,7 +36,7 @@ export async function getContractDocs(
     const { data: docs, error } = await supabase
       .from('contract_docs')
       .select('*')
-      .or(`project_id.eq.${projectId},and(client_id.eq.${project?.client_id},type.eq.msa)`)
+      .or(`project_id.eq.${projectId},and(client_id.eq.${project?.client_id},doc_type.eq.msa)`)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -70,6 +70,11 @@ export async function getContractDocSignedUrl(
 
     if (docError || !doc) {
       return { success: false, error: 'Document not found' }
+    }
+
+    // Check if PDF is ready (file_path may be null while waiting for Xero sync)
+    if (!doc.file_path) {
+      return { success: false, error: 'Document PDF is still being prepared' }
     }
 
     // Validate token - need to check if user has access to this doc

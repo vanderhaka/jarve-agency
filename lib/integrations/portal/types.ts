@@ -135,9 +135,9 @@ export interface ContractDoc {
   id: string
   project_id: string | null
   client_id: string | null
-  name: string
-  type: 'msa' | 'proposal' | 'contract' | 'invoice' | 'signed'
-  file_path: string
+  title: string
+  doc_type: 'msa' | 'sow' | 'proposal' | 'contract' | 'invoice' | 'signed'
+  file_path: string | null
   created_at: string
   signed_at: string | null
 }

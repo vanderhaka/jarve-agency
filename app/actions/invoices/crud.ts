@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { CreateInvoicePayload, InvoiceWithDetails } from './types'
+import type { CreateInvoicePayload, CreateDepositInvoiceParams, InvoiceWithDetails } from './types'
 import { mapInvoiceToDetails } from './helpers'
 import { syncInvoiceToXero } from './xero-sync'
 
@@ -181,4 +181,135 @@ export async function getAllInvoices(): Promise<InvoiceWithDetails[]> {
   }
 
   return (invoices || []).map(mapInvoiceToDetails)
+}
+
+/**
+ * Create a deposit invoice for a signed proposal (internal use - no auth check)
+ * Called automatically when a proposal is signed
+ */
+export async function createDepositInvoiceInternal(
+  params: CreateDepositInvoiceParams
+): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
+  const supabase = await createClient()
+
+  try {
+    // Get agency settings for invoice configuration
+    const { data: settings } = await supabase
+      .from('agency_settings')
+      .select('invoice_prefix, default_currency, invoice_terms_days, default_deposit_percent')
+      .single()
+
+    // Get project-specific deposit override
+    const { data: project } = await supabase
+      .from('agency_projects')
+      .select('deposit_percent')
+      .eq('id', params.projectId)
+      .single()
+
+    const depositPercent = project?.deposit_percent ?? settings?.default_deposit_percent ?? 0.5
+    const currency = settings?.default_currency ?? 'AUD'
+    const invoicePrefix = settings?.invoice_prefix ?? 'INV'
+    const termsDays = settings?.invoice_terms_days ?? 14
+
+    // Calculate deposit amount (from proposal total which is GST inclusive)
+    // Proposal total is GST inclusive, so we need to calculate:
+    // depositAmountInclGst = proposalTotal * depositPercent
+    // depositSubtotal = depositAmountInclGst / (1 + gstRate)
+    const depositAmountInclGst = params.proposalTotal * depositPercent
+    const gstRate = params.gstRate
+    const subtotal = depositAmountInclGst / (1 + gstRate)
+    const gstAmount = subtotal * gstRate
+    const total = subtotal + gstAmount
+
+    // Determine dates
+    const issueDate = new Date().toISOString().split('T')[0]
+    const dueDate = new Date(Date.now() + termsDays * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]
+
+    // Get next invoice number
+    const { data: lastInvoice } = await supabase
+      .from('invoices')
+      .select('invoice_number')
+      .ilike('invoice_number', `${invoicePrefix}-%`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    let nextNumber = 1
+    if (lastInvoice?.invoice_number) {
+      const match = lastInvoice.invoice_number.match(/-(\d+)$/)
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1
+      }
+    }
+    const invoiceNumber = `${invoicePrefix}-${String(nextNumber).padStart(4, '0')}`
+
+    // Create the invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .insert({
+        client_id: params.clientId,
+        project_id: params.projectId,
+        invoice_number: invoiceNumber,
+        currency,
+        subtotal,
+        gst_rate: gstRate,
+        gst_amount: gstAmount,
+        total,
+        issue_date: issueDate,
+        due_date: dueDate,
+        xero_status: 'DRAFT',
+      })
+      .select('id, invoice_number')
+      .single()
+
+    if (invoiceError || !invoice) {
+      console.error('[createDepositInvoiceInternal] Failed to create invoice', { error: invoiceError })
+      return { success: false, error: 'Failed to create invoice' }
+    }
+
+    // Create line item
+    const { error: lineItemError } = await supabase
+      .from('invoice_line_items')
+      .insert({
+        invoice_id: invoice.id,
+        description: `Project Deposit - ${params.projectName}`,
+        quantity: 1,
+        unit_price: subtotal,
+        amount: subtotal,
+        sort_order: 0,
+      })
+
+    if (lineItemError) {
+      console.error('[createDepositInvoiceInternal] Failed to create line item', { error: lineItemError })
+    }
+
+    // Create contract_docs entry immediately with null file_path (PDF pending from Xero)
+    const { error: contractDocError } = await supabase
+      .from('contract_docs')
+      .insert({
+        client_id: params.clientId,
+        project_id: params.projectId,
+        doc_type: 'invoice',
+        title: `Deposit Invoice - ${invoice.invoice_number}`,
+        file_path: null,
+        source_table: 'invoices',
+        source_id: invoice.id,
+      })
+
+    if (contractDocError) {
+      console.error('[createDepositInvoiceInternal] Failed to create contract doc', { error: contractDocError })
+    }
+
+    // Try to sync to Xero as DRAFT
+    await syncInvoiceToXero(invoice.id)
+
+    console.log('[createDepositInvoiceInternal] Deposit invoice created:', invoice.invoice_number)
+
+    return { success: true, invoiceId: invoice.id }
+  } catch (error) {
+    console.error('[createDepositInvoiceInternal] Unexpected error', { error })
+    return { success: false, error: 'Failed to create deposit invoice' }
+  }
 }

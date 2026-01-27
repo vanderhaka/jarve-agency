@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
 import { sendProposalSignedEmail } from '@/lib/email/resend'
+import { createDepositInvoiceInternal } from '@/app/actions/invoices/crud'
 import { SignProposalSchema } from '../schemas'
 import type { SignProposalInput } from './types'
 
@@ -75,6 +76,8 @@ export async function signProposal(rawInput: SignProposalInput) {
       id,
       proposal_id,
       version,
+      total,
+      gst_rate,
       proposals (
         id,
         status,
@@ -256,6 +259,23 @@ export async function signProposal(rawInput: SignProposalInput) {
           .eq('source_table', 'proposals')
 
         console.log('[signProposal] Auto-created project:', newProject.id)
+      }
+    }
+
+    // Create deposit invoice if project and pricing are available
+    if (projectId && sentVersion.total && sentVersion.total > 0) {
+      const depositResult = await createDepositInvoiceInternal({
+        clientId: proposal.client_id,
+        projectId: projectId,
+        projectName: projectName || proposalDetails?.title || 'Project',
+        proposalTotal: sentVersion.total,
+        gstRate: sentVersion.gst_rate ?? 0.1
+      })
+      if (!depositResult.success) {
+        console.error('[signProposal] Deposit invoice error:', depositResult.error)
+        // Non-critical, continue
+      } else {
+        console.log('[signProposal] Deposit invoice created:', depositResult.invoiceId)
       }
     }
 

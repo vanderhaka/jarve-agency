@@ -15,8 +15,9 @@ interface Message {
 
 interface Doc {
   id: string
-  name: string
-  type: string
+  title: string
+  doc_type: string
+  file_path: string | null
   created_at: string
   signed_at: string | null
 }

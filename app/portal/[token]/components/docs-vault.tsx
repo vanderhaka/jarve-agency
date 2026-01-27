@@ -11,8 +11,9 @@ import { toast } from 'sonner'
 
 interface Doc {
   id: string
-  name: string
-  type: string
+  title: string
+  doc_type: string
+  file_path: string | null
   created_at: string
   signed_at: string | null
 }
@@ -24,6 +25,7 @@ interface DocsVaultProps {
 
 const docTypeLabels: Record<string, string> = {
   msa: 'Master Service Agreement',
+  sow: 'Statement of Work',
   proposal: 'Proposal',
   contract: 'Contract',
   invoice: 'Invoice',
@@ -134,9 +136,9 @@ export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <CardTitle className="text-base">{doc.name}</CardTitle>
+                      <CardTitle className="text-base">{doc.title}</CardTitle>
                       <CardDescription>
-                        {docTypeLabels[doc.type] || doc.type}
+                        {docTypeLabels[doc.doc_type] || doc.doc_type}
                       </CardDescription>
                     </div>
                   </div>
@@ -146,7 +148,7 @@ export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
                         <Check className="h-3 w-3" />
                         Signed
                       </Badge>
-                    ) : doc.type === 'proposal' || doc.type === 'contract' ? (
+                    ) : doc.doc_type === 'proposal' || doc.doc_type === 'contract' || doc.doc_type === 'sow' ? (
                       <Badge variant="secondary" className="gap-1">
                         <Clock className="h-3 w-3" />
                         Pending
@@ -166,11 +168,20 @@ export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDownload(doc.id, doc.name)}
-                    disabled={downloading === doc.id}
+                    onClick={() => handleDownload(doc.id, doc.title)}
+                    disabled={downloading === doc.id || !doc.file_path}
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    {downloading === doc.id ? 'Loading...' : 'Download'}
+                    {!doc.file_path ? (
+                      <>
+                        <Clock className="h-4 w-4 mr-2" />
+                        PDF Pending
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 mr-2" />
+                        {downloading === doc.id ? 'Loading...' : 'Download'}
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
