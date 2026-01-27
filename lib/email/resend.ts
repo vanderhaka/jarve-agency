@@ -15,7 +15,7 @@ export async function sendProposalEmail({
   recipientName,
   proposalTitle,
   portalUrl,
-  companyName = 'Jarve'
+  companyName = 'JARVE'
 }: SendProposalEmailParams) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (!siteUrl) {
@@ -24,7 +24,7 @@ export async function sendProposalEmail({
   const fullPortalUrl = `${siteUrl}${portalUrl}`
 
   const { data, error } = await resend.emails.send({
-    from: 'Jarve <proposals@jarve.com.au>',
+    from: 'JARVE <proposals@jarve.com.au>',
     to,
     subject: `Proposal: ${proposalTitle}`,
     html: `
