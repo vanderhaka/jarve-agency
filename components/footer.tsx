@@ -62,10 +62,10 @@ export function Footer() {
                   <ul className="space-y-3">
                     <li>
                       <a
-                        href="mailto:hello@jarve.agency"
+                        href="mailto:hello@jarve.com.au"
                         className="text-zinc-400 hover:text-white transition-colors"
                       >
-                        hello@jarve.agency
+                        hello@jarve.com.au
                       </a>
                     </li>
                     <li className="text-zinc-500">

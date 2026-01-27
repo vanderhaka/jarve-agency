@@ -215,7 +215,7 @@ export default function PortalMSAPage() {
               </div>
 
               <div className="w-full pt-2 text-center text-sm text-muted-foreground">
-                <p>Questions? Contact us at <a href="mailto:hello@jarve.agency" className="text-primary hover:underline">hello@jarve.agency</a></p>
+                <p>Questions? Contact us at <a href="mailto:hello@jarve.com.au" className="text-primary hover:underline">hello@jarve.com.au</a></p>
               </div>
             </div>
           </CardContent>
