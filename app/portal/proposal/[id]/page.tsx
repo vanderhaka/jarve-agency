@@ -231,8 +231,16 @@ export default function PortalProposalPage() {
                 </ul>
               </div>
 
-              <div className="w-full pt-2 text-center text-sm text-muted-foreground">
-                <p>Questions? Contact us at <a href="mailto:hello@jarve.com.au" className="text-primary hover:underline">hello@jarve.com.au</a></p>
+              <div className="w-full pt-2 flex flex-col items-center gap-3">
+                <a
+                  href={`/portal/${token}`}
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Go to Client Portal
+                </a>
+                <p className="text-sm text-muted-foreground">
+                  or contact us at <a href="mailto:hello@jarve.com.au" className="text-primary hover:underline">hello@jarve.com.au</a>
+                </p>
               </div>
             </div>
           </CardContent>
