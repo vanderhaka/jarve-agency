@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Download, Check, Clock, Loader2 } from 'lucide-react'
+import { FileText, Download, Eye, Check, Clock, Loader2 } from 'lucide-react'
 import { usePortal } from './portal-context'
 import { getContractDocSignedUrl, getContractDocs } from '@/lib/integrations/portal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,7 +35,7 @@ const docTypeLabels: Record<string, string> = {
 export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
   const { token, selectedProject } = usePortal()
   const [docs, setDocs] = useState<Doc[]>(initialDocs)
-  const [downloading, setDownloading] = useState<string | null>(null)
+  const [loadingDoc, setLoadingDoc] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const currentProjectIdRef = useRef<string | null>(initialProjectId)
 
@@ -77,21 +77,44 @@ export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
     fetchDocs()
   }, [token, selectedProject])
 
-  async function handleDownload(docId: string, docName: string) {
-    setDownloading(docId)
+  async function handleView(docId: string) {
+    setLoadingDoc(docId)
     try {
       const result = await getContractDocSignedUrl(token, docId)
 
       if (result.success) {
-        // Open the signed URL in a new tab
+        // Open the signed URL in a new tab (browser will display PDF)
         window.open(result.url, '_blank')
       } else {
-        toast.error(result.error || 'Failed to get download link')
+        toast.error(result.error)
       }
-    } catch (error) {
+    } catch {
+      toast.error('Failed to open document')
+    } finally {
+      setLoadingDoc(null)
+    }
+  }
+
+  async function handleDownload(docId: string, docTitle: string) {
+    setLoadingDoc(docId)
+    try {
+      const result = await getContractDocSignedUrl(token, docId)
+
+      if (result.success) {
+        // Create a temporary link to trigger download
+        const link = document.createElement('a')
+        link.href = result.url
+        link.download = `${docTitle}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else {
+        toast.error(result.error)
+      }
+    } catch {
       toast.error('Failed to download document')
     } finally {
-      setDownloading(null)
+      setLoadingDoc(null)
     }
   }
 
@@ -165,24 +188,32 @@ export function DocsVault({ initialDocs, initialProjectId }: DocsVaultProps) {
                       <> &bull; Signed {new Date(doc.signed_at).toLocaleDateString()}</>
                     )}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(doc.id, doc.title)}
-                    disabled={downloading === doc.id || !doc.file_path}
-                  >
-                    {!doc.file_path ? (
-                      <>
-                        <Clock className="h-4 w-4 mr-2" />
-                        PDF Pending
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4 mr-2" />
-                        {downloading === doc.id ? 'Loading...' : 'Download'}
-                      </>
-                    )}
-                  </Button>
+                  {!doc.file_path ? (
+                    <Button variant="outline" size="sm" disabled>
+                      <Clock className="h-4 w-4 mr-2" />
+                      PDF Pending
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleView(doc.id)}
+                        disabled={loadingDoc === doc.id}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        {loadingDoc === doc.id ? 'Loading...' : 'View'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownload(doc.id, doc.title)}
+                        disabled={loadingDoc === doc.id}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
