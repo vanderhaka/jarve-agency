@@ -217,6 +217,42 @@ export function CommandPalette(_props: CommandPaletteProps) {
     [closeSearch]
   )
 
+  // Single-key shortcuts when palette is open and no search query
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle single-key shortcuts when search is empty
+      if (search.length > 0) return
+
+      // Don't trigger if modifier keys are held
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      const key = e.key.toUpperCase()
+
+      // Create shortcuts
+      const createShortcuts: Record<string, { action?: string; href?: string }> = {
+        'L': { action: 'create-lead' },
+        'C': { action: 'create-client' },
+        'P': { action: 'create-project' },
+        'O': { href: '/admin/proposals/new' },
+      }
+
+      if (createShortcuts[key]) {
+        e.preventDefault()
+        const shortcut = createShortcuts[key]
+        if (shortcut.href) {
+          handleSelect(shortcut.href)
+        } else if (shortcut.action) {
+          handleAction(shortcut.action)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, search, handleSelect, handleAction])
+
   const handleContextAction = useCallback(
     (actionId: string) => {
       closeSearch()
