@@ -1,18 +1,19 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Briefcase, Mail, DollarSign, ClipboardList } from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { QuickActionsGrid } from '@/components/admin/quick-actions-grid'
 
 async function getStats() {
   const supabase = await createClient()
 
-  const [leadsResult, projectsResult, clientsResult, tasksResult] = await Promise.all([
+  const [leadsResult, projectsResult, clientsResult, tasksResult, pendingProposalsResult, overdueTasksResult] = await Promise.all([
     supabase.from('leads').select('id, amount', { count: 'exact' }),
     supabase.from('agency_projects').select('id', { count: 'exact', head: true }),
     supabase.from('clients').select('id', { count: 'exact', head: true }),
     supabase.from('tasks').select('id', { count: 'exact', head: true }).neq('status', 'done'),
+    supabase.from('proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('tasks').select('id', { count: 'exact', head: true }).neq('status', 'done').lt('due_date', new Date().toISOString().split('T')[0]),
   ])
 
   const newLeadsResult = await supabase
@@ -30,6 +31,8 @@ async function getStats() {
     totalClients: clientsResult.count || 0,
     pipelineValue,
     openTasks: tasksResult.count || 0,
+    pendingProposals: pendingProposalsResult.count || 0,
+    overdueTasksCount: overdueTasksResult.count || 0,
   }
 }
 
@@ -115,25 +118,14 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button asChild className="w-full justify-start">
-              <Link href="/admin/leads">View All Leads</Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link href="/admin/projects">Manage Projects</Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link href="/admin/clients">View Clients</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <QuickActionsGrid
+        stats={{
+          newLeads: stats.newLeads,
+          openTasks: stats.openTasks,
+          pendingProposals: stats.pendingProposals,
+          overdueTasksCount: stats.overdueTasksCount,
+        }}
+      />
     </div>
   )
 }

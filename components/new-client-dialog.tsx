@@ -16,8 +16,18 @@ import {
 } from '@/components/ui/dialog'
 import { createClient } from '@/utils/supabase/client'
 
-export function NewClientDialog() {
-  const [open, setOpen] = useState(false)
+interface NewClientDialogProps {
+  onSuccess?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: React.ReactNode
+}
+
+export function NewClientDialog({ onSuccess, open: controlledOpen, onOpenChange, trigger }: NewClientDialogProps = {}) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setUncontrolledOpen
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -58,13 +68,18 @@ export function NewClientDialog() {
 
     setOpen(false)
     router.refresh()
+    onSuccess?.()
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>New Client</Button>
-      </DialogTrigger>
+      {trigger !== undefined ? (
+        trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button>New Client</Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>

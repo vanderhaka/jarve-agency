@@ -18,10 +18,16 @@ import { EmployeeSelect } from '@/components/employee-select'
 
 interface NewLeadDialogProps {
   onSuccess?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: React.ReactNode
 }
 
-export function NewLeadDialog({ onSuccess }: NewLeadDialogProps) {
-  const [open, setOpen] = useState(false)
+export function NewLeadDialog({ onSuccess, open: controlledOpen, onOpenChange, trigger }: NewLeadDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setUncontrolledOpen
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
@@ -79,9 +85,13 @@ export function NewLeadDialog({ onSuccess }: NewLeadDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (isOpen) setError(null); }}>
-      <DialogTrigger asChild>
-        <Button>Add Lead</Button>
-      </DialogTrigger>
+      {trigger !== undefined ? (
+        trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button>Add Lead</Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add New Lead</DialogTitle>

@@ -17,8 +17,21 @@ import {
 import { createClient } from '@/utils/supabase/client'
 import { EmployeeSelect } from '@/components/employee-select'
 
-export function NewProjectDialog({ clients }: { clients: Array<{ id: string; name: string; email: string }> }) {
-  const [open, setOpen] = useState(false)
+interface NewProjectDialogProps {
+  clients?: Array<{ id: string; name: string; email: string }>
+  onSuccess?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: React.ReactNode
+}
+
+export function NewProjectDialog({ clients = [], onSuccess, open: controlledOpen, onOpenChange, trigger }: NewProjectDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const [fetchedClients, setFetchedClients] = useState<Array<{ id: string; name: string; email: string }>>([])
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setUncontrolledOpen
+  const displayClients = clients.length > 0 ? clients : fetchedClients
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -33,7 +46,24 @@ export function NewProjectDialog({ clients }: { clients: Array<{ id: string; nam
       }
     }
     fetchEmployee()
-  }, [])
+  }, [supabase.auth])
+
+  // Fetch clients when dialog opens and none provided
+  useEffect(() => {
+    async function fetchClients() {
+      if (open && clients.length === 0 && fetchedClients.length === 0) {
+        const { data } = await supabase
+          .from('clients')
+          .select('id, name, email')
+          .is('deleted_at', null)
+          .order('name')
+        if (data) {
+          setFetchedClients(data)
+        }
+      }
+    }
+    fetchClients()
+  }, [open, clients.length, fetchedClients.length, supabase])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -59,13 +89,18 @@ export function NewProjectDialog({ clients }: { clients: Array<{ id: string; nam
 
     setOpen(false)
     router.refresh()
+    onSuccess?.()
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>New Project</Button>
-      </DialogTrigger>
+      {trigger !== undefined ? (
+        trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button>New Project</Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
@@ -104,7 +139,7 @@ export function NewProjectDialog({ clients }: { clients: Array<{ id: string; nam
             <Label htmlFor="client_id">Client (Optional)</Label>
             <select id="client_id" name="client_id" className="w-full rounded-md border border-input bg-background px-3 py-2">
               <option value="">None</option>
-              {clients.map((client) => (
+              {displayClients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name} ({client.email})
                 </option>
