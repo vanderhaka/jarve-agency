@@ -42,10 +42,15 @@ function parseStorageValue(value: string | null): RecentItem[] {
 // Get current value from localStorage (cached to avoid infinite loops)
 function getSnapshot(): RecentItem[] {
   if (typeof window === 'undefined') return cachedParsed
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (raw !== cachedRaw) {
-    cachedRaw = raw
-    cachedParsed = parseStorageValue(raw)
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw !== cachedRaw) {
+      cachedRaw = raw
+      cachedParsed = parseStorageValue(raw)
+    }
+  } catch {
+    // localStorage throws in iOS Safari private browsing mode
+    return cachedParsed
   }
   return cachedParsed
 }
@@ -57,6 +62,10 @@ function getServerSnapshot(): RecentItem[] {
 
 // Subscribe to storage events
 function subscribe(callback: () => void): () => void {
+  // Guard against SSR - useSyncExternalStore may call subscribe during hydration
+  // iPad Safari has stricter hydration timing where window may not be available
+  if (typeof window === 'undefined') return () => {}
+
   // Listen for storage events from other tabs
   const handleStorage = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) {
