@@ -130,7 +130,7 @@ export function NewClientDialog({ onSuccess, open: controlledOpen, onOpenChange,
             <Textarea id="notes" name="notes" />
           </div>
           <div className="col-span-2 pt-4">
-            <Button type="submit" className="w-full">Add Client</Button>
+            <Button type="submit" variant="success" className="w-full">Add Client</Button>
           </div>
         </form>
       </DialogContent>

@@ -157,7 +157,7 @@ export function PortalManagement({ clientId, clientName }: PortalManagementProps
                 <Button variant="outline" onClick={() => setShowAddDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddUser} disabled={creating}>
+                <Button variant="success" onClick={handleAddUser} disabled={creating}>
                   {creating ? 'Adding...' : 'Add User'}
                 </Button>
               </DialogFooter>

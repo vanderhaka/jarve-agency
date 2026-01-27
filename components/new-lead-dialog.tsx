@@ -89,7 +89,7 @@ export function NewLeadDialog({ onSuccess, open: controlledOpen, onOpenChange, t
         trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
       ) : (
         <DialogTrigger asChild>
-          <Button>Add Lead</Button>
+          <Button variant="success">Add Lead</Button>
         </DialogTrigger>
       )}
       <DialogContent className="max-w-2xl">

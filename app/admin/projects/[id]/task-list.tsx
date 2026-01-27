@@ -49,7 +49,7 @@ export function TaskList({ tasks, onTaskClick, onAddTask }: Props) {
       <div className="flex flex-col items-center justify-center gap-3 h-40 text-muted-foreground border-2 border-dashed rounded-lg">
         <p>No tasks yet. Create your first task to get started.</p>
         {onAddTask && (
-          <Button variant="outline" size="sm" onClick={onAddTask}>
+          <Button variant="success" size="sm" onClick={onAddTask}>
             <Plus className="h-4 w-4 mr-1" />
             Add Task
           </Button>

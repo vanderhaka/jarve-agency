@@ -592,7 +592,7 @@ export default function ProposalDetailPage() {
                       ))}
                       {canEdit && (
                         <Button
-                          variant="outline"
+                          variant="success"
                           size="sm"
                           onClick={() => {
                             const newItems = [...(section.items || []), '']
@@ -675,7 +675,7 @@ export default function ProposalDetailPage() {
                         </TableBody>
                       </Table>
                       {canEdit && (
-                        <Button variant="outline" size="sm" onClick={addLineItem}>
+                        <Button variant="success" size="sm" onClick={addLineItem}>
                           <Plus className="h-4 w-4 mr-2" /> Add Line Item
                         </Button>
                       )}
@@ -706,14 +706,14 @@ export default function ProposalDetailPage() {
             <Card className="border-dashed">
               <CardContent className="pt-6">
                 <div className="flex gap-2 justify-center">
-                  <Button variant="outline" onClick={() => addSection('text')}>
+                  <Button variant="success" onClick={() => addSection('text')}>
                     <Plus className="h-4 w-4 mr-2" /> Text Section
                   </Button>
-                  <Button variant="outline" onClick={() => addSection('list')}>
+                  <Button variant="success" onClick={() => addSection('list')}>
                     <Plus className="h-4 w-4 mr-2" /> List Section
                   </Button>
                   {!content.sections.some((s) => s.type === 'pricing') && (
-                    <Button variant="outline" onClick={() => addSection('pricing')}>
+                    <Button variant="success" onClick={() => addSection('pricing')}>
                       <Plus className="h-4 w-4 mr-2" /> Pricing Section
                     </Button>
                   )}

@@ -268,9 +268,9 @@ function KanbanColumn({
               ))}
               {onAddTask && (
                 <Button
-                  variant="ghost"
+                  variant="success"
                   size="sm"
-                  className="w-full justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200/50"
+                  className="w-full justify-center"
                   onClick={onAddTask}
                 >
                   <Plus className="h-4 w-4 mr-1" />
