@@ -201,41 +201,46 @@ export default function PortalProposalPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <Card className="w-full max-w-lg">
-          <CardContent className="pt-6">
+          <CardContent className="pt-8 pb-8">
             <div className="flex flex-col items-center text-center gap-6">
-              <div className="bg-green-100 p-4 rounded-full">
-                <CheckCircle className="h-12 w-12 text-green-600" />
-              </div>
+              <span className="text-3xl font-bold tracking-tight">JARVE</span>
+
               <div>
-                <h2 className="text-2xl font-semibold">Proposal Signed Successfully</h2>
+                <h2 className="text-2xl font-semibold">You&apos;re all set!</h2>
                 <p className="text-muted-foreground mt-2">
-                  Thank you for signing <span className="font-medium">{proposal?.title}</span>
+                  Thanks for signing <span className="font-medium">{proposal?.title}</span> — we&apos;re excited to work with you.
                 </p>
               </div>
 
               <div className="w-full border-t pt-6 space-y-4 text-left">
-                <h3 className="font-medium text-center">What happens next?</h3>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-3">
-                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">1</span>
-                    <span>You&apos;ll receive a confirmation email with a copy of the signed proposal</span>
+                <p className="text-sm text-muted-foreground text-center">
+                  We&apos;ve set up your Client Portal where you&apos;ll find everything for your project:
+                </p>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <span>Signed documents &amp; contracts</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">2</span>
-                    <span>Your Client Portal is now active - all documents, updates, and team communication will be there</span>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <span>Direct messaging with the team</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <span>File uploads &amp; deliverables</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="w-full pt-4 flex flex-col items-center gap-4">
+              <div className="w-full pt-2 flex flex-col items-center gap-4">
                 <a
                   href={`/portal/${token}`}
-                  className="w-full inline-flex items-center justify-center rounded-md bg-primary px-8 py-4 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="w-full inline-flex items-center justify-center rounded-lg bg-black text-white px-8 py-4 text-base font-semibold hover:bg-gray-800 transition-colors"
                 >
-                  Go to Client Portal
+                  Open Your Client Portal →
                 </a>
-                <p className="text-sm text-muted-foreground">
-                  or contact us at <a href="mailto:hello@jarve.com.au" className="text-primary hover:underline">hello@jarve.com.au</a>
+                <p className="text-xs text-muted-foreground">
+                  A confirmation email is on its way
                 </p>
               </div>
             </div>
