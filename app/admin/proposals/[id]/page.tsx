@@ -164,6 +164,10 @@ export default function ProposalDetailPage() {
 
       if (users) {
         setClientUsers(users)
+        // Auto-select if there's only one contact
+        if (users.length === 1) {
+          setSelectedClientUserId(users[0].id)
+        }
       }
     }
 
@@ -224,6 +228,7 @@ export default function ProposalDetailPage() {
       total: 0
     }
     const newLineItems = [...content.pricing.lineItems, newItem]
+    console.log('[DEBUG] Line item added:', { proposalId, itemId: newItem.id, totalItems: newLineItems.length })
     updatePricing(newLineItems)
   }
 
@@ -274,9 +279,11 @@ export default function ProposalDetailPage() {
   // Save handler
   const handleSave = async () => {
     if (!content || !proposal) return
+    console.log('[DEBUG] Save started:', { proposalId: proposal.id, hasContent: !!content })
     setSaving(true)
 
     const result = await updateProposal(proposal.id, { content })
+    console.log('[DEBUG] Save result:', result)
 
     if (result.success) {
       setHasChanges(false)
@@ -288,12 +295,28 @@ export default function ProposalDetailPage() {
 
   // Send handler (to client user)
   const handleSend = async () => {
-    if (!proposal || !selectedClientUserId) return
+    if (!proposal || !selectedClientUserId || !content) return
+    console.log('[DEBUG] Send to client started:', { proposalId: proposal.id, clientUserId: selectedClientUserId, hasChanges })
     setSending(true)
 
+    // Save any unsaved changes first
+    if (hasChanges) {
+      console.log('[DEBUG] Saving before send...')
+      const saveResult = await updateProposal(proposal.id, { content })
+      console.log('[DEBUG] Save before send result:', saveResult)
+      if (!saveResult.success) {
+        toast.error(saveResult.message)
+        setSending(false)
+        return
+      }
+      setHasChanges(false)
+    }
+
+    console.log('[DEBUG] Sending proposal...')
     const result = await sendProposal(proposal.id, {
       clientUserId: selectedClientUserId
     })
+    console.log('[DEBUG] Send result:', result)
 
     if (result.success) {
       setSendDialogOpen(false)
@@ -308,10 +331,26 @@ export default function ProposalDetailPage() {
 
   // Send handler (to lead - converts to client first)
   const handleSendToLead = async () => {
-    if (!proposal || !proposal.lead_id) return
+    if (!proposal || !proposal.lead_id || !content) return
+    console.log('[DEBUG] Send to lead started:', { proposalId: proposal.id, leadId: proposal.lead_id, hasChanges })
     setSending(true)
 
+    // Save any unsaved changes first
+    if (hasChanges) {
+      console.log('[DEBUG] Saving before send to lead...')
+      const saveResult = await updateProposal(proposal.id, { content })
+      console.log('[DEBUG] Save before send to lead result:', saveResult)
+      if (!saveResult.success) {
+        toast.error(saveResult.message)
+        setSending(false)
+        return
+      }
+      setHasChanges(false)
+    }
+
+    console.log('[DEBUG] Converting lead and sending...')
     const result = await convertLeadAndSend(proposal.id, proposal.lead_id)
+    console.log('[DEBUG] Send to lead result:', result)
 
     if (result.success) {
       setSendDialogOpen(false)

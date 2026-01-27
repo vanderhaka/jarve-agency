@@ -206,22 +206,27 @@ export async function createProposal(input: CreateProposalInput) {
 export async function updateProposal(proposalId: string, input: UpdateProposalInput) {
   const { supabase, employee } = await requireEmployee()
 
+  console.log('[updateProposal] Starting update for proposalId:', proposalId, 'employeeId:', employee.id)
+
   // Get current proposal with authorization data
   const { data: proposal, error: proposalError } = await supabase
     .from('proposals')
-    .select('id, current_version, status, created_by, project:agency_projects(owner_id)')
+    .select('id, current_version, status, created_by, project:agency_projects(assigned_to)')
     .eq('id', proposalId)
     .single()
 
+  console.log('[updateProposal] Query result:', { proposal, proposalError })
+
   if (proposalError || !proposal) {
+    console.log('[updateProposal] Proposal not found - error:', proposalError, 'proposal:', proposal)
     return { success: false, message: 'Proposal not found' }
   }
 
-  // Authorization check: user must be creator or project owner
+  // Authorization check: user must be creator or project assignee
   const projectData = unwrapJoinResult(proposal.project)
   const isCreator = proposal.created_by === employee.id
-  const isProjectOwner = projectData?.owner_id === employee.id
-  if (!isCreator && !isProjectOwner) {
+  const isProjectAssignee = projectData?.assigned_to === employee.id
+  if (!isCreator && !isProjectAssignee) {
     return { success: false, message: 'Unauthorized to modify this proposal' }
   }
 
@@ -282,7 +287,9 @@ export async function updateProposal(proposalId: string, input: UpdateProposalIn
 }
 
 // ============================================================
-// Convert Lead to Client (for sending proposals)
+// Create Client from Lead and Send Proposal
+// Note: Lead is NOT marked as converted here - that happens when
+// the proposal is signed (in signProposal)
 // ============================================================
 
 export async function convertLeadAndSend(proposalId: string, leadId: string) {
@@ -327,14 +334,10 @@ export async function convertLeadAndSend(proposalId: string, leadId: string) {
 
     clientId = newClient.id
 
-    // Update lead with client_id and mark as converted
+    // Link lead to client (conversion happens when proposal is signed)
     await supabase
       .from('leads')
-      .update({
-        client_id: clientId,
-        converted_at: new Date().toISOString(),
-        status: 'converted'
-      })
+      .update({ client_id: clientId })
       .eq('id', leadId)
   }
 
@@ -598,6 +601,15 @@ export async function signProposal(rawInput: SignProposalInput) {
     return { success: false, message: 'Proposal not found' }
   }
 
+  // Get lead_id for conversion (not included in join above)
+  const { data: proposalWithLead } = await supabase
+    .from('proposals')
+    .select('lead_id')
+    .eq('id', proposal.id)
+    .single()
+
+  const leadId = proposalWithLead?.lead_id
+
   if (proposal.status === 'signed') {
     return { success: false, message: 'This proposal has already been signed' }
   }
@@ -638,6 +650,24 @@ export async function signProposal(rawInput: SignProposalInput) {
       return { success: false, message: 'Failed to update proposal status' }
     }
 
+    // Convert the lead now that proposal is signed
+    if (leadId) {
+      const { error: leadUpdateError } = await supabase
+        .from('leads')
+        .update({
+          status: 'converted',
+          converted_at: now
+        })
+        .eq('id', leadId)
+
+      if (leadUpdateError) {
+        console.error('[signProposal] Lead conversion error:', leadUpdateError)
+        // Non-critical, continue
+      } else {
+        console.log('[signProposal] Lead converted:', leadId)
+      }
+    }
+
     // Create contract doc entry (SOW)
     const { error: contractDocError } = await supabase
       .from('contract_docs')
@@ -674,7 +704,7 @@ export async function signProposal(rawInput: SignProposalInput) {
         title,
         project_id,
         client_id,
-        agency_projects(name, owner_id)
+        agency_projects(name, assigned_to)
       `)
       .eq('id', proposal.id)
       .single()
@@ -738,7 +768,7 @@ export async function signProposal(rawInput: SignProposalInput) {
 
       // Use existing project data if available, otherwise use newly created
       const notifyProjectName = projectData?.name || projectName
-      const notifyOwnerId = projectData?.owner_id
+      const notifyOwnerId = projectData?.assigned_to
 
       if (notifyOwnerId) {
         await notifyProposalSigned(
@@ -786,7 +816,7 @@ export async function archiveProposal(proposalId: string) {
   // Get proposal with authorization data
   const { data: proposal, error: proposalError } = await supabase
     .from('proposals')
-    .select('id, created_by, project:agency_projects(owner_id)')
+    .select('id, created_by, project:agency_projects(assigned_to)')
     .eq('id', proposalId)
     .single()
 
@@ -797,8 +827,8 @@ export async function archiveProposal(proposalId: string) {
   // Authorization check: user must be creator or project owner
   const projectData = unwrapJoinResult(proposal.project)
   const isCreator = proposal.created_by === employee.id
-  const isProjectOwner = projectData?.owner_id === employee.id
-  if (!isCreator && !isProjectOwner) {
+  const isProjectAssignee = projectData?.assigned_to === employee.id
+  if (!isCreator && !isProjectAssignee) {
     return { success: false, message: 'Unauthorized to archive this proposal' }
   }
 
@@ -834,7 +864,7 @@ export async function getProposal(proposalId: string) {
       *,
       lead:leads(id, name, email, company),
       client:clients(id, name, email),
-      project:agency_projects(id, name, owner_id),
+      project:agency_projects(id, name, assigned_to),
       created_by_employee:employees!proposals_created_by_fkey(id, name, email),
       versions:proposal_versions(
         id,
@@ -868,8 +898,8 @@ export async function getProposal(proposalId: string) {
   // Authorization check: user must be creator or project owner
   const projectData = unwrapJoinResult(proposal.project)
   const isCreator = proposal.created_by === employee.id
-  const isProjectOwner = projectData?.owner_id === employee.id
-  if (!isCreator && !isProjectOwner) {
+  const isProjectAssignee = projectData?.assigned_to === employee.id
+  if (!isCreator && !isProjectAssignee) {
     return { success: false, message: 'Unauthorized to view this proposal', proposal: null }
   }
 
