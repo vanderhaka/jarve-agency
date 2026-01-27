@@ -15,7 +15,7 @@ const comparisons = [
       { text: "Same quality, modern stack", ours: true },
       { text: "Direct founder access", ours: true },
     ],
-    theirPain: "6+ month timelines, $100K+ budgets, layers of account managers",
+    theirPain: "6+ month timelines, $25K+ budgets, layers of account managers",
   },
   {
     title: "vs. Freelancers",

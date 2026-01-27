@@ -65,7 +65,7 @@ export function HeroSection() {
 
         <FadeIn delay={0.3}>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            AI-assisted development lets us build enterprise-quality software in <span className="text-foreground font-medium">weeks instead of months</span>—at a fraction of the cost. The $100K project? We can do it for $20K.
+            AI-assisted development lets us build enterprise-quality software in <span className="text-foreground font-medium">weeks instead of months</span>—at a fraction of the cost. The $25K project? We can do it for $5K.
           </p>
         </FadeIn>
         
