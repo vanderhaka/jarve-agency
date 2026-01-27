@@ -3,49 +3,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { DialogTrigger } from '@/components/ui/dialog'
 import {
   Loader2,
   ArrowLeft,
   Save,
   Send,
-  Plus,
-  Trash2,
-  GripVertical,
-  FileText,
-  History,
-  CheckCircle,
-  Clock
+  CheckCircle
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -54,10 +21,13 @@ import {
   sendProposal,
   archiveProposal,
   convertLeadAndSend,
-  ProposalSection,
-  PricingLineItem,
   ProposalContent
 } from '../actions'
+import { useProposalForm } from './hooks/use-proposal-form'
+import { ProposalEditor } from './components/proposal-editor'
+import { ClientSelector } from './components/client-selector'
+
+const NO_CLIENT_LABEL = '(No client linked)' as const
 
 interface ClientUser {
   id: string
@@ -110,14 +80,21 @@ export default function ProposalDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [proposal, setProposal] = useState<Proposal | null>(null)
-  const [content, setContent] = useState<ProposalContent | null>(null)
-  const [hasChanges, setHasChanges] = useState(false)
   const [clientUsers, setClientUsers] = useState<ClientUser[]>([])
   const [sendDialogOpen, setSendDialogOpen] = useState(false)
   const [selectedClientUserId, setSelectedClientUserId] = useState('')
   const [sending, setSending] = useState(false)
 
   const supabase = createClient()
+
+  // Load current version content
+  const currentVersionContent = proposal?.versions?.find(
+    v => v.version === proposal.current_version
+  )?.content || null
+
+  // Use form hook
+  const formActions = useProposalForm(currentVersionContent)
+  const { content, hasChanges, setContent, resetChanges } = formActions
 
   const fetchProposal = useCallback(async () => {
     const { data, error } = await supabase
@@ -172,109 +149,12 @@ export default function ProposalDetailPage() {
     }
 
     setLoading(false)
-  }, [supabase, proposalId, router])
+  }, [supabase, proposalId, router, setContent])
 
   useEffect(() => {
     void fetchProposal()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Section handlers
-  const updateSection = (sectionId: string, updates: Partial<ProposalSection>) => {
-    if (!content) return
-    setContent({
-      ...content,
-      sections: content.sections.map(s =>
-        s.id === sectionId ? { ...s, ...updates } : s
-      )
-    })
-    setHasChanges(true)
-  }
-
-  const addSection = (type: ProposalSection['type']) => {
-    if (!content) return
-    const newSection: ProposalSection = {
-      id: `section_${Date.now()}`,
-      type,
-      title: type === 'pricing' ? 'Investment' : 'New Section',
-      body: '',
-      items: type === 'list' ? [] : undefined,
-      order: content.sections.length + 1
-    }
-    setContent({
-      ...content,
-      sections: [...content.sections, newSection]
-    })
-    setHasChanges(true)
-  }
-
-  const removeSection = (sectionId: string) => {
-    if (!content) return
-    setContent({
-      ...content,
-      sections: content.sections.filter(s => s.id !== sectionId)
-    })
-    setHasChanges(true)
-  }
-
-  // Pricing handlers
-  const addLineItem = () => {
-    if (!content) return
-    const newItem: PricingLineItem = {
-      id: crypto.randomUUID(),
-      label: '',
-      qty: 1,
-      unitPrice: 0,
-      total: 0
-    }
-    const newLineItems = [...content.pricing.lineItems, newItem]
-    console.log('[DEBUG] Line item added:', { proposalId, itemId: newItem.id, totalItems: newLineItems.length })
-    updatePricing(newLineItems)
-  }
-
-  const updateLineItem = (itemId: string, updates: Partial<PricingLineItem>) => {
-    if (!content) return
-    const newLineItems = content.pricing.lineItems.map(item => {
-      if (item.id === itemId) {
-        const updated = { ...item, ...updates }
-        updated.total = updated.qty * updated.unitPrice
-        return updated
-      }
-      return item
-    })
-    updatePricing(newLineItems)
-  }
-
-  const removeLineItem = (itemId: string) => {
-    if (!content) return
-    const newLineItems = content.pricing.lineItems.filter(i => i.id !== itemId)
-    updatePricing(newLineItems)
-  }
-
-  const updatePricing = (lineItems: PricingLineItem[]) => {
-    if (!content) return
-    const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0)
-    const gstAmount = subtotal * content.pricing.gstRate
-    const total = subtotal + gstAmount
-
-    setContent({
-      ...content,
-      pricing: {
-        ...content.pricing,
-        lineItems,
-        subtotal,
-        gstAmount,
-        total
-      }
-    })
-    setHasChanges(true)
-  }
-
-  const updateTerms = (terms: string) => {
-    if (!content) return
-    setContent({ ...content, terms })
-    setHasChanges(true)
-  }
 
   // Save handler
   const handleSave = async () => {
@@ -286,7 +166,7 @@ export default function ProposalDetailPage() {
     console.log('[DEBUG] Save result:', result)
 
     if (result.success) {
-      setHasChanges(false)
+      resetChanges()
       fetchProposal()
     }
 
@@ -309,7 +189,7 @@ export default function ProposalDetailPage() {
         setSending(false)
         return
       }
-      setHasChanges(false)
+      resetChanges()
     }
 
     console.log('[DEBUG] Sending proposal...')
@@ -345,7 +225,7 @@ export default function ProposalDetailPage() {
         setSending(false)
         return
       }
-      setHasChanges(false)
+      resetChanges()
     }
 
     console.log('[DEBUG] Converting lead and sending...')
@@ -393,6 +273,10 @@ export default function ProposalDetailPage() {
   const isArchived = proposal.status === 'archived'
   const canEdit = !isSigned && !isArchived
 
+  // Determine display name for client/lead
+  const recipientName = proposal.client?.name ?? proposal.lead?.name
+  const recipientDisplay = recipientName ?? NO_CLIENT_LABEL
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -412,7 +296,7 @@ export default function ProposalDetailPage() {
               <Badge variant="outline">v{proposal.current_version}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {proposal.client?.name || proposal.lead?.name || 'No client linked'}
+              {recipientDisplay}
               {proposal.project && ` • ${proposal.project.name}`}
             </p>
           </div>
@@ -432,94 +316,11 @@ export default function ProposalDetailPage() {
                 )}
                 Save
               </Button>
-              <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Send className="h-4 w-4 mr-2" /> Send
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Send Proposal</DialogTitle>
-                    <DialogDescription>
-                      {proposal.client_id
-                        ? 'Select a client contact to send this proposal to.'
-                        : proposal.lead
-                          ? `Send this proposal to ${proposal.lead.name} (${proposal.lead.email}). This will convert them to a client.`
-                          : 'Link a lead or client to this proposal before sending.'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  {proposal.client_id ? (
-                    <>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label>Send to</Label>
-                          <Select
-                            value={selectedClientUserId}
-                            onValueChange={setSelectedClientUserId}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a contact" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {clientUsers.map((user) => (
-                                <SelectItem key={user.id} value={user.id}>
-                                  {user.name} ({user.email})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => setSendDialogOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleSend}
-                          disabled={!selectedClientUserId || sending}
-                        >
-                          {sending ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : (
-                            <Send className="h-4 w-4 mr-2" />
-                          )}
-                          Send
-                        </Button>
-                      </DialogFooter>
-                    </>
-                  ) : proposal.lead ? (
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setSendDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button onClick={handleSendToLead} disabled={sending}>
-                        {sending ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Send className="h-4 w-4 mr-2" />
-                        )}
-                        Send to {proposal.lead.name}
-                      </Button>
-                    </DialogFooter>
-                  ) : (
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setSendDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </DialogFooter>
-                  )}
-                </DialogContent>
-              </Dialog>
+              <DialogTrigger asChild>
+                <Button onClick={() => setSendDialogOpen(true)}>
+                  <Send className="h-4 w-4 mr-2" /> Send
+                </Button>
+              </DialogTrigger>
               <Button variant="ghost" onClick={handleArchive}>
                 Archive
               </Button>
@@ -549,292 +350,29 @@ export default function ProposalDetailPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="content">
-        <TabsList>
-          <TabsTrigger value="content" className="gap-2">
-            <FileText className="h-4 w-4" /> Content
-          </TabsTrigger>
-          <TabsTrigger value="versions" className="gap-2">
-            <History className="h-4 w-4" /> Versions ({proposal.versions.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Proposal Editor */}
+      <ProposalEditor
+        content={content}
+        versions={proposal.versions}
+        currentVersion={proposal.current_version}
+        canEdit={canEdit}
+        formActions={formActions}
+      />
 
-        <TabsContent value="content" className="mt-6 space-y-6">
-          {/* Sections */}
-          {content.sections
-            .sort((a, b) => a.order - b.order)
-            .map((section) => (
-              <Card key={section.id}>
-                <CardHeader className="flex flex-row items-start justify-between pb-2">
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                    <Input
-                      value={section.title}
-                      onChange={(e) =>
-                        updateSection(section.id, { title: e.target.value })
-                      }
-                      className="font-semibold text-lg border-none p-0 h-auto focus-visible:ring-0"
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  {canEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSection(section.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  {section.type === 'text' && (
-                    <Textarea
-                      value={section.body || ''}
-                      onChange={(e) =>
-                        updateSection(section.id, { body: e.target.value })
-                      }
-                      placeholder="Enter content..."
-                      rows={4}
-                      disabled={!canEdit}
-                    />
-                  )}
-                  {section.type === 'list' && (
-                    <div className="space-y-2">
-                      {(section.items || []).map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span className="text-muted-foreground">•</span>
-                          <Input
-                            value={item}
-                            onChange={(e) => {
-                              const newItems = [...(section.items || [])]
-                              newItems[idx] = e.target.value
-                              updateSection(section.id, { items: newItems })
-                            }}
-                            disabled={!canEdit}
-                          />
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newItems = (section.items || []).filter(
-                                  (_, i) => i !== idx
-                                )
-                                updateSection(section.id, { items: newItems })
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      {canEdit && (
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => {
-                            const newItems = [...(section.items || []), '']
-                            updateSection(section.id, { items: newItems })
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Add Item
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                  {section.type === 'pricing' && (
-                    <div className="space-y-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[40%]">Description</TableHead>
-                            <TableHead className="w-[15%]">Qty</TableHead>
-                            <TableHead className="w-[20%]">Unit Price</TableHead>
-                            <TableHead className="w-[20%]">Total</TableHead>
-                            <TableHead className="w-[5%]"></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {content.pricing.lineItems.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell>
-                                <Input
-                                  value={item.label}
-                                  onChange={(e) =>
-                                    updateLineItem(item.id, { label: e.target.value })
-                                  }
-                                  placeholder="Line item description"
-                                  disabled={!canEdit}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  type="number"
-                                  value={item.qty}
-                                  onChange={(e) =>
-                                    updateLineItem(item.id, {
-                                      qty: parseFloat(e.target.value) || 0
-                                    })
-                                  }
-                                  min="0"
-                                  disabled={!canEdit}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  type="number"
-                                  value={item.unitPrice}
-                                  onChange={(e) =>
-                                    updateLineItem(item.id, {
-                                      unitPrice: parseFloat(e.target.value) || 0
-                                    })
-                                  }
-                                  min="0"
-                                  step="0.01"
-                                  disabled={!canEdit}
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                ${item.total.toFixed(2)}
-                              </TableCell>
-                              <TableCell>
-                                {canEdit && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeLineItem(item.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {canEdit && (
-                        <Button variant="success" size="sm" onClick={addLineItem}>
-                          <Plus className="h-4 w-4 mr-2" /> Add Line Item
-                        </Button>
-                      )}
-                      <div className="flex justify-end">
-                        <div className="w-64 space-y-2">
-                          <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span>${content.pricing.subtotal.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-muted-foreground">
-                            <span>GST ({(content.pricing.gstRate * 100).toFixed(0)}%):</span>
-                            <span>${content.pricing.gstAmount.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between font-bold text-lg border-t pt-2">
-                            <span>Total:</span>
-                            <span>${content.pricing.total.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-
-          {/* Add Section */}
-          {canEdit && (
-            <Card className="border-dashed">
-              <CardContent className="pt-6">
-                <div className="flex gap-2 justify-center">
-                  <Button variant="success" onClick={() => addSection('text')}>
-                    <Plus className="h-4 w-4 mr-2" /> Text Section
-                  </Button>
-                  <Button variant="success" onClick={() => addSection('list')}>
-                    <Plus className="h-4 w-4 mr-2" /> List Section
-                  </Button>
-                  {!content.sections.some((s) => s.type === 'pricing') && (
-                    <Button variant="success" onClick={() => addSection('pricing')}>
-                      <Plus className="h-4 w-4 mr-2" /> Pricing Section
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Terms */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Terms & Conditions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={content.terms}
-                onChange={(e) => updateTerms(e.target.value)}
-                placeholder="Enter payment terms, conditions, and other legal text..."
-                rows={6}
-                disabled={!canEdit}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="versions" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Version History</CardTitle>
-              <CardDescription>
-                Each edit creates a new version for tracking changes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Version</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {proposal.versions
-                    .sort((a, b) => b.version - a.version)
-                    .map((version) => (
-                      <TableRow key={version.id}>
-                        <TableCell className="font-medium">
-                          v{version.version}
-                          {version.version === proposal.current_version && (
-                            <Badge className="ml-2" variant="outline">
-                              Current
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(version.created_at).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          {version.created_by_employee?.name || '-'}
-                        </TableCell>
-                        <TableCell>${version.total?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>
-                          {version.sent_at ? (
-                            <Badge className="bg-blue-500">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Sent {new Date(version.sent_at).toLocaleDateString()}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">Draft</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Client Selector Dialog */}
+      <ClientSelector
+        open={sendDialogOpen}
+        onOpenChange={setSendDialogOpen}
+        clientId={proposal.client_id}
+        leadId={proposal.lead_id}
+        lead={proposal.lead}
+        clientUsers={clientUsers}
+        selectedClientUserId={selectedClientUserId}
+        onSelectClientUser={setSelectedClientUserId}
+        sending={sending}
+        onSendToClient={handleSend}
+        onSendToLead={handleSendToLead}
+      />
     </div>
   )
 }

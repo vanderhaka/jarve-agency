@@ -1,7 +1,7 @@
-// Data access layer for notifications
+// Database query layer for notifications
 
 import { createClient } from '@/utils/supabase/server'
-import type { NotificationInsert, Notification, ReminderConfig } from './types'
+import type { NotificationInsert, Notification, ReminderConfig } from '../types'
 
 /**
  * Get unread notifications for the current user
@@ -9,7 +9,7 @@ import type { NotificationInsert, Notification, ReminderConfig } from './types'
 export async function getUnreadNotifications(): Promise<Notification[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return []
 
   const { data, error } = await supabase
@@ -38,7 +38,7 @@ export async function getNotifications(options?: {
 }): Promise<{ notifications: Notification[]; total: number }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return { notifications: [], total: 0 }
 
   const limit = options?.limit ?? 20
@@ -75,7 +75,7 @@ export async function getNotifications(options?: {
 export async function getUnreadCount(): Promise<number> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return 0
 
   const { count, error } = await supabase
@@ -98,7 +98,7 @@ export async function getUnreadCount(): Promise<number> {
 export async function markAsRead(notificationId: string): Promise<boolean> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return false
 
   const { error } = await supabase
@@ -121,7 +121,7 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
 export async function markAllAsRead(): Promise<boolean> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return false
 
   const { error } = await supabase
@@ -220,7 +220,7 @@ export async function getReminderConfig(): Promise<ReminderConfig> {
 }
 
 /**
- * Get overdue tasks for scheduler
+ * Get overdue tasks (raw data from database)
  */
 export async function getOverdueTasks(): Promise<Array<{
   id: string
@@ -229,7 +229,7 @@ export async function getOverdueTasks(): Promise<Array<{
   status: string
   assigned_to: string | null
   project_id: string
-  project_name: string
+  agency_projects: { name: string } | { name: string }[] | null
 }>> {
   const supabase = await createClient()
 
@@ -254,24 +254,11 @@ export async function getOverdueTasks(): Promise<Array<{
     return []
   }
 
-  return (data ?? []).map((task) => {
-    const projectData = Array.isArray(task.agency_projects)
-      ? task.agency_projects[0]
-      : task.agency_projects
-    return {
-      id: task.id,
-      title: task.title,
-      due_date: task.due_date,
-      status: task.status,
-      assigned_to: task.assigned_to,
-      project_id: task.project_id,
-      project_name: (projectData as { name: string } | undefined)?.name ?? 'Unknown Project',
-    }
-  })
+  return data ?? []
 }
 
 /**
- * Get overdue milestones for scheduler
+ * Get overdue milestones (raw data from database)
  */
 export async function getOverdueMilestones(): Promise<Array<{
   id: string
@@ -280,8 +267,7 @@ export async function getOverdueMilestones(): Promise<Array<{
   status: string
   amount: number
   project_id: string
-  project_name: string
-  project_owner_id: string
+  agency_projects: { name: string; owner_id: string } | { name: string; owner_id: string }[] | null
 }>> {
   const supabase = await createClient()
 
@@ -305,21 +291,7 @@ export async function getOverdueMilestones(): Promise<Array<{
     return []
   }
 
-  return (data ?? []).map((milestone) => {
-    const projectData = Array.isArray(milestone.agency_projects)
-      ? milestone.agency_projects[0]
-      : milestone.agency_projects
-    return {
-      id: milestone.id,
-      title: milestone.title,
-      due_date: milestone.due_date,
-      status: milestone.status,
-      amount: Number(milestone.amount),
-      project_id: milestone.project_id,
-      project_name: (projectData as { name: string; owner_id: string } | undefined)?.name ?? 'Unknown Project',
-      project_owner_id: (projectData as { name: string; owner_id: string } | undefined)?.owner_id ?? '',
-    }
-  })
+  return data ?? []
 }
 
 /**
@@ -331,11 +303,10 @@ export async function getPendingProposals(daysThreshold: number): Promise<Array<
   sent_at: string
   status: string
   project_id: string
-  project_name: string
-  project_owner_id: string
+  agency_projects: { name: string; owner_id: string } | { name: string; owner_id: string }[] | null
 }>> {
   const supabase = await createClient()
-  
+
   const thresholdDate = new Date()
   thresholdDate.setDate(thresholdDate.getDate() - daysThreshold)
 
@@ -358,20 +329,7 @@ export async function getPendingProposals(daysThreshold: number): Promise<Array<
     return []
   }
 
-  return (data ?? []).map((proposal) => {
-    const projectData = Array.isArray(proposal.agency_projects)
-      ? proposal.agency_projects[0]
-      : proposal.agency_projects
-    return {
-      id: proposal.id,
-      title: proposal.title,
-      sent_at: proposal.sent_at,
-      status: proposal.status,
-      project_id: proposal.project_id,
-      project_name: (projectData as { name: string; owner_id: string } | undefined)?.name ?? 'Unknown Project',
-      project_owner_id: (projectData as { name: string; owner_id: string } | undefined)?.owner_id ?? '',
-    }
-  })
+  return data ?? []
 }
 
 /**
@@ -383,11 +341,10 @@ export async function getPendingChangeRequests(daysThreshold: number): Promise<A
   created_at: string
   status: string
   project_id: string
-  project_name: string
-  project_owner_id: string
+  agency_projects: { name: string; owner_id: string } | { name: string; owner_id: string }[] | null
 }>> {
   const supabase = await createClient()
-  
+
   const thresholdDate = new Date()
   thresholdDate.setDate(thresholdDate.getDate() - daysThreshold)
 
@@ -409,18 +366,5 @@ export async function getPendingChangeRequests(daysThreshold: number): Promise<A
     return []
   }
 
-  return (data ?? []).map((cr) => {
-    const projectData = Array.isArray(cr.agency_projects)
-      ? cr.agency_projects[0]
-      : cr.agency_projects
-    return {
-      id: cr.id,
-      title: cr.title,
-      created_at: cr.created_at,
-      status: cr.status,
-      project_id: cr.project_id,
-      project_name: (projectData as { name: string; owner_id: string } | undefined)?.name ?? 'Unknown Project',
-      project_owner_id: (projectData as { name: string; owner_id: string } | undefined)?.owner_id ?? '',
-    }
-  })
+  return data ?? []
 }
