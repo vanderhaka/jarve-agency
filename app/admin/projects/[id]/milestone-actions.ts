@@ -3,27 +3,16 @@
 import { revalidatePath } from 'next/cache'
 import {
   createMilestone,
-  insertMilestone,
   updateMilestone,
   deleteMilestone,
   reorderMilestones,
   completeMilestone,
 } from '@/lib/milestones/data'
-import type { CreateMilestoneInput, UpdateMilestoneInput, InsertMilestoneInput } from '@/lib/milestones/types'
+import type { CreateMilestoneInput, UpdateMilestoneInput } from '@/lib/milestones/types'
 
 export async function createMilestoneAction(input: CreateMilestoneInput) {
   try {
     const milestone = await createMilestone(input)
-    revalidatePath(`/admin/projects/${input.project_id}`)
-    return { success: true, milestone }
-  } catch (error) {
-    return { success: false, error: (error as Error).message }
-  }
-}
-
-export async function insertMilestoneAction(input: InsertMilestoneInput) {
-  try {
-    const milestone = await insertMilestone(input)
     revalidatePath(`/admin/projects/${input.project_id}`)
     return { success: true, milestone }
   } catch (error) {

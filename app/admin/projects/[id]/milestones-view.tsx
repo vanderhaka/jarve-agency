@@ -29,15 +29,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Plus, MoreVertical, GripVertical, Check, Trash2, Edit, Receipt } from 'lucide-react'
+import { Plus, MoreVertical, Check, Trash2, Edit, Receipt } from 'lucide-react'
 import type { Milestone, MilestoneStatus } from '@/lib/milestones/types'
 import {
   createMilestoneAction,
   updateMilestoneAction,
   deleteMilestoneAction,
-  reorderMilestonesAction,
   completeMilestoneAction,
 } from './milestone-actions'
+import { formatCurrency, formatDate } from '@/lib/utils/format'
 
 interface Props {
   projectId: string
@@ -56,22 +56,6 @@ const statusLabels: Record<MilestoneStatus, string> = {
   active: 'Active',
   complete: 'Complete',
   invoiced: 'Invoiced',
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD',
-  }).format(amount)
-}
-
-function formatDate(date: string | null): string {
-  if (!date) return '-'
-  return new Date(date).toLocaleDateString('en-AU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 export function MilestonesView({ projectId, milestones: initialMilestones }: Props) {
@@ -323,9 +307,6 @@ export function MilestonesView({ projectId, milestones: initialMilestones }: Pro
                   key={milestone.id}
                   className="flex items-center gap-4 p-4 border rounded-lg bg-background hover:bg-muted/50 transition-colors"
                 >
-                  <div className="text-muted-foreground cursor-grab">
-                    <GripVertical className="h-4 w-4" />
-                  </div>
                   <div className="text-sm text-muted-foreground w-8">
                     #{index + 1}
                   </div>

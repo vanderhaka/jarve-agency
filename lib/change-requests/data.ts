@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { createMilestone } from '@/lib/milestones/data'
+import { randomBytes } from 'crypto'
 import type {
   ChangeRequest,
   CreateChangeRequestInput,
@@ -9,15 +10,16 @@ import type {
 } from './types'
 
 /**
- * Generate a secure portal token
+ * Generate a secure portal token using cryptographically secure random bytes
  */
 function generatePortalToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let token = ''
-  for (let i = 0; i < 32; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return token
+  // Generate 24 random bytes and encode as base64url (URL-safe)
+  // 24 bytes = 192 bits of entropy, encoded to 32 characters
+  return randomBytes(24)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
 }
 
 /**
@@ -138,25 +140,21 @@ export async function updateChangeRequest(
 export async function deleteChangeRequest(changeRequestId: string): Promise<void> {
   const supabase = await createClient()
 
-  // Only allow deletion of drafts
-  const { data: existing } = await supabase
+  // Atomically delete only if status is draft (prevents TOCTOU race condition)
+  const { error, count } = await supabase
     .from('change_requests')
-    .select('status')
+    .delete({ count: 'exact' })
     .eq('id', changeRequestId)
-    .single()
-
-  if (existing && existing.status !== 'draft') {
-    throw new Error('Can only delete draft change requests')
-  }
-
-  const { error } = await supabase
-    .from('change_requests')
-    .delete()
-    .eq('id', changeRequestId)
+    .eq('status', 'draft')
 
   if (error) {
     console.error('[deleteChangeRequest] Error:', error)
     throw new Error('Failed to delete change request')
+  }
+
+  // If no rows were deleted, the change request either doesn't exist or isn't a draft
+  if (count === 0) {
+    throw new Error('Can only delete draft change requests')
   }
 }
 

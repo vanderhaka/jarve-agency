@@ -38,6 +38,7 @@ import {
   sendChangeRequestAction,
   archiveChangeRequestAction,
 } from './change-request-actions'
+import { formatCurrency, formatDate } from '@/lib/utils/format'
 
 interface Props {
   projectId: string
@@ -58,22 +59,6 @@ const statusLabels: Record<ChangeRequestStatus, string> = {
   signed: 'Signed',
   rejected: 'Rejected',
   archived: 'Archived',
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD',
-  }).format(amount)
-}
-
-function formatDate(date: string | null): string {
-  if (!date) return '-'
-  return new Date(date).toLocaleDateString('en-AU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 export function ChangeRequestsView({ projectId, changeRequests: initialChangeRequests }: Props) {

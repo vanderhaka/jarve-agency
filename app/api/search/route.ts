@@ -82,10 +82,11 @@ export async function GET(request: Request) {
         .ilike('title', searchTerm)
         .limit(5),
 
-      // Search change requests
+      // Search change requests (exclude archived)
       supabase
         .from('change_requests')
         .select('id, title, project_id, status, amount, agency_projects(name)')
+        .neq('status', 'archived')
         .ilike('title', searchTerm)
         .limit(5),
     ])
