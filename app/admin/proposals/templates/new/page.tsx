@@ -127,7 +127,7 @@ export default function NewTemplatePage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Sections</CardTitle>
-          <Button size="sm" onClick={addSection}>
+          <Button variant="success" size="sm" onClick={addSection}>
             <Plus className="mr-2 h-4 w-4" /> Add Section
           </Button>
         </CardHeader>

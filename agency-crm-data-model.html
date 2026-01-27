@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency CRM Data Model - Option C: Project-Centric</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .key-insight h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .key-insight ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .key-insight li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .key-insight li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            min-height: 800px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* Entity Boxes */
+        .entity {
+            position: absolute;
+            background: white;
+            border: 3px solid;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 200px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .entity:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .entity.client {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ffffff 0%, #d1fae5 100%);
+            top: 50px;
+            left: 50px;
+        }
+
+        .entity.project {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #ffffff 0%, #dbeafe 100%);
+            top: 50px;
+            right: 50px;
+        }
+
+        .entity.proposal {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
+            top: 350px;
+            right: 50px;
+        }
+
+        .entity-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: inherit;
+        }
+
+        .entity-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .entity-field {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .entity-field:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .field-value {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        /* Flow Steps */
+        .flow-step {
+            position: absolute;
+            background: white;
+            border: 3px solid #8b5cf6;
+            border-radius: 12px;
+            padding: 15px 20px;
+            min-width: 250px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .flow-step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        .flow-step.step1 { top: 250px; left: 50px; }
+        .flow-step.step2 { top: 250px; left: 350px; }
+        .flow-step.step3 { top: 400px; left: 350px; }
+        .flow-step.step4 { top: 550px; left: 350px; }
+        .flow-step.step5 { top: 550px; left: 50px; }
+        .flow-step.step6 { top: 650px; right: 50px; }
+
+        .step-number {
+            display: inline-block;
+            background: #8b5cf6;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .step-text {
+            display: inline-block;
+            font-weight: 600;
+            color: #333;
+            vertical-align: middle;
+        }
+
+        /* Relationship Lines */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .entity, .flow-step {
+            z-index: 2;
+        }
+
+        .relationship-line {
+            stroke: #94a3b8;
+            stroke-width: 3;
+            fill: none;
+            opacity: 0.6;
+        }
+
+        .relationship-line.active {
+            stroke: #8b5cf6;
+            stroke-width: 4;
+            opacity: 1;
+        }
+
+        .arrow {
+            fill: #94a3b8;
+            opacity: 0.6;
+        }
+
+        .arrow.active {
+            fill: #8b5cf6;
+            opacity: 1;
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: absolute;
+            background: #1f2937;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip:before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #1f2937;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border: 3px solid;
+            border-radius: 6px;
+        }
+
+        .legend-box.client { border-color: #10b981; background: #d1fae5; }
+        .legend-box.project { border-color: #3b82f6; background: #dbeafe; }
+        .legend-box.proposal { border-color: #f59e0b; background: #fef3c7; }
+        .legend-box.flow { border-color: #8b5cf6; background: white; }
+
+        .legend-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .diagram-container {
+                min-height: 1000px;
+            }
+
+            .entity, .flow-step {
+                position: static !important;
+                margin: 20px auto;
+                max-width: 400px;
+            }
+
+            svg {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agency CRM Data Model</h1>
+        <p class="subtitle">Option C: Project-Centric Organization</p>
+
+        <div class="key-insight">
+            <h3>Key Design Principles</h3>
+            <ul>
+                <li>Proposals always attach to Projects, not directly to Clients</li>
+                <li>A Client can have many Projects over time</li>
+                <li>Each Project can have one or more Proposals (revisions, phases)</li>
+                <li>Client status (Lead/Active/Past) flows from Project status</li>
+            </ul>
+        </div>
+
+        <div class="diagram-container">
+            <svg id="relationship-svg">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                        <polygon points="0 0, 10 3, 0 6" class="arrow" />
+                    </marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                        <polygon points="0 0, 10 3, 0 6" class="arrow active" />
+                    </marker>
+                </defs>
+            </svg>
+
+            <!-- Entity: Client -->
+            <div class="entity client" data-tooltip="The company or individual you work with. Can be a Lead (prospect), Active Client, or Past Client. Status changes based on Project activity.">
+                <div class="entity-title" style="color: #10b981;">Client/Organization</div>
+                <div class="entity-subtitle">The company or individual</div>
+                <div class="entity-field" data-tooltip="Unique identifier for the client">
+                    <span class="field-label">id:</span> <span class="field-value">UUID</span>
+                </div>
+                <div class="entity-field" data-tooltip="Company or individual name">
+                    <span class="field-label">name:</span> <span class="field-value">string</span>
+                </div>
+                <div class="entity-field" data-tooltip="Lead → Active Client → Past Client. Lead = no completed projects yet">
+                    <span class="field-label">status:</span> <span class="field-value">Lead | Active | Past</span>
+                </div>
+                <div class="entity-field" data-tooltip="Primary contact person at the client organization">
+                    <span class="field-label">contact_person:</span> <span class="field-value">string</span>
+                </div>
+                <div class="entity-field" data-tooltip="Contact email address">
+                    <span class="field-label">email:</span> <span class="field-value">string</span>
+                </div>
+                <div class="entity-field" data-tooltip="When this client record was created">
+                    <span class="field-label">created_at:</span> <span class="field-value">timestamp</span>
+                </div>
+            </div>
+
+            <!-- Entity: Project -->
+            <div class="entity project" data-tooltip="The unit of work for a client. Moves through stages: Proposal → Active → Completed. A client can have many projects over time.">
+                <div class="entity-title" style="color: #3b82f6;">Project</div>
+                <div class="entity-subtitle">The unit of work</div>
+                <div class="entity-field" data-tooltip="Unique identifier for the project">
+                    <span class="field-label">id:</span> <span class="field-value">UUID</span>
+                </div>
+                <div class="entity-field" data-tooltip="Reference to the Client this project belongs to">
+                    <span class="field-label">client_id:</span> <span class="field-value">→ Client</span>
+                </div>
+                <div class="entity-field" data-tooltip="Project name or title">
+                    <span class="field-label">name:</span> <span class="field-value">string</span>
+                </div>
+                <div class="entity-field" data-tooltip="Proposal → Active → Completed. Determines client status">
+                    <span class="field-label">status:</span> <span class="field-value">Proposal | Active | Completed</span>
+                </div>
+                <div class="entity-field" data-tooltip="Total project budget or contract value">
+                    <span class="field-label">budget:</span> <span class="field-value">decimal</span>
+                </div>
+                <div class="entity-field" data-tooltip="Expected or actual start date">
+                    <span class="field-label">start_date:</span> <span class="field-value">date</span>
+                </div>
+                <div class="entity-field" data-tooltip="Expected or actual end date">
+                    <span class="field-label">end_date:</span> <span class="field-value">date</span>
+                </div>
+            </div>
+
+            <!-- Entity: Proposal -->
+            <div class="entity proposal" data-tooltip="Scoping document for a project. Always belongs to a Project. Can have multiple proposals per project (revisions, phases).">
+                <div class="entity-title" style="color: #f59e0b;">Proposal</div>
+                <div class="entity-subtitle">Scoping document</div>
+                <div class="entity-field" data-tooltip="Unique identifier for the proposal">
+                    <span class="field-label">id:</span> <span class="field-value">UUID</span>
+                </div>
+                <div class="entity-field" data-tooltip="Reference to the Project this proposal belongs to">
+                    <span class="field-label">project_id:</span> <span class="field-value">→ Project</span>
+                </div>
+                <div class="entity-field" data-tooltip="Proposal title or version identifier">
+                    <span class="field-label">title:</span> <span class="field-value">string</span>
+                </div>
+                <div class="entity-field" data-tooltip="Draft → Sent → Accepted/Declined. Accepted = Project becomes Active">
+                    <span class="field-label">status:</span> <span class="field-value">Draft | Sent | Accepted | Declined</span>
+                </div>
+                <div class="entity-field" data-tooltip="Proposed project cost in this proposal">
+                    <span class="field-label">amount:</span> <span class="field-value">decimal</span>
+                </div>
+                <div class="entity-field" data-tooltip="Detailed scope of work document">
+                    <span class="field-label">scope_of_work:</span> <span class="field-value">text</span>
+                </div>
+                <div class="entity-field" data-tooltip="When this proposal version was created">
+                    <span class="field-label">created_at:</span> <span class="field-value">timestamp</span>
+                </div>
+                <div class="entity-field" data-tooltip="Date proposal was sent to client">
+                    <span class="field-label">sent_at:</span> <span class="field-value">timestamp</span>
+                </div>
+            </div>
+
+            <!-- Flow Steps -->
+            <div class="flow-step step1" data-tooltip="First interaction with a prospect. Create a Client record with status='Lead'. They're not a client yet, just a prospect.">
+                <span class="step-number">1</span>
+                <span class="step-text">New Lead → Create Client</span>
+            </div>
+
+            <div class="flow-step step2" data-tooltip="Create a Project record linked to the Client. Initial status is 'Proposal' stage. This is the potential work opportunity.">
+                <span class="step-number">2</span>
+                <span class="step-text">Create Project for work</span>
+            </div>
+
+            <div class="flow-step step3" data-tooltip="Create Proposal document linked to the Project. Draft the scope, pricing, and timeline. Status starts as 'Draft'.">
+                <span class="step-number">3</span>
+                <span class="step-text">Create Proposal</span>
+            </div>
+
+            <div class="flow-step step4" data-tooltip="Proposal accepted! Update Proposal status to 'Accepted', Project status to 'Active', and Client status to 'Active Client'. Work begins!">
+                <span class="step-number">4</span>
+                <span class="step-text">Proposal Accepted → Active</span>
+            </div>
+
+            <div class="flow-step step5" data-tooltip="Project work is complete! If the client has no other active projects, they may become a 'Past Client'. But they can always return!">
+                <span class="step-number">5</span>
+                <span class="step-text">Project Completed</span>
+            </div>
+
+            <div class="flow-step step6" data-tooltip="Client returns for more work! Create a new Project → new Proposal. Same client, fresh project. Their status returns to 'Active Client'.">
+                <span class="step-number">6</span>
+                <span class="step-text">New Project (existing client)</span>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box client"></div>
+                <span class="legend-label">Client Entity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box project"></div>
+                <span class="legend-label">Project Entity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box proposal"></div>
+                <span class="legend-label">Proposal Entity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box flow"></div>
+                <span class="legend-label">Flow Step</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip element -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Tooltip functionality
+        const tooltip = document.getElementById('tooltip');
+        const tooltipElements = document.querySelectorAll('[data-tooltip]');
+
+        tooltipElements.forEach(element => {
+            element.addEventListener('mouseenter', (e) => {
+                const text = element.getAttribute('data-tooltip');
+                tooltip.textContent = text;
+                tooltip.classList.add('show');
+                updateTooltipPosition(e);
+            });
+
+            element.addEventListener('mousemove', updateTooltipPosition);
+
+            element.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('show');
+            });
+        });
+
+        function updateTooltipPosition(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = (y + 20) + 'px';
+        }
+
+        // Draw relationship lines (only on larger screens)
+        function drawRelationships() {
+            if (window.innerWidth < 1200) return;
+
+            const svg = document.getElementById('relationship-svg');
+            const container = document.querySelector('.diagram-container');
+
+            // Clear existing lines
+            const existingPaths = svg.querySelectorAll('path');
+            existingPaths.forEach(path => path.remove());
+
+            // Get element positions
+            const clientBox = document.querySelector('.entity.client');
+            const projectBox = document.querySelector('.entity.project');
+            const proposalBox = document.querySelector('.entity.proposal');
+
+            if (!clientBox || !projectBox || !proposalBox) return;
+
+            const clientRect = clientBox.getBoundingClientRect();
+            const projectRect = projectBox.getBoundingClientRect();
+            const proposalRect = proposalBox.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            // Calculate relative positions
+            const clientX = clientRect.right - containerRect.left;
+            const clientY = clientRect.top - containerRect.top + clientRect.height / 2;
+
+            const projectX = projectRect.left - containerRect.left;
+            const projectY = projectRect.top - containerRect.top + projectRect.height / 2;
+
+            const proposalX = proposalRect.left - containerRect.left;
+            const proposalY = proposalRect.top - containerRect.top + proposalRect.height / 2;
+
+            const projectBottomX = projectRect.left - containerRect.left + projectRect.width / 2;
+            const projectBottomY = projectRect.bottom - containerRect.top;
+
+            const proposalTopX = proposalRect.left - containerRect.left + proposalRect.width / 2;
+            const proposalTopY = proposalRect.top - containerRect.top;
+
+            // Draw Client → Project (has many)
+            const clientToProject = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            clientToProject.setAttribute('class', 'relationship-line');
+            clientToProject.setAttribute('d', `M ${clientX} ${clientY} L ${projectX} ${projectY}`);
+            clientToProject.setAttribute('marker-end', 'url(#arrowhead)');
+            svg.appendChild(clientToProject);
+
+            // Draw Project → Proposal (has many)
+            const projectToProposal = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            projectToProposal.setAttribute('class', 'relationship-line');
+            projectToProposal.setAttribute('d', `M ${projectBottomX} ${projectBottomY} L ${proposalTopX} ${proposalTopY}`);
+            projectToProposal.setAttribute('marker-end', 'url(#arrowhead)');
+            svg.appendChild(projectToProposal);
+        }
+
+        // Initial draw
+        window.addEventListener('load', drawRelationships);
+        window.addEventListener('resize', drawRelationships);
+
+        // Add hover effects for relationships
+        const entities = document.querySelectorAll('.entity');
+        entities.forEach(entity => {
+            entity.addEventListener('mouseenter', function() {
+                const lines = document.querySelectorAll('.relationship-line');
+                const arrows = document.querySelectorAll('.arrow');
+
+                if (this.classList.contains('client')) {
+                    // Highlight client → project line
+                    if (lines[0]) {
+                        lines[0].classList.add('active');
+                        lines[0].setAttribute('marker-end', 'url(#arrowhead-active)');
+                    }
+                } else if (this.classList.contains('project')) {
+                    // Highlight all lines
+                    lines.forEach(line => {
+                        line.classList.add('active');
+                        line.setAttribute('marker-end', 'url(#arrowhead-active)');
+                    });
+                } else if (this.classList.contains('proposal')) {
+                    // Highlight project → proposal line
+                    if (lines[1]) {
+                        lines[1].classList.add('active');
+                        lines[1].setAttribute('marker-end', 'url(#arrowhead-active)');
+                    }
+                }
+            });
+
+            entity.addEventListener('mouseleave', function() {
+                const lines = document.querySelectorAll('.relationship-line');
+                lines.forEach(line => {
+                    line.classList.remove('active');
+                    line.setAttribute('marker-end', 'url(#arrowhead)');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

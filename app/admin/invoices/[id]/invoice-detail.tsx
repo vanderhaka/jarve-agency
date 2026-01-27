@@ -99,7 +99,7 @@ export function InvoiceDetail({ invoice }: Props) {
 
   async function handleSyncStatus() {
     setSyncing(true)
-    const { syncInvoiceStatus } = await import('@/app/actions/invoices/actions')
+    const { syncInvoiceStatus } = await import('@/app/actions/invoices')
     const result = await syncInvoiceStatus(invoice.id)
     if (result.success && result.status) {
       setCurrentInvoice((prev) => ({
@@ -113,7 +113,7 @@ export function InvoiceDetail({ invoice }: Props) {
 
   async function handleMarkPaid() {
     startTransition(async () => {
-      const { markInvoicePaid } = await import('@/app/actions/invoices/actions')
+      const { markInvoicePaid } = await import('@/app/actions/invoices')
       const result = await markInvoicePaid(invoice.id)
 
       if (result.success) {
