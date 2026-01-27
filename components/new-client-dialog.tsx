@@ -71,14 +71,20 @@ export function NewClientDialog({ onSuccess, open: controlledOpen, onOpenChange,
     onSuccess?.()
   }
 
+  // In controlled mode (open prop provided), don't render DialogTrigger at all
+  // This prevents iPad Safari context issues during hydration
+  const showTrigger = !isControlled
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {trigger !== undefined ? (
-        trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
-      ) : (
-        <DialogTrigger asChild>
-          <Button>New Client</Button>
-        </DialogTrigger>
+      {showTrigger && (
+        trigger !== undefined ? (
+          trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
+        ) : (
+          <DialogTrigger asChild>
+            <Button>New Client</Button>
+          </DialogTrigger>
+        )
       )}
       <DialogContent className="max-w-2xl">
         <DialogHeader>
