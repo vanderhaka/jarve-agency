@@ -701,29 +701,85 @@ export async function signProposal(input: SignProposalInput) {
       })
       .eq('id', tokenData.id)
 
-    // Create notification for proposal signed
-    // Get proposal title and project info for notification
+    // Get proposal details including pricing info
     const { data: proposalDetails } = await supabase
       .from('proposals')
       .select(`
         title,
         project_id,
+        client_id,
         agency_projects(name, owner_id)
       `)
       .eq('id', proposal.id)
       .single()
+
+    // Get version content for project description
+    const { data: versionData } = await supabase
+      .from('proposal_versions')
+      .select('content')
+      .eq('id', sentVersion.id)
+      .single()
+
+    let projectId = proposalDetails?.project_id
+    let projectName = 'Project'
+
+    // Auto-create project if proposal doesn't have one linked
+    if (proposalDetails && !proposalDetails.project_id) {
+      const projectDescription = versionData?.content?.sections
+        ?.find((s: { type: string }) => s.type === 'text')
+        ?.body || ''
+
+      const { data: newProject, error: projectError } = await supabase
+        .from('agency_projects')
+        .insert({
+          name: proposalDetails.title,
+          client_id: proposalDetails.client_id,
+          status: 'planning',
+          type: 'web',
+          description: projectDescription.substring(0, 500)
+        })
+        .select('id, name')
+        .single()
+
+      if (projectError) {
+        console.error('[signProposal] Project creation error:', projectError)
+        // Non-critical, continue
+      } else if (newProject) {
+        projectId = newProject.id
+        projectName = newProject.name
+
+        // Link project to proposal
+        await supabase
+          .from('proposals')
+          .update({ project_id: newProject.id })
+          .eq('id', proposal.id)
+
+        // Link project to contract doc
+        await supabase
+          .from('contract_docs')
+          .update({ project_id: newProject.id })
+          .eq('source_id', proposal.id)
+          .eq('source_table', 'proposals')
+
+        console.log('[signProposal] Auto-created project:', newProject.id)
+      }
+    }
 
     if (proposalDetails) {
       const projectData = Array.isArray(proposalDetails.agency_projects)
         ? proposalDetails.agency_projects[0]
         : proposalDetails.agency_projects
 
-      if (projectData?.owner_id) {
+      // Use existing project data if available, otherwise use newly created
+      const notifyProjectName = projectData?.name || projectName
+      const notifyOwnerId = projectData?.owner_id
+
+      if (notifyOwnerId) {
         await notifyProposalSigned(
           proposal.id,
           proposalDetails.title,
-          projectData.name || 'Project',
-          projectData.owner_id
+          notifyProjectName,
+          notifyOwnerId
         )
       }
 
@@ -736,6 +792,7 @@ export async function signProposal(input: SignProposalInput) {
           proposalTitle: proposalDetails.title,
           portalUrl
         })
+        console.log('[signProposal] Confirmation email sent to:', input.signerEmail)
       } catch (emailError) {
         console.error('[signProposal] Confirmation email error:', emailError)
         // Non-critical, continue
