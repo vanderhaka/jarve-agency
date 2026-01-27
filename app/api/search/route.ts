@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   try {
     // Search across tables in parallel (exclude soft-deleted records)
-    const [leadsData, clientsData, projectsData, employeesData, proposalsData, contractDocsData, invoicesData] = await Promise.all([
+    const [leadsData, clientsData, projectsData, employeesData, milestonesData, changeRequestsData] = await Promise.all([
       // Search leads (exclude deleted)
       supabase
         .from('leads')
@@ -75,26 +75,18 @@ export async function GET(request: Request) {
             .limit(5)
         : Promise.resolve({ data: [], error: null }),
 
-      // Search proposals
+      // Search milestones
       supabase
-        .from('proposals')
-        .select('id, title, status, client:clients(name)')
-        .is('archived_at', null)
+        .from('milestones')
+        .select('id, title, project_id, status, amount, agency_projects(name)')
         .ilike('title', searchTerm)
         .limit(5),
 
-      // Search contract docs
+      // Search change requests
       supabase
-        .from('contract_docs')
-        .select('id, title, doc_type, client:clients(name)')
+        .from('change_requests')
+        .select('id, title, project_id, status, amount, agency_projects(name)')
         .ilike('title', searchTerm)
-        .limit(5),
-
-      // Search invoices by invoice number
-      supabase
-        .from('invoices')
-        .select('id, invoice_number, total, xero_status, client:clients(name)')
-        .ilike('invoice_number', searchTerm)
         .limit(5),
     ])
 
@@ -128,36 +120,26 @@ export async function GET(request: Request) {
         type: 'employee' as const,
         href: `/admin/employees/${employee.id}`,
       })),
-      ...(proposalsData.data || []).map((proposal) => {
-        const client = Array.isArray(proposal.client) ? proposal.client[0] : proposal.client
+      ...(milestonesData.data || []).map((milestone) => {
+        const project = Array.isArray(milestone.agency_projects) ? milestone.agency_projects[0] : milestone.agency_projects
+        const projectName = project?.name
         return {
-          id: proposal.id,
-          name: proposal.title,
-          subtitle: client?.name || proposal.status,
-          type: 'proposal' as const,
-          href: `/admin/proposals/${proposal.id}`,
+          id: milestone.id,
+          name: milestone.title,
+          subtitle: projectName ? `${projectName} - $${milestone.amount}` : `$${milestone.amount}`,
+          type: 'milestone' as const,
+          href: `/admin/projects/${milestone.project_id}?tab=milestones`,
         }
       }),
-      ...(contractDocsData.data || []).map((doc) => {
-        const client = Array.isArray(doc.client) ? doc.client[0] : doc.client
+      ...(changeRequestsData.data || []).map((cr) => {
+        const project = Array.isArray(cr.agency_projects) ? cr.agency_projects[0] : cr.agency_projects
+        const projectName = project?.name
         return {
-          id: doc.id,
-          name: doc.title,
-          subtitle: client?.name || doc.doc_type,
-          type: 'contract' as const,
-          href: `/admin/proposals`,
-        }
-      }),
-      ...(invoicesData.data || []).map(invoice => {
-        // Handle the client join - it could be an object, array, or null
-        const clientData = invoice.client as { name: string } | { name: string }[] | null
-        const client = Array.isArray(clientData) ? clientData[0] : clientData
-        return {
-          id: invoice.id,
-          name: invoice.invoice_number || 'Draft Invoice',
-          subtitle: client?.name || `$${invoice.total?.toFixed(2) || '0.00'}`,
-          type: 'invoice' as const,
-          href: `/admin/invoices/${invoice.id}`,
+          id: cr.id,
+          name: cr.title,
+          subtitle: projectName ? `${projectName} - $${cr.amount}` : `$${cr.amount}`,
+          type: 'change_request' as const,
+          href: `/admin/projects/${cr.project_id}?tab=change-requests`,
         }
       }),
     ]

@@ -26,7 +26,7 @@ interface Props {
   progress: number
   overdueCount: number
   currentView: 'list' | 'kanban'
-  currentTab?: 'tasks' | 'finance'
+  currentTab?: 'tasks' | 'milestones' | 'change-requests'
 }
 
 const statusColors: Record<string, string> = {

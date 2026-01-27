@@ -1,9 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
+import { getMilestonesByProject } from '@/lib/milestones/data'
+import { getChangeRequestsByProject } from '@/lib/change-requests/data'
 import { ProjectHeader } from './project-header'
-import { TasksView } from './tasks-view'
-import { ProjectFinanceTab } from './project-finance-tab'
 import { parseFiltersFromParams } from './filter-utils'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 import { ProjectTabs } from './project-tabs'
@@ -11,8 +11,8 @@ import { ProjectTabs } from './project-tabs'
 interface Props {
   params: Promise<{ id: string }>
   searchParams: Promise<{
-    tab?: 'tasks' | 'finance'
     view?: 'list' | 'kanban'
+    tab?: 'tasks' | 'milestones' | 'change-requests'
     search?: string
     status?: string
     type?: string
@@ -46,7 +46,7 @@ async function getProject(projectId: string) {
 export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { id } = await params
   const resolvedSearchParams = await searchParams
-  const { tab = 'tasks', view = 'kanban' } = resolvedSearchParams
+  const { view = 'kanban', tab = 'tasks' } = resolvedSearchParams
 
   // Parse filters from URL search params
   const filters = parseFiltersFromParams(new URLSearchParams(
@@ -69,10 +69,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
     notFound()
   }
 
-  const [tasksByStatus, taskCounts, overdueCount] = await Promise.all([
+  const [tasksByStatus, taskCounts, overdueCount, milestones, changeRequests] = await Promise.all([
     getTasksByProjectGrouped(id),
     getTaskCounts(id),
     getOverdueCount(id),
+    getMilestonesByProject(id),
+    getChangeRequestsByProject(id),
   ])
 
   const totalTasks = Object.values(taskCounts).reduce((sum, count) => sum + count, 0)
@@ -91,21 +93,15 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         currentView={view}
         currentTab={tab}
       />
-      <ProjectTabs currentTab={tab} />
-      {tab === 'tasks' ? (
-        <TasksView
-          projectId={id}
-          tasksByStatus={tasksByStatus}
-          currentView={view}
-          filters={filters}
-        />
-      ) : (
-        <ProjectFinanceTab
-          projectId={id}
-          clientId={project.client_id || null}
-          clientName={project.clients?.name || null}
-        />
-      )}
+      <ProjectTabs
+        projectId={id}
+        currentTab={tab}
+        currentView={view}
+        tasksByStatus={tasksByStatus}
+        filters={filters}
+        milestones={milestones}
+        changeRequests={changeRequests}
+      />
     </div>
   )
 }
