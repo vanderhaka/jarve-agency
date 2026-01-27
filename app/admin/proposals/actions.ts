@@ -1,10 +1,13 @@
 'use server'
 
+import { randomBytes } from 'crypto'
 import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
 import { sendProposalEmail, sendProposalSignedEmail } from '@/lib/email/resend'
+import { requireEmployee } from '@/lib/auth/require-employee'
+import { unwrapJoinResult } from '@/lib/types/action-result'
+import { SignProposalSchema } from './schemas'
 
 // ============================================================
 // Types
@@ -70,24 +73,7 @@ export interface SignProposalInput {
 // ============================================================
 
 export async function createProposal(input: CreateProposalInput) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Get employee ID
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('id', user.id)
-    .is('deleted_at', null)
-    .single()
-
-  if (!employee) {
-    return { success: false, message: 'Employee not found' }
-  }
+  const { supabase, employee } = await requireEmployee()
 
   // Determine client_id
   let clientId = input.clientId
@@ -218,33 +204,25 @@ export async function createProposal(input: CreateProposalInput) {
 // ============================================================
 
 export async function updateProposal(proposalId: string, input: UpdateProposalInput) {
-  const supabase = await createClient()
+  const { supabase, employee } = await requireEmployee()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
-
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('id', user.id)
-    .is('deleted_at', null)
-    .single()
-
-  if (!employee) {
-    return { success: false, message: 'Employee not found' }
-  }
-
-  // Get current proposal
+  // Get current proposal with authorization data
   const { data: proposal, error: proposalError } = await supabase
     .from('proposals')
-    .select('id, current_version, status')
+    .select('id, current_version, status, created_by, project:agency_projects(owner_id)')
     .eq('id', proposalId)
     .single()
 
   if (proposalError || !proposal) {
     return { success: false, message: 'Proposal not found' }
+  }
+
+  // Authorization check: user must be creator or project owner
+  const projectData = unwrapJoinResult(proposal.project)
+  const isCreator = proposal.created_by === employee.id
+  const isProjectOwner = projectData?.owner_id === employee.id
+  if (!isCreator && !isProjectOwner) {
+    return { success: false, message: 'Unauthorized to modify this proposal' }
   }
 
   // Cannot edit signed or archived proposals
@@ -308,17 +286,12 @@ export async function updateProposal(proposalId: string, input: UpdateProposalIn
 // ============================================================
 
 export async function convertLeadAndSend(proposalId: string, leadId: string) {
-  const supabase = await createClient()
+  const { supabase, user } = await requireEmployee()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Get the lead
+  // Get the lead (includes client_id to avoid N+1 query)
   const { data: lead, error: leadError } = await supabase
     .from('leads')
-    .select('id, name, email, company')
+    .select('id, name, email, company, client_id')
     .eq('id', leadId)
     .single()
 
@@ -332,14 +305,9 @@ export async function convertLeadAndSend(proposalId: string, leadId: string) {
 
   // Check if client already exists for this lead
   let clientId: string
-  const { data: existingLead } = await supabase
-    .from('leads')
-    .select('client_id')
-    .eq('id', leadId)
-    .single()
 
-  if (existingLead?.client_id) {
-    clientId = existingLead.client_id
+  if (lead.client_id) {
+    clientId = lead.client_id
   } else {
     // Create client from lead
     const { data: newClient, error: clientError } = await supabase
@@ -416,12 +384,7 @@ export async function convertLeadAndSend(proposalId: string, leadId: string) {
 // ============================================================
 
 export async function sendProposal(proposalId: string, input: SendProposalInput) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
+  const { supabase } = await requireEmployee()
 
   // Get proposal with client info
   const { data: proposal, error: proposalError } = await supabase
@@ -488,37 +451,33 @@ export async function sendProposal(proposalId: string, input: SendProposalInput)
       }
     }
 
-    // Mark version as sent
-    const { error: versionUpdateError } = await supabase
-      .from('proposal_versions')
-      .update({
-        sent_at: new Date().toISOString(),
-        sent_to_client_user_id: clientUser.id
-      })
-      .eq('proposal_id', proposalId)
-      .eq('version', versionToSend)
-
-    if (versionUpdateError) {
-      console.error('[sendProposal] Version update error:', versionUpdateError)
-    }
-
-    // Update proposal status to sent
-    const { error: proposalUpdateError } = await supabase
-      .from('proposals')
-      .update({ status: 'sent' })
-      .eq('id', proposalId)
-
-    if (proposalUpdateError) {
-      console.error('[sendProposal] Proposal update error:', proposalUpdateError)
-      return { success: false, message: 'Failed to update proposal status' }
-    }
-
-    // Update client_id on proposal if not set
+    // Parallelize version and proposal updates for better performance
+    const proposalUpdate: { status: string; client_id?: string } = { status: 'sent' }
     if (!proposal.client_id && clientUser.client_id) {
-      await supabase
+      proposalUpdate.client_id = clientUser.client_id
+    }
+
+    const [versionResult, proposalResult] = await Promise.all([
+      supabase
+        .from('proposal_versions')
+        .update({
+          sent_at: new Date().toISOString(),
+          sent_to_client_user_id: clientUser.id
+        })
+        .eq('proposal_id', proposalId)
+        .eq('version', versionToSend),
+      supabase
         .from('proposals')
-        .update({ client_id: clientUser.client_id })
+        .update(proposalUpdate)
         .eq('id', proposalId)
+    ])
+
+    if (versionResult.error) {
+      console.error('[sendProposal] Version update error:', versionResult.error)
+    }
+    if (proposalResult.error) {
+      console.error('[sendProposal] Proposal update error:', proposalResult.error)
+      return { success: false, message: 'Failed to update proposal status' }
     }
 
     revalidatePath('/admin/proposals')
@@ -563,7 +522,14 @@ export async function sendProposal(proposalId: string, input: SendProposalInput)
 // Sign Proposal (Client Portal)
 // ============================================================
 
-export async function signProposal(input: SignProposalInput) {
+export async function signProposal(rawInput: SignProposalInput) {
+  // Validate and sanitize input (XSS protection for SVG)
+  const parseResult = SignProposalSchema.safeParse(rawInput)
+  if (!parseResult.success) {
+    return { success: false, message: 'Invalid input: ' + parseResult.error.issues[0]?.message }
+  }
+  const input = parseResult.data
+
   const supabase = await createClient()
 
   // Validate token
@@ -815,11 +781,25 @@ export async function signProposal(input: SignProposalInput) {
 // ============================================================
 
 export async function archiveProposal(proposalId: string) {
-  const supabase = await createClient()
+  const { supabase, employee } = await requireEmployee()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
+  // Get proposal with authorization data
+  const { data: proposal, error: proposalError } = await supabase
+    .from('proposals')
+    .select('id, created_by, project:agency_projects(owner_id)')
+    .eq('id', proposalId)
+    .single()
+
+  if (proposalError || !proposal) {
+    return { success: false, message: 'Proposal not found' }
+  }
+
+  // Authorization check: user must be creator or project owner
+  const projectData = unwrapJoinResult(proposal.project)
+  const isCreator = proposal.created_by === employee.id
+  const isProjectOwner = projectData?.owner_id === employee.id
+  if (!isCreator && !isProjectOwner) {
+    return { success: false, message: 'Unauthorized to archive this proposal' }
   }
 
   const { error } = await supabase
@@ -846,12 +826,7 @@ export async function archiveProposal(proposalId: string) {
 // ============================================================
 
 export async function getProposal(proposalId: string) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
+  const { supabase, employee } = await requireEmployee()
 
   const { data: proposal, error } = await supabase
     .from('proposals')
@@ -859,7 +834,7 @@ export async function getProposal(proposalId: string) {
       *,
       lead:leads(id, name, email, company),
       client:clients(id, name, email),
-      project:agency_projects(id, name),
+      project:agency_projects(id, name, owner_id),
       created_by_employee:employees!proposals_created_by_fkey(id, name, email),
       versions:proposal_versions(
         id,
@@ -890,6 +865,14 @@ export async function getProposal(proposalId: string) {
     return { success: false, message: 'Proposal not found', proposal: null }
   }
 
+  // Authorization check: user must be creator or project owner
+  const projectData = unwrapJoinResult(proposal.project)
+  const isCreator = proposal.created_by === employee.id
+  const isProjectOwner = projectData?.owner_id === employee.id
+  if (!isCreator && !isProjectOwner) {
+    return { success: false, message: 'Unauthorized to view this proposal', proposal: null }
+  }
+
   return { success: true, proposal }
 }
 
@@ -903,12 +886,7 @@ export async function listProposals(filters?: {
   leadId?: string
   status?: string
 }) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
+  const { supabase } = await requireEmployee()
 
   let query = supabase
     .from('proposals')
@@ -954,10 +932,6 @@ export async function listProposals(filters?: {
 // ============================================================
 
 function generatePortalToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let token = ''
-  for (let i = 0; i < 32; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return token
+  // Use cryptographically secure random bytes for token generation
+  return randomBytes(24).toString('base64url')
 }
