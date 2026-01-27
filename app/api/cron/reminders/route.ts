@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
     `)
     .not('due_date', 'is', null)
     .not('status', 'eq', 'done')
-    .is('deleted_at', null)
     .lt('due_date', today)
 
   for (const task of overdueTasks ?? []) {
@@ -91,10 +90,10 @@ export async function POST(request: NextRequest) {
       status,
       amount,
       project_id,
-      agency_projects!inner(name, owner_id)
+      agency_projects!inner(name, created_by)
     `)
     .not('due_date', 'is', null)
-    .not('status', 'in', '(complete,invoiced)')
+    .not('status', 'in', '("complete","invoiced")')
     .lt('due_date', today)
 
   for (const milestone of overdueMilestones ?? []) {
@@ -110,8 +109,8 @@ export async function POST(request: NextRequest) {
       status: milestone.status,
       amount: Number(milestone.amount),
       project_id: milestone.project_id,
-      project_name: (projectData as { name: string; owner_id: string } | undefined)?.name ?? 'Unknown',
-      project_owner_id: (projectData as { name: string; owner_id: string } | undefined)?.owner_id ?? '',
+      project_name: (projectData as { name: string; created_by: string } | undefined)?.name ?? 'Unknown',
+      project_owner_id: (projectData as { name: string; created_by: string } | undefined)?.created_by ?? '',
     }, config)
     
     if (notification) {
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
       created_at,
       status,
       project_id,
-      agency_projects!inner(name, owner_id)
+      agency_projects!inner(name, created_by)
     `)
     .eq('status', 'sent')
     .lt('created_at', thresholdDate.toISOString())
@@ -148,8 +147,8 @@ export async function POST(request: NextRequest) {
       created_at: cr.created_at,
       status: cr.status,
       project_id: cr.project_id,
-      project_name: (projectData as { name: string; owner_id: string } | undefined)?.name ?? 'Unknown',
-      project_owner_id: (projectData as { name: string; owner_id: string } | undefined)?.owner_id ?? '',
+      project_name: (projectData as { name: string; created_by: string } | undefined)?.name ?? 'Unknown',
+      project_owner_id: (projectData as { name: string; created_by: string } | undefined)?.created_by ?? '',
     }, config)
     
     if (notification) {

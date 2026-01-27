@@ -242,12 +242,15 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **Data flow:**
 - Date-based triggers (tasks, milestones, invoices, proposals, change requests) → in-app notifications → activity feed.
 
-**Gaps / fixes:**
-- Notification table + scheduler/cron missing.
+**Status:** ✅ Implemented (Stage 7)
+- Notifications table with RLS policies
+- Bell icon UI with dropdown (mark as read, navigation)
+- Cron scheduler for overdue detection
+- Immediate triggers for signed documents and payments
 
 **Tests:**
-- Automated: scheduler generates correct reminders with status checks.
-- Manual: `manual-tests/reminders.md`.
+- Automated: scheduler generates correct reminders with status checks. ✅ 32 tests
+- Manual: `manual-tests/stage-7-notifications.md`.
 
 ---
 
@@ -301,9 +304,22 @@ Start here: `docs/PLAN.md` (master index + stage files).
 **Scope:** Milestones, auto-create draft deposit invoice after proposal signing (uses proposal total), auto invoice trigger, change request signing + milestone insertion.
 **DoD:** Milestone + change request tests pass + `manual-tests/milestones.md` and `manual-tests/change-requests.md`.
 
-### Stage 7 — Reminders & Notifications (In-App)
+### Stage 7 — Reminders & Notifications (In-App) ✅
 **Scope:** Notifications table, scheduler + notification UI for tasks/milestones/invoices/proposals/change requests.
 **DoD:** Reminder tests pass + `manual-tests/reminders.md`.
+
+**Completed (Jan 2026):**
+- ✅ Notifications table with RLS policies + unique index
+- ✅ Bell icon UI with popover dropdown
+- ✅ Cron endpoint (`/api/cron/reminders`) secured with CRON_SECRET
+- ✅ Immediate triggers for proposal/CR signed, invoice paid
+- ✅ 32 automated tests passing
+- ✅ Manual test checklist: `manual-tests/stage-7-notifications.md`
+
+**Fixes during testing:**
+- Changed `owner_id` → `created_by` in scheduler (column doesn't exist)
+- Removed `deleted_at` filter (column doesn't exist in tasks table)
+- Fixed PostgREST filter syntax for milestone status exclusion
 
 > **Note:** Time Tracking (Contractors) moved to FUTURE-IDEAS.md - implement when you hire contractors.
 
