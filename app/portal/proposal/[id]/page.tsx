@@ -158,8 +158,7 @@ export default function PortalProposalPage() {
       token,
       signerName: signerName.trim(),
       signerEmail: signerEmail.trim(),
-      signatureSvg,
-      ipAddress: '' // Will be captured server-side if needed
+      signatureSvg
     })
 
     if (result.success) {

@@ -1,10 +1,22 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
 import { sendProposalSignedEmail } from '@/lib/email/resend'
 import { SignProposalSchema } from '../schemas'
 import type { SignProposalInput } from './types'
+
+// Get client IP from request headers
+async function getClientIp(): Promise<string | null> {
+  const headersList = await headers()
+  // Try common headers in order of reliability
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || headersList.get('x-real-ip')
+    || headersList.get('cf-connecting-ip') // Cloudflare
+    || null
+  return ip
+}
 
 // ============================================================
 // Sign Proposal (Client Portal)
@@ -19,6 +31,7 @@ export async function signProposal(rawInput: SignProposalInput) {
   const input = parseResult.data
 
   const supabase = await createClient()
+  const clientIp = await getClientIp()
 
   // Validate token
   const { data: tokenData, error: tokenError } = await supabase
@@ -112,7 +125,7 @@ export async function signProposal(rawInput: SignProposalInput) {
         signer_name: input.signerName,
         signer_email: input.signerEmail,
         signature_svg: input.signatureSvg,
-        ip_address: input.ipAddress || null,
+        ip_address: clientIp,
         signed_at: now
       })
 

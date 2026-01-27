@@ -1,5 +1,6 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -7,6 +8,17 @@ import { SignMSASchema } from '../schemas'
 import type { SignMSAInput } from '../schemas'
 import type { SendMSAInput } from './types'
 import { generatePortalToken } from './helpers'
+
+// Get client IP from request headers
+async function getClientIp(): Promise<string | null> {
+  const headersList = await headers()
+  // Try common headers in order of reliability
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || headersList.get('x-real-ip')
+    || headersList.get('cf-connecting-ip') // Cloudflare
+    || null
+  return ip
+}
 
 // ============================================================
 // Send MSA to Client
@@ -124,6 +136,7 @@ export async function signMSA(msaId: string, rawInput: SignMSAInput) {
   const input = parseResult.data
 
   const supabase = await createClient()
+  const clientIp = await getClientIp()
 
   // Validate token
   const { data: tokenData, error: tokenError } = await supabase
@@ -190,7 +203,7 @@ export async function signMSA(msaId: string, rawInput: SignMSAInput) {
         signer_name: input.signerName,
         signer_email: input.signerEmail,
         signature_svg: input.signatureSvg,
-        ip_address: input.ipAddress || null
+        ip_address: clientIp
       })
       .eq('id', msaId)
 

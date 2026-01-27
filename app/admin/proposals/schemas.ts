@@ -122,7 +122,6 @@ export const SignProposalSchema = z.object({
   signerName: z.string().min(1).max(200),
   signerEmail: z.string().email(),
   signatureSvg: z.string().transform(sanitizeSvg),
-  ipAddress: z.string().ip().optional(),
 })
 
 export type SignProposalInput = z.infer<typeof SignProposalSchema>
@@ -136,7 +135,6 @@ export const SignMSASchema = z.object({
   signerName: z.string().min(1).max(200),
   signerEmail: z.string().email(),
   signatureSvg: z.string().transform(sanitizeSvg),
-  ipAddress: z.string().ip().optional(),
 })
 
 export type SignMSAInput = z.infer<typeof SignMSASchema>

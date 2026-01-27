@@ -54,5 +54,4 @@ export interface SignProposalInput {
   signerName: string
   signerEmail: string
   signatureSvg: string
-  ipAddress?: string
 }

@@ -141,8 +141,7 @@ export default function PortalMSAPage() {
       token,
       signerName: signerName.trim(),
       signerEmail: signerEmail.trim(),
-      signatureSvg,
-      ipAddress: ''
+      signatureSvg
     })
 
     if (result.success) {
