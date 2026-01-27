@@ -37,14 +37,14 @@ export async function syncInvoicePdfInternal(
     // Check if we already have this PDF
     const { data: existingDoc } = await supabase
       .from('contract_docs')
-      .select('id')
+      .select('id, file_path')
       .eq('source_table', 'invoices')
       .eq('source_id', invoiceId)
       .eq('doc_type', 'invoice')
       .maybeSingle()
 
-    if (existingDoc) {
-      // PDF already synced
+    // If entry exists with a valid file_path, PDF is already synced
+    if (existingDoc?.file_path) {
       return true
     }
 
@@ -69,21 +69,36 @@ export async function syncInvoicePdfInternal(
       return false
     }
 
-    // Create contract_docs entry
+    // Create or update contract_docs entry
     const docEntry = buildContractDocEntry(params, storagePath)
-    const { error: docError } = await supabase.from('contract_docs').insert({
-      client_id: docEntry.clientId,
-      project_id: docEntry.projectId,
-      doc_type: docEntry.docType,
-      title: docEntry.title,
-      file_path: docEntry.filePath,
-      source_table: docEntry.sourceTable,
-      source_id: docEntry.sourceId,
-    })
 
-    if (docError) {
-      console.error('Failed to create contract_docs entry', { invoiceId, error: docError })
-      return false
+    if (existingDoc) {
+      // Update existing entry with file_path
+      const { error: updateError } = await supabase
+        .from('contract_docs')
+        .update({ file_path: docEntry.filePath })
+        .eq('id', existingDoc.id)
+
+      if (updateError) {
+        console.error('Failed to update contract_docs entry', { invoiceId, error: updateError })
+        return false
+      }
+    } else {
+      // Create new entry
+      const { error: docError } = await supabase.from('contract_docs').insert({
+        client_id: docEntry.clientId,
+        project_id: docEntry.projectId,
+        doc_type: docEntry.docType,
+        title: docEntry.title,
+        file_path: docEntry.filePath,
+        source_table: docEntry.sourceTable,
+        source_id: docEntry.sourceId,
+      })
+
+      if (docError) {
+        console.error('Failed to create contract_docs entry', { invoiceId, error: docError })
+        return false
+      }
     }
 
     console.info('Invoice PDF synced successfully', { invoiceId, storagePath })

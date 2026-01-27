@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
 import { sendProposalSignedEmail } from '@/lib/email/resend'
 import { createDepositInvoiceInternal } from '@/app/actions/invoices/crud'
+import { generateSowPdf } from '@/lib/pdf'
 import { SignProposalSchema } from '../schemas'
 import type { SignProposalInput } from './types'
 
@@ -311,6 +312,23 @@ export async function signProposal(rawInput: SignProposalInput) {
         console.error('[signProposal] Confirmation email error:', emailError)
         // Non-critical, continue
       }
+    }
+
+    // Generate SOW PDF async (fire-and-forget, don't block response)
+    if (projectId) {
+      generateSowPdf({
+        proposalId: proposal.id,
+        versionId: sentVersion.id,
+        projectId: projectId,
+      }).then((result) => {
+        if (result.success) {
+          console.log('[signProposal] SOW PDF generated:', result.filePath)
+        } else {
+          console.error('[signProposal] SOW PDF generation failed:', result.error)
+        }
+      }).catch((error) => {
+        console.error('[signProposal] SOW PDF generation error:', error)
+      })
     }
 
     return {
