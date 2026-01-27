@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { SignMSASchema } from './schemas'
+import type { SignMSAInput } from './schemas'
 
 // ============================================================
 // Types
@@ -27,13 +29,8 @@ export interface SendMSAInput {
   clientUserId: string
 }
 
-export interface SignMSAInput {
-  token: string
-  signerName: string
-  signerEmail: string
-  signatureSvg: string
-  ipAddress?: string
-}
+// Re-export SignMSAInput for callers
+export type { SignMSAInput }
 
 // ============================================================
 // Create MSA (one per client)
@@ -321,7 +318,14 @@ export async function sendMSA(msaId: string, input: SendMSAInput) {
 // Sign MSA (Client Portal)
 // ============================================================
 
-export async function signMSA(msaId: string, input: SignMSAInput) {
+export async function signMSA(msaId: string, rawInput: SignMSAInput) {
+  // Validate and sanitize input (XSS protection for SVG)
+  const parseResult = SignMSASchema.safeParse(rawInput)
+  if (!parseResult.success) {
+    return { success: false, message: 'Invalid input: ' + parseResult.error.issues[0]?.message }
+  }
+  const input = parseResult.data
+
   const supabase = await createClient()
 
   // Validate token

@@ -1,12 +1,13 @@
 import { createClient } from '@/utils/supabase/server'
 import { createMilestone } from '@/lib/milestones/data'
 import { notifyChangeRequestSigned } from '@/lib/notifications/actions'
-import type {
-  ChangeRequest,
-  CreateChangeRequestInput,
-  UpdateChangeRequestInput,
-  SignChangeRequestInput,
-  RejectChangeRequestInput,
+import {
+  SignChangeRequestSchema,
+  type ChangeRequest,
+  type CreateChangeRequestInput,
+  type UpdateChangeRequestInput,
+  type SignChangeRequestInput,
+  type RejectChangeRequestInput,
 } from './types'
 
 /**
@@ -198,8 +199,15 @@ export async function sendChangeRequest(changeRequestId: string): Promise<Change
  */
 export async function signChangeRequest(
   changeRequestId: string,
-  input: SignChangeRequestInput
+  rawInput: SignChangeRequestInput
 ): Promise<ChangeRequest> {
+  // Validate and sanitize input (XSS protection for SVG)
+  const parseResult = SignChangeRequestSchema.safeParse(rawInput)
+  if (!parseResult.success) {
+    throw new Error('Invalid input: ' + parseResult.error.issues[0]?.message)
+  }
+  const input = parseResult.data
+
   const supabase = await createClient()
 
   // Get the change request

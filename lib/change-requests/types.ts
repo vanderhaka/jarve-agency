@@ -1,3 +1,6 @@
+import { z } from 'zod'
+import { sanitizeSvg } from '@/app/admin/proposals/schemas'
+
 export type ChangeRequestStatus = 'draft' | 'sent' | 'signed' | 'rejected' | 'archived'
 
 export interface ChangeRequest {
@@ -38,12 +41,15 @@ export interface UpdateChangeRequestInput {
   status?: ChangeRequestStatus
 }
 
-export interface SignChangeRequestInput {
-  signer_name: string
-  signer_email: string
-  signature_svg: string
-  ip_address?: string
-}
+// Schema with XSS protection for signature SVG
+export const SignChangeRequestSchema = z.object({
+  signer_name: z.string().min(1).max(200),
+  signer_email: z.string().email(),
+  signature_svg: z.string().transform(sanitizeSvg),
+  ip_address: z.string().ip().optional(),
+})
+
+export type SignChangeRequestInput = z.infer<typeof SignChangeRequestSchema>
 
 export interface RejectChangeRequestInput {
   rejection_reason: string
