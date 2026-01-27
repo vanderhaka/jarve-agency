@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -163,13 +162,11 @@ export function InvoicesList({
             Manage project invoices and payments
           </CardDescription>
         </div>
+        <Button disabled={!clientId} onClick={() => setShowCreateDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Invoice
+        </Button>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button disabled={!clientId}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Invoice
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Draft Invoice</DialogTitle>
@@ -344,21 +341,21 @@ export function InvoicesList({
                         )}
                       </Button>
                       {invoice.xeroStatus !== 'PAID' && (
-                        <Dialog
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Mark as paid"
+                            onClick={() => setShowMarkPaidDialog(invoice.id)}
+                          >
+                            <DollarSign className="h-4 w-4" />
+                          </Button>
+                          <Dialog
                           open={showMarkPaidDialog === invoice.id}
                           onOpenChange={(open) =>
                             setShowMarkPaidDialog(open ? invoice.id : null)
                           }
                         >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Mark as paid"
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
                               <DialogTitle>Mark Invoice as Paid</DialogTitle>
@@ -401,8 +398,9 @@ export function InvoicesList({
                                 )}
                               </Button>
                             </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+                        </>
                       )}
                       <Link href={`/app/invoices/${invoice.id}`}>
                         <Button variant="ghost" size="sm" title="View details">

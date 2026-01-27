@@ -20,7 +20,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   ArrowLeft,
@@ -188,14 +187,13 @@ export function InvoiceDetail({ invoice }: Props) {
             Sync from Xero
           </Button>
           {currentInvoice.xero_status !== 'PAID' && (
-            <Dialog open={showMarkPaidDialog} onOpenChange={setShowMarkPaidDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Mark Paid
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
+            <>
+              <Button onClick={() => setShowMarkPaidDialog(true)}>
+                <DollarSign className="h-4 w-4 mr-2" />
+                Mark Paid
+              </Button>
+              <Dialog open={showMarkPaidDialog} onOpenChange={setShowMarkPaidDialog}>
+                <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Mark Invoice as Paid</DialogTitle>
                   <DialogDescription>
@@ -228,8 +226,9 @@ export function InvoiceDetail({ invoice }: Props) {
                     )}
                   </Button>
                 </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
         </div>
       </div>

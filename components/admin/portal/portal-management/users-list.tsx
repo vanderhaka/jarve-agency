@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { usePortalUsers } from './hooks/use-portal-users'
@@ -70,13 +69,11 @@ export function UsersList({ clientId, clientName }: UsersListProps) {
             Manage users who can access the client portal
           </CardDescription>
         </div>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add User
+        </Button>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Portal User</DialogTitle>

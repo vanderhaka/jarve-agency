@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus } from 'lucide-react'
 import type { Milestone, MilestoneStatus } from '@/lib/milestones/types'
@@ -165,13 +164,11 @@ export function MilestonesView({ projectId, milestones: initialMilestones }: Pro
 
       {/* Actions */}
       <div className="flex justify-end">
+        <Button onClick={() => { resetForm(); setIsCreateOpen(true) }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Milestone
+        </Button>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setIsCreateOpen(true) }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Milestone
-            </Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Milestone</DialogTitle>

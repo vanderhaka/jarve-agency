@@ -80,17 +80,23 @@ export function NewTaskDialog({
     }
   }
 
+  // In controlled mode, don't render DialogTrigger at all
+  // This prevents iPad Safari context issues during hydration
+  const showTrigger = !isControlled
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {trigger !== undefined ? (
-        <DialogTrigger asChild>{trigger}</DialogTrigger>
-      ) : (
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className="h-4 w-4 mr-1" />
-            New Task
-          </Button>
-        </DialogTrigger>
+      {showTrigger && (
+        trigger !== undefined ? (
+          trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
+        ) : (
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-1" />
+              New Task
+            </Button>
+          </DialogTrigger>
+        )
       )}
       <DialogContent className="max-w-md">
         <DialogHeader>

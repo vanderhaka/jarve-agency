@@ -6,7 +6,6 @@ import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DialogTrigger } from '@/components/ui/dialog'
 import {
   Loader2,
   ArrowLeft,
@@ -316,11 +315,9 @@ export default function ProposalDetailPage() {
                 )}
                 Save
               </Button>
-              <DialogTrigger asChild>
-                <Button onClick={() => setSendDialogOpen(true)}>
-                  <Send className="h-4 w-4 mr-2" /> Send
-                </Button>
-              </DialogTrigger>
+              <Button onClick={() => setSendDialogOpen(true)}>
+                <Send className="h-4 w-4 mr-2" /> Send
+              </Button>
               <Button variant="ghost" onClick={handleArchive}>
                 Archive
               </Button>

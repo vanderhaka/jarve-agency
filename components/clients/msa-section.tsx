@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -82,20 +81,21 @@ export function MSASection({
     setSending(false)
   }
 
+  const sendButton = msa?.status === 'sent' ? (
+    <Button variant="outline" size="sm" onClick={() => setSendDialogOpen(true)}>
+      <Send className="h-4 w-4 mr-2" /> Resend
+    </Button>
+  ) : (
+    <Button onClick={() => setSendDialogOpen(true)}>
+      <Send className="h-4 w-4 mr-2" /> Send for Signing
+    </Button>
+  )
+
   const sendDialogContent = (
-    <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-      <DialogTrigger asChild>
-        {msa?.status === 'sent' ? (
-          <Button variant="outline" size="sm">
-            <Send className="h-4 w-4 mr-2" /> Resend
-          </Button>
-        ) : (
-          <Button>
-            <Send className="h-4 w-4 mr-2" /> Send for Signing
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent>
+    <>
+      {sendButton}
+      <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+        <DialogContent>
         <DialogHeader>
           <DialogTitle>Send MSA</DialogTitle>
           <DialogDescription>
@@ -133,7 +133,8 @@ export function MSASection({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   )
 
   if (!msa) {

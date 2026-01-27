@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { EmployeeSelect } from '@/components/employee-select'
 import { convertLeadToProject, type ConvertLeadInput } from '@/app/admin/leads/actions'
@@ -75,14 +74,13 @@ export function ConvertLeadDialog({ lead }: ConvertLeadDialogProps) {
     : lead.name
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <ArrowRightCircle className="h-4 w-4" />
-          Convert to Project
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
+    <>
+      <Button className="gap-2" onClick={() => setOpen(true)}>
+        <ArrowRightCircle className="h-4 w-4" />
+        Convert to Project
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
         <DialogHeader>
           <DialogTitle>Convert Lead to Project</DialogTitle>
           <DialogDescription>
@@ -169,7 +167,8 @@ export function ConvertLeadDialog({ lead }: ConvertLeadDialogProps) {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
