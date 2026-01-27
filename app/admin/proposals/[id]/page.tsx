@@ -53,6 +53,7 @@ import {
   updateProposal,
   sendProposal,
   archiveProposal,
+  convertLeadAndSend,
   ProposalSection,
   PricingLineItem,
   ProposalContent
@@ -89,7 +90,7 @@ interface Proposal {
   lead_id: string | null
   project_id: string | null
   client?: { id: string; name: string }
-  lead?: { id: string; name: string }
+  lead?: { id: string; name: string; email: string }
   project?: { id: string; name: string }
   versions: ProposalVersion[]
   signatures: Array<{
@@ -124,7 +125,7 @@ export default function ProposalDetailPage() {
       .select(`
         *,
         client:clients(id, name),
-        lead:leads(id, name),
+        lead:leads(id, name, email),
         project:agency_projects(id, name),
         versions:proposal_versions(
           id, version, content, subtotal, gst_rate, gst_amount, total,
@@ -285,7 +286,7 @@ export default function ProposalDetailPage() {
     setSaving(false)
   }
 
-  // Send handler
+  // Send handler (to client user)
   const handleSend = async () => {
     if (!proposal || !selectedClientUserId) return
     setSending(true)
@@ -293,6 +294,24 @@ export default function ProposalDetailPage() {
     const result = await sendProposal(proposal.id, {
       clientUserId: selectedClientUserId
     })
+
+    if (result.success) {
+      setSendDialogOpen(false)
+      fetchProposal()
+      toast.success(result.message)
+    } else {
+      toast.error(result.message)
+    }
+
+    setSending(false)
+  }
+
+  // Send handler (to lead - converts to client first)
+  const handleSendToLead = async () => {
+    if (!proposal || !proposal.lead_id) return
+    setSending(true)
+
+    const result = await convertLeadAndSend(proposal.id, proposal.lead_id)
 
     if (result.success) {
       setSendDialogOpen(false)
@@ -386,7 +405,9 @@ export default function ProposalDetailPage() {
                     <DialogDescription>
                       {proposal.client_id
                         ? 'Select a client contact to send this proposal to.'
-                        : 'Link a client to this proposal before sending.'}
+                        : proposal.lead
+                          ? `Send this proposal to ${proposal.lead.name} (${proposal.lead.email}). This will convert them to a client.`
+                          : 'Link a lead or client to this proposal before sending.'}
                     </DialogDescription>
                   </DialogHeader>
                   {proposal.client_id ? (
@@ -431,7 +452,7 @@ export default function ProposalDetailPage() {
                         </Button>
                       </DialogFooter>
                     </>
-                  ) : (
+                  ) : proposal.lead ? (
                     <DialogFooter>
                       <Button
                         variant="outline"
@@ -439,10 +460,22 @@ export default function ProposalDetailPage() {
                       >
                         Cancel
                       </Button>
-                      <Button asChild>
-                        <Link href={`/admin/proposals/${proposal.id}`}>
-                          Link Client
-                        </Link>
+                      <Button onClick={handleSendToLead} disabled={sending}>
+                        {sending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Send to {proposal.lead.name}
+                      </Button>
+                    </DialogFooter>
+                  ) : (
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSendDialogOpen(false)}
+                      >
+                        Cancel
                       </Button>
                     </DialogFooter>
                   )}

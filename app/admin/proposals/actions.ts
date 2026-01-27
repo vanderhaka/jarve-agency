@@ -304,6 +304,115 @@ export async function updateProposal(proposalId: string, input: UpdateProposalIn
 }
 
 // ============================================================
+// Convert Lead to Client (for sending proposals)
+// ============================================================
+
+export async function convertLeadAndSend(proposalId: string, leadId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Get the lead
+  const { data: lead, error: leadError } = await supabase
+    .from('leads')
+    .select('id, name, email, company')
+    .eq('id', leadId)
+    .single()
+
+  if (leadError || !lead) {
+    return { success: false, message: 'Lead not found' }
+  }
+
+  if (!lead.email) {
+    return { success: false, message: 'Lead has no email address' }
+  }
+
+  // Check if client already exists for this lead
+  let clientId: string
+  const { data: existingLead } = await supabase
+    .from('leads')
+    .select('client_id')
+    .eq('id', leadId)
+    .single()
+
+  if (existingLead?.client_id) {
+    clientId = existingLead.client_id
+  } else {
+    // Create client from lead
+    const { data: newClient, error: clientError } = await supabase
+      .from('clients')
+      .insert({
+        name: lead.company || lead.name,
+        email: lead.email,
+        created_by: user.id
+      })
+      .select('id')
+      .single()
+
+    if (clientError || !newClient) {
+      console.error('[convertLeadAndSend] Client creation error:', clientError)
+      return { success: false, message: 'Failed to create client' }
+    }
+
+    clientId = newClient.id
+
+    // Update lead with client_id and mark as converted
+    await supabase
+      .from('leads')
+      .update({
+        client_id: clientId,
+        converted_at: new Date().toISOString(),
+        status: 'converted'
+      })
+      .eq('id', leadId)
+  }
+
+  // Check if client_user exists for this email
+  let clientUserId: string
+  const { data: existingUser } = await supabase
+    .from('client_users')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('email', lead.email)
+    .single()
+
+  if (existingUser) {
+    clientUserId = existingUser.id
+  } else {
+    // Create client_user
+    const { data: newUser, error: userError } = await supabase
+      .from('client_users')
+      .insert({
+        client_id: clientId,
+        name: lead.name,
+        email: lead.email,
+        role: 'primary'
+      })
+      .select('id')
+      .single()
+
+    if (userError || !newUser) {
+      console.error('[convertLeadAndSend] Client user creation error:', userError)
+      return { success: false, message: 'Failed to create client contact' }
+    }
+
+    clientUserId = newUser.id
+  }
+
+  // Update proposal with client_id
+  await supabase
+    .from('proposals')
+    .update({ client_id: clientId })
+    .eq('id', proposalId)
+
+  // Now send using the existing flow
+  return sendProposal(proposalId, { clientUserId })
+}
+
+// ============================================================
 // Send Proposal to Client
 // ============================================================
 
