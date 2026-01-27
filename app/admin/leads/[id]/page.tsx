@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Mail, DollarSign, UserCircle, Archive, CheckCircle2 } from 'lucide-react'
+import { Mail, DollarSign, UserCircle, Archive, CheckCircle2, FileText } from 'lucide-react'
 import { InteractionTimeline } from '@/components/interaction-timeline'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 import { ConvertLeadDialog } from '@/components/convert-lead-dialog'
@@ -64,6 +64,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <p className="text-muted-foreground">Lead overview and audit trail</p>
         </div>
         <div className="flex items-center gap-2">
+          {!lead.archived_at && (
+            <Button asChild>
+              <Link href={`/admin/proposals/new?leadId=${lead.id}`}>
+                <FileText className="mr-2 h-4 w-4" />
+                Create Proposal
+              </Link>
+            </Button>
+          )}
           {!lead.converted_at && (
             <ConvertLeadDialog lead={lead} />
           )}
