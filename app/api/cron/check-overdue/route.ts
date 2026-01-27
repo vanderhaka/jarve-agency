@@ -60,6 +60,15 @@ export async function GET(request: NextRequest) {
     // Get current date in agency timezone
     const timezone = settings?.timezone || 'Australia/Adelaide'
     const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone }) // YYYY-MM-DD format
+    
+    // For weekly frequency, only run on Mondays
+    if (settings?.reminder_frequency === 'weekly') {
+      const now = new Date()
+      const dayOfWeek = now.getUTCDay() // 0 = Sunday, 1 = Monday, etc.
+      if (dayOfWeek !== 1) {
+        return NextResponse.json({ message: 'Weekly reminders only run on Mondays', notifications: 0 })
+      }
+    }
 
     const notifications: CreateNotificationInput[] = []
 
@@ -95,8 +104,8 @@ export async function GET(request: NextRequest) {
       .lt('due_date', today)
       .in('status', UNPAID_INVOICE_STATUSES)
 
-    if (invoicesError && invoicesError.code !== 'PGRST204') {
-      // PGRST204 = table doesn't exist, which is expected if Stage 5 not complete
+    if (invoicesError && invoicesError.code !== '42P01') {
+      // 42P01 = table doesn't exist, which is expected if Stage 5 not complete
       console.error('Failed to fetch overdue invoices:', invoicesError)
     } else if (overdueInvoices) {
       for (const invoice of overdueInvoices) {
@@ -121,7 +130,7 @@ export async function GET(request: NextRequest) {
       .in('status', INCOMPLETE_MILESTONE_STATUSES)
       .not('assignee_id', 'is', null)
 
-    if (milestonesError && milestonesError.code !== 'PGRST204') {
+    if (milestonesError && milestonesError.code !== '42P01') {
       console.error('Failed to fetch overdue milestones:', milestonesError)
     } else if (overdueMilestones) {
       for (const milestone of overdueMilestones) {

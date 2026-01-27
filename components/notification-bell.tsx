@@ -102,12 +102,16 @@ export function NotificationBell() {
   const handleDelete = async (id: string) => {
     startTransition(async () => {
       await deleteNotification(id)
-      // Optimistically update the local state
-      const deletedNotif = notifications.find((n) => n.id === id)
-      setNotifications((prev) => prev.filter((n) => n.id !== id))
+      // Optimistically update the local state using functional updates
+      let wasUnread = false
+      setNotifications((prev) => {
+        const deletedNotif = prev.find((n) => n.id === id)
+        wasUnread = deletedNotif ? !deletedNotif.read_at : false
+        return prev.filter((n) => n.id !== id)
+      })
       setCounts((prev) => ({
         total: prev.total - 1,
-        unread: deletedNotif && !deletedNotif.read_at ? prev.unread - 1 : prev.unread,
+        unread: Math.max(0, wasUnread ? prev.unread - 1 : prev.unread),
       }))
     })
   }
