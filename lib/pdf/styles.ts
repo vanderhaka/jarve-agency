@@ -285,3 +285,9 @@ export const formatDate = (date: string | Date): string => {
     year: 'numeric',
   })
 }
+
+// Placeholder text for empty sections in PDFs
+export const placeholders = {
+  emptySection: 'Details to be confirmed.',
+  emptyPricing: 'Pricing to be confirmed.',
+}

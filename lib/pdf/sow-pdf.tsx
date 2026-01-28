@@ -8,7 +8,7 @@ import {
   Svg,
   Path,
 } from '@react-pdf/renderer'
-import { styles, colors, formatCurrency, formatDate } from './styles'
+import { styles, colors, formatCurrency, formatDate, placeholders } from './styles'
 
 // Types matching proposal content structure
 interface LineItem {
@@ -178,89 +178,102 @@ export function SowPdf({
 
         {/* Content Sections */}
         {sortedSections.map((section) => {
-          if (section.type === 'text' && section.body) {
+          if (section.type === 'text') {
+            const bodyText = section.body || placeholders.emptySection
             return (
               <View key={section.id} style={styles.section}>
                 <Text style={styles.sectionTitle}>{section.title}</Text>
-                <Text style={styles.sectionBody}>{section.body}</Text>
+                <Text style={styles.sectionBody}>{bodyText}</Text>
               </View>
             )
           }
 
-          if (section.type === 'list' && section.items?.length > 0) {
+          if (section.type === 'list') {
+            const hasItems = section.items && section.items.length > 0
             return (
               <View key={section.id} style={styles.section}>
                 <Text style={styles.sectionTitle}>{section.title}</Text>
-                {section.items.map((item, idx) => (
-                  <View key={idx} style={styles.listItem}>
-                    <Text style={styles.listBullet}>•</Text>
-                    <Text style={styles.listText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            )
-          }
-
-          if (section.type === 'pricing' && content.pricing.lineItems.length > 0) {
-            return (
-              <View key={section.id} style={styles.section}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-
-                {/* Pricing Table */}
-                <View style={styles.pricingTable}>
-                  {/* Header */}
-                  <View style={styles.tableHeader}>
-                    <Text style={[styles.tableHeaderText, styles.tableCellDescription]}>
-                      Description
-                    </Text>
-                    <Text style={[styles.tableHeaderText, styles.tableCellQty]}>Qty</Text>
-                    <Text style={[styles.tableHeaderText, styles.tableCellPrice]}>Unit Price</Text>
-                    <Text style={[styles.tableHeaderText, styles.tableCellTotal]}>Total</Text>
-                  </View>
-
-                  {/* Rows */}
-                  {content.pricing.lineItems.map((item, idx) => (
-                    <View
-                      key={item.id}
-                      style={[styles.tableRow, idx % 2 === 1 ? styles.tableRowAlt : {}]}
-                    >
-                      <Text style={[styles.tableCell, styles.tableCellDescription]}>
-                        {item.label}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.tableCellQty]}>{item.qty}</Text>
-                      <Text style={[styles.tableCell, styles.tableCellPrice]}>
-                        {formatCurrency(item.unitPrice)}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.tableCellTotal]}>
-                        {formatCurrency(item.total)}
-                      </Text>
+                {hasItems ? (
+                  section.items.map((item, idx) => (
+                    <View key={idx} style={styles.listItem}>
+                      <Text style={styles.listBullet}>•</Text>
+                      <Text style={styles.listText}>{item}</Text>
                     </View>
-                  ))}
-                </View>
+                  ))
+                ) : (
+                  <Text style={styles.sectionBody}>{placeholders.emptySection}</Text>
+                )}
+              </View>
+            )
+          }
 
-                {/* Totals */}
-                <View style={styles.totalsSection}>
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>Subtotal</Text>
-                    <Text style={styles.totalValue}>
-                      {formatCurrency(content.pricing.subtotal)}
-                    </Text>
-                  </View>
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>
-                      GST ({(content.pricing.gstRate * 100).toFixed(0)}%)
-                    </Text>
-                    <Text style={styles.totalValue}>
-                      {formatCurrency(content.pricing.gstAmount)}
-                    </Text>
-                  </View>
-                  <View style={styles.grandTotalRow}>
-                    <Text style={styles.grandTotalLabel}>Total (inc. GST)</Text>
-                    <Text style={styles.grandTotalValue}>
-                      {formatCurrency(content.pricing.total)}
-                    </Text>
-                  </View>
-                </View>
+          if (section.type === 'pricing') {
+            const hasLineItems = content.pricing.lineItems.length > 0
+            return (
+              <View key={section.id} style={styles.section}>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+
+                {hasLineItems ? (
+                  <>
+                    {/* Pricing Table */}
+                    <View style={styles.pricingTable}>
+                      {/* Header */}
+                      <View style={styles.tableHeader}>
+                        <Text style={[styles.tableHeaderText, styles.tableCellDescription]}>
+                          Description
+                        </Text>
+                        <Text style={[styles.tableHeaderText, styles.tableCellQty]}>Qty</Text>
+                        <Text style={[styles.tableHeaderText, styles.tableCellPrice]}>Unit Price</Text>
+                        <Text style={[styles.tableHeaderText, styles.tableCellTotal]}>Total</Text>
+                      </View>
+
+                      {/* Rows */}
+                      {content.pricing.lineItems.map((item, idx) => (
+                        <View
+                          key={item.id}
+                          style={[styles.tableRow, idx % 2 === 1 ? styles.tableRowAlt : {}]}
+                        >
+                          <Text style={[styles.tableCell, styles.tableCellDescription]}>
+                            {item.label}
+                          </Text>
+                          <Text style={[styles.tableCell, styles.tableCellQty]}>{item.qty}</Text>
+                          <Text style={[styles.tableCell, styles.tableCellPrice]}>
+                            {formatCurrency(item.unitPrice)}
+                          </Text>
+                          <Text style={[styles.tableCell, styles.tableCellTotal]}>
+                            {formatCurrency(item.total)}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Totals */}
+                    <View style={styles.totalsSection}>
+                      <View style={styles.totalRow}>
+                        <Text style={styles.totalLabel}>Subtotal</Text>
+                        <Text style={styles.totalValue}>
+                          {formatCurrency(content.pricing.subtotal)}
+                        </Text>
+                      </View>
+                      <View style={styles.totalRow}>
+                        <Text style={styles.totalLabel}>
+                          GST ({(content.pricing.gstRate * 100).toFixed(0)}%)
+                        </Text>
+                        <Text style={styles.totalValue}>
+                          {formatCurrency(content.pricing.gstAmount)}
+                        </Text>
+                      </View>
+                      <View style={styles.grandTotalRow}>
+                        <Text style={styles.grandTotalLabel}>Total (inc. GST)</Text>
+                        <Text style={styles.grandTotalValue}>
+                          {formatCurrency(content.pricing.total)}
+                        </Text>
+                      </View>
+                    </View>
+                  </>
+                ) : (
+                  <Text style={styles.sectionBody}>{placeholders.emptyPricing}</Text>
+                )}
               </View>
             )
           }
