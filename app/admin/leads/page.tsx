@@ -121,33 +121,34 @@ export default function LeadsPage() {
           <h1 className="text-3xl font-bold">Leads</h1>
           <p className="text-muted-foreground">Manage and track your leads</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 rounded-lg border-2 border-black bg-white dark:bg-gray-900 p-2">
           <div className="flex items-center space-x-2">
             <Switch
               id="show-archived"
               checked={showArchived}
               onCheckedChange={setShowArchived}
+              className="data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-gray-500 dark:data-[state=checked]:bg-white dark:data-[state=unchecked]:bg-gray-600"
             />
-            <Label htmlFor="show-archived" className="flex items-center gap-1.5 text-sm cursor-pointer">
+            <Label htmlFor="show-archived" className="flex items-center gap-1.5 text-sm cursor-pointer font-medium">
               <Archive className="h-4 w-4" />
               {showArchived ? 'Showing archived' : 'Show archived'}
             </Label>
           </div>
-          <div className="flex items-center bg-muted rounded-lg p-1">
+          <div className="flex items-center bg-white border-2 border-black rounded-lg p-1">
             <Button
-              variant={view === 'list' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => setView('list')}
-              className="h-8 px-3"
+              className={`h-8 px-3 ${view === 'list' ? 'bg-black text-white hover:bg-black/90' : ''}`}
             >
               <LayoutList className="h-4 w-4 mr-2" />
               List
             </Button>
             <Button
-              variant={view === 'kanban' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => setView('kanban')}
-              className="h-8 px-3"
+              className={`h-8 px-3 ${view === 'kanban' ? 'bg-black text-white hover:bg-black/90' : ''}`}
             >
               <Kanban className="h-4 w-4 mr-2" />
               Board

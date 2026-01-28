@@ -79,10 +79,9 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
       {/* Search trigger */}
       <div className="flex items-center">
         <Button
-          variant="outline"
           size="sm"
           onClick={() => openSearch()}
-          className="gap-2"
+          className="gap-2 bg-black text-white hover:bg-black/90"
         >
           <Search className="h-4 w-4" />
           <span className="hidden sm:inline">Search</span>

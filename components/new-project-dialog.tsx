@@ -103,7 +103,7 @@ export function NewProjectDialog({ clients = [], onSuccess, open: controlledOpen
           trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
         ) : (
           <DialogTrigger asChild>
-            <Button>New Project</Button>
+            <Button className="bg-black text-white hover:bg-black/90">New Project</Button>
           </DialogTrigger>
         )
       )}
