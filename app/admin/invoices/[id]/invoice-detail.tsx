@@ -154,8 +154,13 @@ export function InvoiceDetail({ invoice }: Props) {
     async function refreshInvoice() {
       const { data, error } = await supabase
         .from('invoices')
-        .select(
-          `\n          *,\n          client:clients(id, name, email, xero_contact_id),\n          project:agency_projects(id, name),\n          line_items:invoice_line_items(*),\n          payments(*)\n        `\n        )
+        .select(`
+          *,
+          client:clients(id, name, email, xero_contact_id),
+          project:agency_projects(id, name),
+          line_items:invoice_line_items(*),
+          payments(*)
+        `)
         .eq('id', invoice.id)
         .single()
 
