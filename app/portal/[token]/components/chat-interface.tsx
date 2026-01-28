@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2, MessageSquare } from 'lucide-react'
 import { usePortal } from './portal-context'
 import { postPortalMessage, updateReadState, getPortalMessages } from '@/lib/integrations/portal'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
+import { ChatMessage } from '@/components/chat'
 import { getPortalChatChannel, PORTAL_CHAT_EVENT } from '@/lib/integrations/portal/realtime'
 
 interface Message {
@@ -145,7 +145,10 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
       const result = await postPortalMessage(token, selectedProject.id, newMessage)
 
       if (result.success) {
-        setMessages((prev) => [...prev, result.message])
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.id === result.message.id)) return prev
+          return [...prev, result.message]
+        })
         setNewMessage('')
       } else {
         toast.error(result.error || 'Failed to send message')
@@ -173,15 +176,19 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)]">
-      {/* Header */}
-      <div className="pb-4 border-b">
-        <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
-        <p className="text-muted-foreground">{selectedProject.name}</p>
-      </div>
+    <Card className="flex flex-col h-[calc(100vh-12rem)]">
+      <CardHeader className="border-b py-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4" />
+          <CardTitle className="text-base">Messages</CardTitle>
+        </div>
+        <CardDescription>
+          Chat with JARVE Team about {selectedProject.name}
+        </CardDescription>
+      </CardHeader>
 
       {/* Messages */}
-      <div
+      <CardContent
         ref={messagesContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto py-4 space-y-4"
@@ -192,50 +199,26 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            No messages yet. Start the conversation!
+            <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+            <p>No messages yet</p>
+            <p className="text-sm">Start the conversation with the team</p>
           </div>
         ) : (
           messages.map((message) => (
-            <div
+            <ChatMessage
               key={message.id}
-              className={cn(
-                'flex',
-                message.author_type === 'client' ? 'justify-end' : 'justify-start'
-              )}
-            >
-              <div
-                className={cn(
-                  'max-w-[70%] rounded-lg px-4 py-2',
-                  message.author_type === 'client'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                )}
-              >
-                <p className="text-sm font-medium mb-1">
-                  {message.author_type === 'client'
-                    ? manifest.clientUser.name
-                    : 'JARVE Team'}
-                </p>
-                <p className="whitespace-pre-wrap break-words">{message.body}</p>
-                <p
-                  className={cn(
-                    'text-xs mt-1',
-                    message.author_type === 'client'
-                      ? 'text-primary-foreground/70'
-                      : 'text-muted-foreground'
-                  )}
-                >
-                  {new Date(message.created_at).toLocaleString()}
-                </p>
-              </div>
-            </div>
+              authorName={message.author_type === 'client' ? manifest.clientUser.name : 'JARVE Team'}
+              body={message.body}
+              timestamp={message.created_at}
+              isSender={message.author_type === 'client'}
+            />
           ))
         )}
         <div ref={messagesEndRef} />
-      </div>
+      </CardContent>
 
       {/* Input */}
-      <div className="pt-4 border-t">
+      <div className="border-t p-4">
         <div className="flex gap-2">
           <Textarea
             value={newMessage}
@@ -258,6 +241,6 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>
-    </div>
+    </Card>
   )
 }

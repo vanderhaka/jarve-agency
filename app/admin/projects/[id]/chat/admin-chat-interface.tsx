@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
+import { ChatMessage } from '@/components/chat'
 import { getPortalChatChannel, PORTAL_CHAT_EVENT } from '@/lib/integrations/portal/realtime'
 
 interface Message {
@@ -95,7 +95,10 @@ export function AdminChatInterface({
       const result = await postOwnerMessage(projectId, newMessage)
 
       if (result.success) {
-        setMessages((prev) => [...prev, result.message])
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.id === result.message.id)) return prev
+          return [...prev, result.message]
+        })
         setNewMessage('')
       } else {
         toast.error(result.error || 'Failed to send message')
@@ -157,39 +160,13 @@ export function AdminChatInterface({
             </div>
           ) : (
             messages.map((message) => (
-              <div
+              <ChatMessage
                 key={message.id}
-                className={cn(
-                  'flex',
-                  message.author_type === 'owner' ? 'justify-end' : 'justify-start'
-                )}
-              >
-                <div
-                  className={cn(
-                    'max-w-[70%] rounded-lg px-4 py-2',
-                    message.author_type === 'owner'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  )}
-                >
-                  <p className="text-sm font-medium mb-1">
-                    {message.author_type === 'owner'
-                      ? 'You'
-                      : clientUserName || clientName}
-                  </p>
-                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
-                  <p
-                    className={cn(
-                      'text-xs mt-1',
-                      message.author_type === 'owner'
-                        ? 'text-primary-foreground/70'
-                        : 'text-muted-foreground'
-                    )}
-                  >
-                    {new Date(message.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
+                authorName={message.author_type === 'owner' ? 'You' : clientUserName || clientName}
+                body={message.body}
+                timestamp={message.created_at}
+                isSender={message.author_type === 'owner'}
+              />
             ))
           )}
           <div ref={messagesEndRef} />

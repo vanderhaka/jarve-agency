@@ -46,7 +46,7 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
 
   return (
     <nav className="flex gap-4 mb-8 border-b">
-      <div className="flex items-center gap-4 flex-1">
+      <div className="flex items-center gap-4 flex-1 overflow-x-auto scrollbar-hide">
         {/* Standard navigation items for all users */}
         <NavLink href="/app" icon={LayoutDashboard}>
           Dashboard
