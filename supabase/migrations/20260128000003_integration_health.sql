@@ -10,21 +10,14 @@ CREATE TABLE IF NOT EXISTS integration_health (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Trigger for updated_at
-DO $$
+-- Trigger for updated_at (shared helper)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $func$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column'
-  ) THEN
-    CREATE OR REPLACE FUNCTION update_updated_at_column()
-    RETURNS TRIGGER AS $$
-    BEGIN
-      NEW.updated_at = now();
-      RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-  END IF;
-END $$;
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$func$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trigger_integration_health_updated_at ON integration_health;
 CREATE TRIGGER trigger_integration_health_updated_at
