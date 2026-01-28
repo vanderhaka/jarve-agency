@@ -5,7 +5,6 @@ import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/
 import { getMilestonesByProject } from '@/lib/milestones/data'
 import { getChangeRequestsByProject } from '@/lib/change-requests/data'
 import { parseFiltersFromParams } from './filter-utils'
-import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 import { ProjectTabs } from './project-tabs'
 import { getProjectDocs } from './tabs/docs/actions'
 import { getProjectUploads } from './tabs/uploads/actions'
@@ -134,7 +133,6 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <Breadcrumbs />
       <ProjectTabs
         project={project}
         projectId={id}

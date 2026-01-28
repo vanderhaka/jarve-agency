@@ -1,46 +1,22 @@
 'use client'
 
-import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, LayoutGrid, List } from 'lucide-react'
+import { LayoutGrid, List } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { TaskStatus } from '@/lib/tasks/types'
 import { NewTaskDialog } from './new-task-dialog'
 
 type TabValue = 'overview' | 'tasks' | 'milestones' | 'change-requests' | 'chat' | 'docs' | 'uploads' | 'finance'
 
-interface Project {
-  id: string
-  name: string
-  type: string
-  status: string
-  description: string | null
-  client_id?: string | null
-  clients?: { name: string; email: string } | null
-}
-
 interface Props {
-  project: Project
+  project: { id: string }
   taskCounts: Record<TaskStatus, number>
   totalTasks: number
   progress: number
   overdueCount: number
   currentView: 'list' | 'kanban'
   currentTab?: TabValue
-}
-
-const statusColors: Record<string, string> = {
-  planning: 'bg-yellow-100 text-yellow-800',
-  active: 'bg-green-100 text-green-800',
-  completed: 'bg-blue-100 text-blue-800',
-  maintenance: 'bg-purple-100 text-purple-800',
-  default: 'bg-gray-100 text-gray-800',
-}
-
-function getStatusColor(status: string): string {
-  return statusColors[status] ?? statusColors.default
 }
 
 export function ProjectHeader({ project, taskCounts, totalTasks, progress, overdueCount, currentView, currentTab = 'overview' }: Props) {
@@ -55,32 +31,8 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, overd
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb & Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/projects">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold">{project.name}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="outline">{project.type}</Badge>
-              <Badge className={getStatusColor(project.status)}>
-                {project.status}
-              </Badge>
-              {project.clients && project.client_id && (
-                <Link
-                  href={`/admin/clients/${project.client_id}`}
-                  className="text-primary hover:underline"
-                >
-                  • {project.clients.name}
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Actions */}
+      <div className="flex items-center justify-end">
         {/* Only show view toggle and new task button on Tasks tab */}
         {currentTab === 'tasks' && (
           <div className="flex items-center gap-2">

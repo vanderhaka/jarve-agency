@@ -2,6 +2,9 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 import { TasksView } from './tasks-view'
 import { MilestonesView } from './milestones-view'
 import { ChangeRequestsView } from './change-requests'
@@ -91,7 +94,15 @@ export function ProjectTabs({
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="flex-wrap h-auto gap-1">
+      <div className="flex items-center gap-3 mb-4">
+        <Link href="/admin/projects">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <h1 className="text-2xl font-bold">{project.name}</h1>
+      </div>
+      <TabsList className="flex-wrap h-auto gap-1 w-full">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="tasks">Tasks</TabsTrigger>
         <TabsTrigger value="milestones">Milestones</TabsTrigger>
