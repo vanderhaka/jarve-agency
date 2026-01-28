@@ -19,6 +19,7 @@ type TabValue = 'overview' | 'tasks' | 'milestones' | 'change-requests' | 'chat'
 
 interface Message {
   id: string
+  project_id: string
   author_type: string
   author_id: string | null
   body: string
@@ -137,7 +138,6 @@ export function ProjectTabs({
           projectId={projectId}
           clientName={clientName ?? 'Client'}
           clientUserName={clientUserName}
-          currentUserId={currentUserId}
           initialMessages={initialMessages}
         />
       </TabsContent>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Send, MessageSquare } from 'lucide-react'
 import { postOwnerMessage, updateOwnerReadState } from '@/lib/integrations/portal'
 import { Button } from '@/components/ui/button'
@@ -8,9 +8,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/utils/supabase/client'
+import { getPortalChatChannel, PORTAL_CHAT_EVENT } from '@/lib/integrations/portal/realtime'
 
 interface Message {
   id: string
+  project_id: string
   author_type: string
   author_id: string | null
   body: string
@@ -21,38 +24,72 @@ interface AdminChatTabProps {
   projectId: string
   clientName: string
   clientUserName: string | null
-  currentUserId: string
   initialMessages: Message[]
 }
+
+const MAX_MESSAGE_LENGTH = 2000
 
 export function AdminChatTab({
   projectId,
   clientName,
   clientUserName,
-  currentUserId,
   initialMessages,
 }: AdminChatTabProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const supabase = useMemo(() => createClient(), [])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const autoScrollRef = useRef(true)
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (autoScrollRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   // Mark messages as read when viewing
   useEffect(() => {
-    updateOwnerReadState(projectId, currentUserId)
-  }, [projectId, currentUserId])
+    updateOwnerReadState(projectId)
+  }, [projectId])
+
+  function handleScroll() {
+    const container = messagesContainerRef.current
+    if (!container) return
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+    autoScrollRef.current = distanceFromBottom < 120
+  }
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(getPortalChatChannel(projectId), {
+        config: { broadcast: { self: true } },
+      })
+      .on('broadcast', { event: PORTAL_CHAT_EVENT }, ({ payload }) => {
+        const incoming = (payload as { message?: Message }).message
+        if (!incoming) return
+        if (incoming.project_id !== projectId) return
+
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.id === incoming.id)) return prev
+          return [...prev, incoming]
+        })
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, projectId])
 
   async function handleSend() {
     if (!newMessage.trim()) return
 
     setSending(true)
     try {
-      const result = await postOwnerMessage(projectId, newMessage, currentUserId)
+      const result = await postOwnerMessage(projectId, newMessage)
 
       if (result.success) {
         setMessages((prev) => [...prev, result.message])
@@ -87,7 +124,11 @@ export function AdminChatTab({
       </CardHeader>
 
       {/* Messages */}
-      <CardContent className="flex-1 overflow-y-auto py-4 space-y-4">
+      <CardContent
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto py-4 space-y-4"
+      >
         {messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             <MessageSquare className="h-8 w-8 mx-auto mb-2" />
@@ -144,6 +185,7 @@ export function AdminChatTab({
             placeholder="Type your message..."
             className="min-h-[80px] resize-none"
             disabled={sending}
+            maxLength={MAX_MESSAGE_LENGTH}
           />
           <Button
             onClick={handleSend}

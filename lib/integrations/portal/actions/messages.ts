@@ -5,10 +5,13 @@
 
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { requireEmployee } from '@/lib/auth/require-employee'
 import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import type { PortalMessage } from '../types'
 import { validateTokenForProject } from './tokens'
+import { broadcastPortalMessage } from '../realtime-server'
+
+const MAX_MESSAGE_LENGTH = 2000
 
 /**
  * Get messages for a project
@@ -57,6 +60,14 @@ export async function postPortalMessage(
   body: string
 ): Promise<{ success: true; message: PortalMessage } | { success: false; error: string }> {
   try {
+    const trimmed = body.trim()
+    if (!trimmed) {
+      return { success: false, error: 'Message cannot be empty' }
+    }
+    if (trimmed.length > MAX_MESSAGE_LENGTH) {
+      return { success: false, error: 'Message is too long' }
+    }
+
     console.log('[Portal] postPortalMessage called with projectId:', projectId, 'body length:', body.length)
     const supabase = createPortalServiceClient()
 
@@ -75,7 +86,7 @@ export async function postPortalMessage(
         project_id: projectId,
         author_type: 'client',
         author_id: validation.clientUserId,
-        body: body.trim(),
+        body: trimmed,
       })
       .select()
       .single()
@@ -83,6 +94,13 @@ export async function postPortalMessage(
     if (error || !message) {
       console.log('[Portal] Insert message error:', error)
       return { success: false, error: 'Failed to post message' }
+    }
+
+    if (process.env.PORTAL_MESSAGES_WEBHOOK_MODE !== 'webhook') {
+      const broadcastResult = await broadcastPortalMessage(message as PortalMessage)
+      if (!broadcastResult.ok) {
+        console.warn('[Portal] Broadcast failed:', broadcastResult.error)
+      }
     }
 
     console.log('[Portal] Message posted successfully:', message.id)
@@ -98,11 +116,18 @@ export async function postPortalMessage(
  */
 export async function postOwnerMessage(
   projectId: string,
-  body: string,
-  authorId: string
+  body: string
 ): Promise<{ success: true; message: PortalMessage } | { success: false; error: string }> {
   try {
-    const supabase = await createClient()
+    const trimmed = body.trim()
+    if (!trimmed) {
+      return { success: false, error: 'Message cannot be empty' }
+    }
+    if (trimmed.length > MAX_MESSAGE_LENGTH) {
+      return { success: false, error: 'Message is too long' }
+    }
+
+    const { supabase, user } = await requireEmployee()
 
     // Insert message as owner
     const { data: message, error } = await supabase
@@ -110,14 +135,21 @@ export async function postOwnerMessage(
       .insert({
         project_id: projectId,
         author_type: 'owner',
-        author_id: authorId,
-        body: body.trim(),
+        author_id: user.id,
+        body: trimmed,
       })
       .select()
       .single()
 
     if (error || !message) {
       return { success: false, error: 'Failed to post message' }
+    }
+
+    if (process.env.PORTAL_MESSAGES_WEBHOOK_MODE !== 'webhook') {
+      const broadcastResult = await broadcastPortalMessage(message as PortalMessage)
+      if (!broadcastResult.ok) {
+        console.warn('[Portal] Broadcast failed:', broadcastResult.error)
+      }
     }
 
     return { success: true, message: message as PortalMessage }
@@ -173,11 +205,10 @@ export async function updateReadState(
  * Update read state as owner (admin side)
  */
 export async function updateOwnerReadState(
-  projectId: string,
-  ownerId: string
+  projectId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient()
+    const { supabase, user } = await requireEmployee()
 
     const { error } = await supabase
       .from('portal_read_state')
@@ -185,7 +216,7 @@ export async function updateOwnerReadState(
         {
           project_id: projectId,
           user_type: 'owner',
-          user_id: ownerId,
+          user_id: user.id,
           last_read_at: new Date().toISOString(),
         },
         {

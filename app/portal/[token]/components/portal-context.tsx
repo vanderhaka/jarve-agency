@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useMemo, useState, ReactNode } from 'react'
 import type { PortalManifest, PortalProject } from '@/lib/integrations/portal'
 
 interface PortalContextType {
@@ -8,6 +8,8 @@ interface PortalContextType {
   token: string
   selectedProject: PortalProject | null
   setSelectedProject: (project: PortalProject | null) => void
+  setProjectUnread: (projectId: string, count: number) => void
+  incrementProjectUnread: (projectId: string, delta?: number) => void
 }
 
 const PortalContext = createContext<PortalContextType | null>(null)
@@ -27,18 +29,53 @@ interface PortalProviderProps {
 }
 
 export function PortalProvider({ children, manifest, token }: PortalProviderProps) {
-  // Default to first project if available
-  const [selectedProject, setSelectedProject] = useState<PortalProject | null>(
-    manifest.projects[0] || null
+  const [manifestState, setManifestState] = useState<PortalManifest>(manifest)
+  // Track selected project by ID, derive full project from manifestState
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    manifest.projects[0]?.id || null
   )
+
+  // Derive selectedProject from manifestState to stay in sync with unread counts
+  const selectedProject = useMemo(() => {
+    if (!selectedProjectId) return null
+    return manifestState.projects.find((p) => p.id === selectedProjectId) || null
+  }, [manifestState.projects, selectedProjectId])
+
+  const setSelectedProject = (project: PortalProject | null) => {
+    setSelectedProjectId(project?.id || null)
+  }
+
+  const setProjectUnread = (projectId: string, count: number) => {
+    setManifestState((prev) => ({
+      ...prev,
+      projects: prev.projects.map((project) =>
+        project.id === projectId
+          ? { ...project, unread_count: Math.max(0, count) }
+          : project
+      ),
+    }))
+  }
+
+  const incrementProjectUnread = (projectId: string, delta: number = 1) => {
+    setManifestState((prev) => ({
+      ...prev,
+      projects: prev.projects.map((project) =>
+        project.id === projectId
+          ? { ...project, unread_count: Math.max(0, project.unread_count + delta) }
+          : project
+      ),
+    }))
+  }
 
   return (
     <PortalContext.Provider
       value={{
-        manifest,
+        manifest: manifestState,
         token,
         selectedProject,
         setSelectedProject,
+        setProjectUnread,
+        incrementProjectUnread,
       }}
     >
       {children}

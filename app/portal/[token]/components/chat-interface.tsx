@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Send, Loader2 } from 'lucide-react'
 import { usePortal } from './portal-context'
 import { postPortalMessage, updateReadState, getPortalMessages } from '@/lib/integrations/portal'
@@ -9,9 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/utils/supabase/client'
+import { getPortalChatChannel, PORTAL_CHAT_EVENT } from '@/lib/integrations/portal/realtime'
 
 interface Message {
   id: string
+  project_id: string
   author_type: string
   body: string
   created_at: string
@@ -22,14 +25,19 @@ interface ChatInterfaceProps {
   initialProjectId: string | null
 }
 
+const MAX_MESSAGE_LENGTH = 2000
+
 export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfaceProps) {
-  const { token, selectedProject, manifest } = usePortal()
+  const { token, selectedProject, manifest, setProjectUnread } = usePortal()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(false)
+  const supabase = useMemo(() => createClient(), [])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const currentProjectIdRef = useRef<string | null>(initialProjectId)
+  const autoScrollRef = useRef(true)
 
   // Fetch messages when project changes
   useEffect(() => {
@@ -54,7 +62,7 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
         } else {
           toast.error(result.error || 'Failed to load messages')
         }
-      } catch (error) {
+      } catch {
         // Check if this is still the current project before showing error
         if (currentProjectIdRef.current !== projectId) return
         toast.error('Failed to load messages')
@@ -71,15 +79,63 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (autoScrollRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
+
+  function handleScroll() {
+    const container = messagesContainerRef.current
+    if (!container) return
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+    autoScrollRef.current = distanceFromBottom < 120
+  }
 
   // Mark messages as read when viewing
   useEffect(() => {
     if (selectedProject) {
       updateReadState(token, selectedProject.id)
+        .then((result) => {
+          if (result.success) {
+            setProjectUnread(selectedProject.id, 0)
+          }
+        })
     }
-  }, [token, selectedProject])
+  }, [token, selectedProject, setProjectUnread])
+
+  // Subscribe to realtime chat updates for the selected project
+  useEffect(() => {
+    if (!selectedProject) return
+
+    const channel = supabase
+      .channel(getPortalChatChannel(selectedProject.id), {
+        config: { broadcast: { self: true } },
+      })
+      .on('broadcast', { event: PORTAL_CHAT_EVENT }, ({ payload }) => {
+        const incoming = (payload as { message?: Message }).message
+        if (!incoming) return
+        if (incoming.project_id !== selectedProject.id) return
+
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.id === incoming.id)) return prev
+          return [...prev, incoming]
+        })
+
+        if (incoming.author_type === 'owner') {
+          updateReadState(token, selectedProject.id)
+            .then((result) => {
+              if (result.success) {
+                setProjectUnread(selectedProject.id, 0)
+              }
+            })
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, selectedProject, token, setProjectUnread])
 
   async function handleSend() {
     if (!newMessage.trim() || !selectedProject) return
@@ -94,7 +150,7 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
       } else {
         toast.error(result.error || 'Failed to send message')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to send message')
     } finally {
       setSending(false)
@@ -125,7 +181,11 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-4">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto py-4 space-y-4"
+      >
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -184,6 +244,7 @@ export function ChatInterface({ initialMessages, initialProjectId }: ChatInterfa
             placeholder="Type your message..."
             className="min-h-[80px] resize-none"
             disabled={sending}
+            maxLength={MAX_MESSAGE_LENGTH}
           />
           <Button
             onClick={handleSend}

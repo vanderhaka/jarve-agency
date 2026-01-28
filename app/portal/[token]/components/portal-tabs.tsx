@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Home, MessageSquare, FileText, Upload, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePortal } from './portal-context'
 import { Badge } from '@/components/ui/badge'
+import { createClient } from '@/utils/supabase/client'
+import { getPortalChatChannel, PORTAL_CHAT_EVENT } from '@/lib/integrations/portal/realtime'
 
 interface Message {
   id: string
+  project_id: string
   author_type: string
   body: string
   created_at: string
@@ -58,7 +61,8 @@ const tabs: { id: TabId; label: string; icon: typeof Home }[] = [
 
 export function PortalTabs({ children }: PortalTabsProps) {
   const searchParams = useSearchParams()
-  const { manifest } = usePortal()
+  const { manifest, selectedProject, setProjectUnread, incrementProjectUnread } = usePortal()
+  const supabase = useMemo(() => createClient(), [])
 
   // Get tab from URL query param or use state default
   const tabParam = searchParams.get('tab')
@@ -77,6 +81,60 @@ export function PortalTabs({ children }: PortalTabsProps) {
   }
 
   const totalUnread = manifest.projects.reduce((sum, p) => sum + p.unread_count, 0)
+  const projectIdsKey = useMemo(
+    () => manifest.projects.map((project) => project.id).join('|'),
+    [manifest.projects]
+  )
+  const projectsRef = useRef(manifest.projects)
+  const activeTabRef = useRef(activeTab)
+  const selectedProjectRef = useRef(selectedProject)
+
+  useEffect(() => {
+    projectsRef.current = manifest.projects
+  }, [manifest.projects])
+
+  useEffect(() => {
+    activeTabRef.current = activeTab
+  }, [activeTab])
+
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject
+  }, [selectedProject])
+
+  useEffect(() => {
+    const projects = projectsRef.current
+    if (projects.length === 0) return
+
+    const channels = projects.map((project) =>
+      supabase
+        .channel(getPortalChatChannel(project.id), {
+          config: { broadcast: { self: true } },
+        })
+        .on('broadcast', { event: PORTAL_CHAT_EVENT }, ({ payload }) => {
+          const incoming = (payload as { message?: Message }).message
+          if (!incoming) return
+          if (incoming.project_id !== project.id) return
+          if (incoming.author_type !== 'owner') return
+
+          const isActiveProject = selectedProjectRef.current?.id === project.id
+          const isViewingMessages = activeTabRef.current === 'messages' && isActiveProject
+
+          if (isViewingMessages) {
+            setProjectUnread(project.id, 0)
+          } else {
+            incrementProjectUnread(project.id, 1)
+          }
+        })
+    )
+
+    channels.forEach((channel) => channel.subscribe())
+
+    return () => {
+      channels.forEach((channel) => {
+        supabase.removeChannel(channel)
+      })
+    }
+  }, [projectIdsKey, supabase, setProjectUnread, incrementProjectUnread])
 
   return (
     <div className="space-y-6">

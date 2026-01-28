@@ -52,7 +52,7 @@ async function getProjectMessages(projectId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('portal_messages')
-    .select('id, author_type, author_id, body, created_at')
+    .select('id, project_id, author_type, author_id, body, created_at')
     .eq('project_id', projectId)
     .order('created_at', { ascending: true })
 
