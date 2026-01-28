@@ -35,28 +35,17 @@ export async function sendPortalLink(projectId: string): Promise<SendPortalLinkR
     return { success: false, message: 'No client assigned to this project' }
   }
 
-  // Get primary client user
+  // Get client user (first one for this client)
   const { data: clientUser, error: clientUserError } = await supabase
     .from('client_users')
     .select('id, name, email')
     .eq('client_id', project.client_id)
-    .eq('is_primary', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .single()
 
   if (clientUserError || !clientUser) {
-    // Fallback to any client user if no primary
-    const { data: anyUser, error: anyError } = await supabase
-      .from('client_users')
-      .select('id, name, email')
-      .eq('client_id', project.client_id)
-      .limit(1)
-      .single()
-
-    if (anyError || !anyUser) {
-      return { success: false, message: 'No client user found' }
-    }
-
-    return sendEmailToUser(supabase, anyUser, project)
+    return { success: false, message: 'No client user found' }
   }
 
   return sendEmailToUser(supabase, clientUser, project)
