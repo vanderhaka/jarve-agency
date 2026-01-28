@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Briefcase, Mail, DollarSign, ClipboardList } from 'lucide-react'
@@ -7,7 +8,7 @@ import { CreateNewTabs } from '@/components/admin/create-new-tabs'
 import { NewMessagesSection } from '@/components/admin/new-messages-section'
 
 async function getUnreadMessages() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: messages } = await supabase
     .from('portal_messages')
