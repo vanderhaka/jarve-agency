@@ -1,10 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Building2, Mail, ExternalLink, CheckCircle, Clock } from 'lucide-react'
+import { Building2, Mail, ExternalLink, CheckCircle, Clock, Send } from 'lucide-react'
+import { toast } from 'sonner'
 import Link from 'next/link'
+import { sendPortalLink } from './actions'
 
 interface Project {
   id: string
@@ -41,6 +44,23 @@ export function AdminOverviewTab({
   milestonesCount,
   changeRequestsCount,
 }: Props) {
+  const [sendingPortalLink, setSendingPortalLink] = useState(false)
+
+  async function handleSendPortalLink() {
+    setSendingPortalLink(true)
+    try {
+      const result = await sendPortalLink(project.id)
+      if (result.success) {
+        toast.success(result.message)
+      } else {
+        toast.error(result.message)
+      }
+    } catch {
+      toast.error('Failed to send portal link')
+    } finally {
+      setSendingPortalLink(false)
+    }
+  }
   return (
     <div className="space-y-6">
       {/* Project Info */}
@@ -96,12 +116,23 @@ export function AdminOverviewTab({
                     </a>
                   </p>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/admin/clients/${project.client_id}`}>
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Client
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/admin/clients/${project.client_id}`}>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Client
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleSendPortalLink}
+                    disabled={sendingPortalLink}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {sendingPortalLink ? 'Sending...' : 'Send Portal Link'}
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="text-center py-4">
