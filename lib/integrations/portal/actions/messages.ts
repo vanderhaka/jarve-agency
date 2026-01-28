@@ -127,7 +127,12 @@ export async function postOwnerMessage(
       return { success: false, error: 'Message is too long' }
     }
 
-    const { supabase, user } = await requireEmployee()
+    // Authenticate the employee first
+    const { user } = await requireEmployee()
+    console.log('[Admin] postOwnerMessage called by user:', user.id, 'projectId:', projectId)
+
+    // Use service role client for insert (RLS enabled but no policies exist)
+    const supabase = createPortalServiceClient()
 
     // Insert message as owner
     const { data: message, error } = await supabase
@@ -142,13 +147,18 @@ export async function postOwnerMessage(
       .single()
 
     if (error || !message) {
+      console.error('[Admin] Insert message error:', error)
       return { success: false, error: 'Failed to post message' }
     }
+
+    console.log('[Admin] Message posted successfully:', message.id)
 
     if (process.env.PORTAL_MESSAGES_WEBHOOK_MODE !== 'webhook') {
       const broadcastResult = await broadcastPortalMessage(message as PortalMessage)
       if (!broadcastResult.ok) {
-        console.warn('[Portal] Broadcast failed:', broadcastResult.error)
+        console.warn('[Admin] Broadcast failed:', broadcastResult.error)
+      } else {
+        console.log('[Admin] Message broadcast successfully')
       }
     }
 
@@ -208,7 +218,11 @@ export async function updateOwnerReadState(
   projectId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { supabase, user } = await requireEmployee()
+    // Authenticate the employee first
+    const { user } = await requireEmployee()
+
+    // Use service role client for upsert (RLS enabled but no policies exist)
+    const supabase = createPortalServiceClient()
 
     const { error } = await supabase
       .from('portal_read_state')
@@ -225,6 +239,7 @@ export async function updateOwnerReadState(
       )
 
     if (error) {
+      console.error('[Admin] Update read state error:', error)
       return { success: false, error: 'Failed to update read state' }
     }
 

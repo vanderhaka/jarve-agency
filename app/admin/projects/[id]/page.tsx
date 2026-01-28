@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { redirect, notFound } from 'next/navigation'
 import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
 import { getMilestonesByProject } from '@/lib/milestones/data'
@@ -49,7 +50,8 @@ async function getProject(projectId: string) {
 }
 
 async function getProjectMessages(projectId: string) {
-  const supabase = await createClient()
+  // Use service role client (RLS enabled but no policies exist for portal_messages)
+  const supabase = createPortalServiceClient()
   const { data, error } = await supabase
     .from('portal_messages')
     .select('id, project_id, author_type, author_id, body, created_at')
