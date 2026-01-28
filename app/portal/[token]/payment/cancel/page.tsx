@@ -44,6 +44,11 @@ export default async function PaymentCancelPage({ params, searchParams }: Paymen
                 Back to Invoices
               </Link>
             </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/portal/${token}`}>
+                Back to Portal
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { verifyWebhookSignature, getPaymentIntent } from '@/lib/integrations/stripe/client'
 import { xeroApiCall } from '@/lib/integrations/xero/client'
 import { notifyInvoicePaid } from '@/lib/notifications/actions'
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const supabase = await createClient()
+  const supabase = createPortalServiceClient()
 
   try {
     switch (event.type) {

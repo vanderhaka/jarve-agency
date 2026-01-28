@@ -41,3 +41,25 @@ See `.claude/rules/supabase-mcp.md` for:
 2. **UI testing** - Automate with Claude in Chrome
 3. **Verification** - Check database state via MCP
 4. **Documentation** - Generate TESTING.md with results
+
+## Vercel Environment Variables
+
+**CRITICAL: Avoid trailing newlines when setting env vars!**
+
+Using `echo` pipes a trailing newline into the value, breaking URLs and API keys:
+```bash
+# BAD - adds \n to the value
+echo "https://jarve.com.au" | vercel env add NEXT_PUBLIC_SITE_URL production
+
+# GOOD - no trailing newline
+printf '%s' 'https://jarve.com.au' | vercel env add NEXT_PUBLIC_SITE_URL production
+```
+
+**Always use `printf '%s'` instead of `echo` when piping to `vercel env add`.**
+
+To verify env vars are clean:
+```bash
+vercel env pull .env.check --environment=production
+cat .env.check | od -c | head -20  # Check for embedded \n
+rm .env.check
+```

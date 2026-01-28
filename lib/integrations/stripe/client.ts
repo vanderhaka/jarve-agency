@@ -79,9 +79,16 @@ export async function createCheckoutSession(params: {
       url: session.url || undefined,
     }
   } catch (error) {
+    // Log full error details for debugging
     console.error('Failed to create Stripe checkout session', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error?.constructor?.name,
       invoiceId: params.invoiceId,
+      amount: params.amount,
+      currency: params.currency,
+      // Log Stripe-specific error details if available
+      stripeCode: (error as { code?: string })?.code,
+      stripeType: (error as { type?: string })?.type,
     })
     return {
       success: false,

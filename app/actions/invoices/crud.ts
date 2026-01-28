@@ -84,7 +84,7 @@ export async function createInvoice(
         total,
         issue_date: issueDate,
         due_date: dueDate,
-        xero_status: 'DRAFT',
+        xero_status: 'AUTHORISED',
         created_by: user.id,
       })
       .select('id')
@@ -260,7 +260,7 @@ export async function createDepositInvoiceInternal(
         total,
         issue_date: issueDate,
         due_date: dueDate,
-        xero_status: 'DRAFT',
+        xero_status: 'AUTHORISED',
       })
       .select('id, invoice_number')
       .single()

@@ -78,11 +78,18 @@ export default async function PaymentSuccessPage({ params, searchParams }: Payme
             Your invoice status will be updated automatically.
           </p>
 
-          <Button asChild className="w-full">
-            <Link href={`/portal/${token}?tab=invoices`}>
-              View Invoices
-            </Link>
-          </Button>
+          <div className="space-y-3">
+            <Button asChild className="w-full">
+              <Link href={`/portal/${token}?tab=invoices`}>
+                View Invoices
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/portal/${token}`}>
+                Back to Portal
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
