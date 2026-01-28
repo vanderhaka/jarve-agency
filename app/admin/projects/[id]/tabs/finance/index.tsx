@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { BudgetCard } from './budget-card'
@@ -15,6 +15,10 @@ interface Invoice {
   issueDate: string | null
   dueDate: string | null
   paidAt: string | null
+  paymentStatus: string | null
+  paymentStatusUpdatedAt: string | null
+  lastPaymentError: string | null
+  updatedAt: string | null
   client?: {
     id: string
     name: string
@@ -30,7 +34,8 @@ interface Props {
 export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
+  const invoiceIdsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     fetchInvoices()
@@ -50,6 +55,10 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
         issue_date,
         due_date,
         paid_at,
+        payment_status,
+        payment_status_updated_at,
+        last_payment_error,
+        updated_at,
         client:clients(id, name)
       `)
       .eq('project_id', projectId)
@@ -58,27 +67,58 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
     if (error) {
       console.error('Failed to fetch invoices', error)
     } else {
-      setInvoices(
-        (data || []).map((inv) => {
-          // Handle the client join - it could be an object or null
-          const clientData = inv.client as { id: string; name: string } | { id: string; name: string }[] | null
-          const client = Array.isArray(clientData) ? clientData[0] : clientData
-          return {
-            id: inv.id,
-            invoiceNumber: inv.invoice_number,
-            xeroStatus: inv.xero_status,
-            total: inv.total,
-            currency: inv.currency,
-            issueDate: inv.issue_date,
-            dueDate: inv.due_date,
-            paidAt: inv.paid_at,
-            client: client || undefined,
-          }
-        })
-      )
+      const mapped = (data || []).map((inv) => {
+        // Handle the client join - it could be an object or null
+        const clientData = inv.client as { id: string; name: string } | { id: string; name: string }[] | null
+        const client = Array.isArray(clientData) ? clientData[0] : clientData
+        return {
+          id: inv.id,
+          invoiceNumber: inv.invoice_number,
+          xeroStatus: inv.xero_status,
+          total: inv.total,
+          currency: inv.currency,
+          issueDate: inv.issue_date,
+          dueDate: inv.due_date,
+          paidAt: inv.paid_at,
+          paymentStatus: inv.payment_status,
+          paymentStatusUpdatedAt: inv.payment_status_updated_at,
+          lastPaymentError: inv.last_payment_error,
+          updatedAt: inv.updated_at,
+          client: client || undefined,
+        }
+      })
+      setInvoices(mapped)
+      invoiceIdsRef.current = new Set(mapped.map((inv) => inv.id))
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`project-invoices-${projectId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'invoices', filter: `project_id=eq.${projectId}` },
+        () => {
+          fetchInvoices()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payments' },
+        (payload) => {
+          const invoiceId = (payload.new as { invoice_id?: string })?.invoice_id
+          if (invoiceId && invoiceIdsRef.current.has(invoiceId)) {
+            fetchInvoices()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [projectId, supabase])
 
   if (loading) {
     return (

@@ -44,6 +44,10 @@ interface Invoice {
   issueDate: string | null
   dueDate: string | null
   paidAt: string | null
+  paymentStatus: string | null
+  paymentStatusUpdatedAt: string | null
+  lastPaymentError: string | null
+  updatedAt: string | null
   client?: {
     id: string
     name: string
@@ -65,6 +69,13 @@ const statusColors: Record<string, string> = {
   PAID: 'bg-green-100 text-green-800',
   VOIDED: 'bg-red-100 text-red-800',
   DELETED: 'bg-red-100 text-red-800',
+}
+
+const paymentStatusLabels: Record<string, string> = {
+  processing: 'Processing',
+  paid: 'Paid',
+  failed: 'Failed',
+  refunded: 'Refunded',
 }
 
 export function InvoicesList({
@@ -304,6 +315,16 @@ export function InvoicesList({
                     >
                       {invoice.xeroStatus || 'DRAFT'}
                     </Badge>
+                    {invoice.paymentStatus && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Stripe: {paymentStatusLabels[invoice.paymentStatus] || invoice.paymentStatus}
+                      </div>
+                    )}
+                    {invoice.paymentStatus === 'failed' && invoice.lastPaymentError && (
+                      <div className="mt-1 text-xs text-red-600">
+                        {invoice.lastPaymentError}
+                      </div>
+                    )}
                     {invoice.paidAt && (
                       <span className="ml-2 text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(invoice.paidAt), {

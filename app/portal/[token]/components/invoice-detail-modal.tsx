@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, CheckCircle, CreditCard } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Loader2, CheckCircle, CreditCard, AlertCircle, RefreshCw } from 'lucide-react'
 import { usePortal } from './portal-context'
 import { getPortalInvoiceDetails } from '@/lib/integrations/portal'
+import { buildInvoiceTimeline } from '@/lib/invoices/status'
 import {
   Sheet,
   SheetContent,
@@ -22,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { InvoiceTimeline } from '@/components/invoices/invoice-timeline'
 import type { PortalInvoice, PortalInvoiceStatus } from '@/lib/integrations/portal/types'
 
 interface InvoiceDetailModalProps {
@@ -34,7 +36,10 @@ const statusConfig: Record<PortalInvoiceStatus, { label: string; variant: 'defau
   sent: { label: 'Sent', variant: 'outline' },
   viewed: { label: 'Viewed', variant: 'outline' },
   partially_paid: { label: 'Partially Paid', variant: 'default' },
+  processing: { label: 'Processing', variant: 'outline' },
+  payment_failed: { label: 'Payment Failed', variant: 'destructive' },
   paid: { label: 'Paid', variant: 'default' },
+  refunded: { label: 'Refunded', variant: 'secondary' },
   overdue: { label: 'Overdue', variant: 'destructive' },
   voided: { label: 'Voided', variant: 'secondary' },
 }
@@ -61,6 +66,7 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
   const [invoice, setInvoice] = useState<PortalInvoice | null>(null)
   const [loading, setLoading] = useState(false)
   const [paying, setPaying] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (!invoiceId) {
@@ -89,6 +95,29 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
     fetchInvoice(invoiceId)
   }, [token, invoiceId, onClose])
 
+  const refreshInvoice = useCallback(async () => {
+    if (!invoiceId) return
+    setRefreshing(true)
+    try {
+      const result = await getPortalInvoiceDetails(token, invoiceId)
+      if (result.success) {
+        setInvoice(result.invoice)
+      }
+    } finally {
+      setRefreshing(false)
+    }
+  }, [invoiceId, token])
+
+  useEffect(() => {
+    if (!invoice || invoice.status !== 'processing') return
+
+    const interval = setInterval(() => {
+      refreshInvoice()
+    }, 8000)
+
+    return () => clearInterval(interval)
+  }, [invoice, refreshInvoice])
+
   async function handlePayNow() {
     if (!invoice) return
 
@@ -116,14 +145,34 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
   }
 
   const isOpen = invoiceId !== null
-  const isPaid = invoice?.status === 'paid' || invoice?.status === 'partially_paid' && (invoice?.payments?.reduce((sum, p) => sum + p.amount, 0) ?? 0) >= (invoice?.total ?? 0)
+  const totalPaid = invoice?.payments?.reduce((sum, p) => sum + p.amount, 0) ?? 0
+  const isPaid = invoice?.status === 'paid' || (invoice?.status === 'partially_paid' && totalPaid >= (invoice?.total ?? 0))
 
   // Calculate amount due
-  const totalPaid = invoice?.payments?.reduce((sum, p) => sum + p.amount, 0) ?? 0
   const amountDue = invoice?.total ? invoice.total - totalPaid : 0
 
   // Only payable if not paid, not voided, not draft, and has amount due > 0
-  const isPayable = invoice && !isPaid && invoice.status !== 'voided' && invoice.status !== 'draft' && amountDue > 0
+  const isPayable = invoice &&
+    !isPaid &&
+    invoice.status !== 'voided' &&
+    invoice.status !== 'draft' &&
+    invoice.status !== 'processing' &&
+    invoice.status !== 'refunded' &&
+    amountDue > 0
+
+  const timelineEvents = invoice
+    ? buildInvoiceTimeline({
+        issueDate: invoice.issue_date,
+        dueDate: invoice.due_date,
+        paidAt: invoice.paid_at,
+        paymentStatus: invoice.payment_status,
+        paymentStatusUpdatedAt: invoice.payment_status_updated_at,
+        xeroStatus: null,
+        lastSyncedAt: null,
+        createdAt: invoice.created_at,
+        includeXero: false,
+      })
+    : []
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -257,6 +306,59 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
                 </>
               )}
 
+              {/* Status Timeline */}
+              {timelineEvents.length > 0 && (
+                <div className="border-t pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium">Status timeline</h3>
+                    {invoice.status === 'processing' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={refreshInvoice}
+                        disabled={refreshing}
+                      >
+                        {refreshing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Refresh
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  <InvoiceTimeline events={timelineEvents} />
+                </div>
+              )}
+
+              {/* Payment status messaging */}
+              {invoice.status === 'processing' && (
+                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-700">Payment received — confirming</p>
+                    <p className="text-sm text-muted-foreground">
+                      This usually updates within a minute. You can refresh if needed.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {invoice.status === 'payment_failed' && (
+                <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-red-600">Payment failed</p>
+                    {invoice.last_payment_error && (
+                      <p className="text-sm text-muted-foreground">{invoice.last_payment_error}</p>
+                    )}
+                    <p className="text-sm text-muted-foreground">Please try again or contact support.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Pay Now Button */}
               {isPayable && (
                 <Button
@@ -284,7 +386,7 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
                 <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <span className="font-medium text-green-600">
-                    Paid on {formatDate(invoice.paid_at)}
+                    {invoice.paid_at ? `Paid on ${formatDate(invoice.paid_at)}` : 'Paid'}
                   </span>
                 </div>
               )}

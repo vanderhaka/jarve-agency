@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle } from 'lucide-react'
-import { getCheckoutSession } from '@/lib/integrations/stripe/client'
-import { getPortalManifest } from '@/lib/integrations/portal'
+import { getPortalManifest, confirmPortalCheckoutSession } from '@/lib/integrations/portal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -10,6 +9,8 @@ interface PaymentSuccessPageProps {
   params: Promise<{ token: string }>
   searchParams: Promise<{ session_id?: string }>
 }
+
+export const dynamic = 'force-dynamic'
 
 function formatCurrency(amount: number, currency: string): string {
   return new Intl.NumberFormat('en-AU', {
@@ -34,16 +35,17 @@ export default async function PaymentSuccessPage({ params, searchParams }: Payme
     currency: string
     invoiceNumber: string | null
   } | null = null
+  let paymentStatus: string | null = null
 
   if (session_id) {
-    const session = await getCheckoutSession(session_id)
-    // Verify session belongs to this portal token and is paid
-    if (session && session.payment_status === 'paid' && session.metadata?.portal_token === token) {
+    const confirmation = await confirmPortalCheckoutSession(token, session_id)
+    if (confirmation.success) {
       paymentDetails = {
-        amount: session.amount_total ?? 0,
-        currency: session.currency ?? 'aud',
-        invoiceNumber: session.metadata?.invoice_number || null,
+        amount: confirmation.amount,
+        currency: confirmation.currency,
+        invoiceNumber: confirmation.invoiceNumber,
       }
+      paymentStatus = confirmation.paymentStatus
     }
   }
 
@@ -75,7 +77,9 @@ export default async function PaymentSuccessPage({ params, searchParams }: Payme
 
           <p className="text-sm text-muted-foreground">
             A confirmation email will be sent to you shortly.
-            Your invoice status will be updated automatically.
+            {paymentStatus === 'processing'
+              ? ' We are confirming your payment now.'
+              : ' Your invoice status will be updated automatically.'}
           </p>
 
           <div className="space-y-3">

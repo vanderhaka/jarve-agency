@@ -30,6 +30,7 @@ export {
   getPortalInvoices,
   getPortalInvoiceDetails,
   createPortalCheckoutSession,
+  confirmPortalCheckoutSession,
   getPortalMsaSigningData,
   getPortalProposalSigningData,
 } from './actions'

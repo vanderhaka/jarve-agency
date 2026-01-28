@@ -155,7 +155,10 @@ export type PortalInvoiceStatus =
   | 'sent'
   | 'viewed'
   | 'partially_paid'
+  | 'processing'
+  | 'payment_failed'
   | 'paid'
+  | 'refunded'
   | 'overdue'
   | 'voided'
 
@@ -210,6 +213,9 @@ export interface PortalInvoice {
   due_date: string | null
   paid_at: string | null
   payment_link_url: string | null
+  payment_status: string | null
+  payment_status_updated_at: string | null
+  last_payment_error: string | null
   status: PortalInvoiceStatus
   created_at: string
   updated_at: string
@@ -231,6 +237,10 @@ export interface PortalInvoiceSummary {
   issue_date: string | null
   due_date: string | null
   paid_at: string | null
+  payment_status?: string | null
+  payment_status_updated_at?: string | null
+  last_payment_error?: string | null
+  updated_at?: string | null
 }
 
 /**

@@ -7,6 +7,8 @@ import { DocsVault } from './components/docs-vault'
 import { UploadsManager } from './components/uploads-manager'
 import { InvoicesList } from './components/invoices-list'
 
+export const dynamic = 'force-dynamic'
+
 interface PortalPageProps {
   params: Promise<{ token: string }>
 }

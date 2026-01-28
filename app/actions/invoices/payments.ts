@@ -57,6 +57,9 @@ export async function markInvoicePaid(
       .update({
         paid_at: new Date().toISOString(),
         xero_status: 'PAID',
+        payment_status: 'paid',
+        payment_status_updated_at: new Date().toISOString(),
+        last_payment_error: null,
       })
       .eq('id', invoiceId)
 

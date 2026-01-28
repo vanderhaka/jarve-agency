@@ -277,6 +277,9 @@ export async function syncInvoiceStatus(
 
     if (xeroInvoice.Status === 'PAID' && xeroInvoice.AmountPaid) {
       updates.paid_at = new Date().toISOString()
+      updates.payment_status = 'paid'
+      updates.payment_status_updated_at = new Date().toISOString()
+      updates.last_payment_error = null
     }
 
     await supabase.from('invoices').update(updates).eq('id', invoiceId)

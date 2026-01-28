@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Receipt, Loader2, DollarSign, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { Receipt, Loader2, DollarSign, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react'
 import { usePortal } from './portal-context'
 import { getPortalInvoices } from '@/lib/integrations/portal'
 import { Card, CardContent } from '@/components/ui/card'
@@ -24,7 +24,10 @@ const statusConfig: Record<
   sent: { label: 'Sent', variant: 'outline', icon: Receipt },
   viewed: { label: 'Viewed', variant: 'outline', icon: Receipt },
   partially_paid: { label: 'Partial', variant: 'default', icon: DollarSign },
+  processing: { label: 'Processing', variant: 'outline', icon: Loader2 },
+  payment_failed: { label: 'Payment Failed', variant: 'destructive', icon: AlertCircle },
   paid: { label: 'Paid', variant: 'default', icon: CheckCircle },
+  refunded: { label: 'Refunded', variant: 'secondary', icon: AlertCircle },
   overdue: { label: 'Overdue', variant: 'destructive', icon: AlertCircle },
   voided: { label: 'Voided', variant: 'secondary', icon: Clock },
 }
@@ -51,7 +54,13 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
   const [invoices, setInvoices] = useState<PortalInvoiceSummary[]>(initialInvoices)
   const [loading, setLoading] = useState(false)
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null)
   const currentProjectIdRef = useRef<string | null>(initialProjectId)
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const hasProcessingInvoices = invoices.some(
+    (invoice) => invoice.status === 'processing'
+  )
 
   // Fetch invoices when project changes
   useEffect(() => {
@@ -65,7 +74,7 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
     // Update ref immediately to track which project we're fetching for
     currentProjectIdRef.current = projectId
 
-    async function fetchInvoices() {
+    async function fetchInvoices({ silent = false } = {}) {
       setLoading(true)
       try {
         const result = await getPortalInvoices(token, projectId)
@@ -73,6 +82,10 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
         if (currentProjectIdRef.current !== projectId) return
         if (result.success) {
           setInvoices(result.invoices)
+          setLastUpdatedAt(new Date().toISOString())
+          if (!silent) {
+            toast.success('Invoices updated')
+          }
         } else {
           toast.error(result.error)
         }
@@ -88,8 +101,39 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
       }
     }
 
-    fetchInvoices()
+    fetchInvoices({ silent: true })
   }, [token, selectedProject])
+
+  // Poll while payments are processing to keep status fresh
+  useEffect(() => {
+    if (!selectedProject) return
+
+    if (!hasProcessingInvoices) {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+        pollIntervalRef.current = null
+      }
+      return
+    }
+
+    if (pollIntervalRef.current) return
+
+    pollIntervalRef.current = setInterval(async () => {
+      if (!selectedProject?.id) return
+      const result = await getPortalInvoices(token, selectedProject.id)
+      if (result.success) {
+        setInvoices(result.invoices)
+        setLastUpdatedAt(new Date().toISOString())
+      }
+    }, 8000)
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+        pollIntervalRef.current = null
+      }
+    }
+  }, [hasProcessingInvoices, selectedProject, token])
 
   if (!selectedProject) {
     return (
@@ -104,7 +148,40 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
-        <p className="text-muted-foreground">View and pay invoices for your projects</p>
+        <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
+          <p>View and pay invoices for your projects</p>
+          {lastUpdatedAt && (
+            <span className="text-xs">
+              Updated {new Date(lastUpdatedAt).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => {
+              if (!selectedProject) return
+              setLoading(true)
+              getPortalInvoices(token, selectedProject.id)
+                .then((result) => {
+                  if (result.success) {
+                    setInvoices(result.invoices)
+                    setLastUpdatedAt(new Date().toISOString())
+                  } else {
+                    toast.error(result.error)
+                  }
+                })
+                .catch(() => toast.error('Failed to refresh invoices'))
+                .finally(() => setLoading(false))
+            }}
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Refresh
+          </Button>
+          {hasProcessingInvoices && (
+            <span className="text-xs text-blue-600">Payments processing…</span>
+          )}
+        </div>
       </div>
 
       {/* Invoices list */}
@@ -127,7 +204,13 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
             const config = statusConfig[invoice.status]
             const StatusIcon = config.icon
             const isPaid = invoice.status === 'paid'
-            const isPayable = !isPaid && invoice.status !== 'voided' && invoice.status !== 'draft'
+            const isProcessing = invoice.status === 'processing'
+            const isPayable =
+              !isPaid &&
+              !isProcessing &&
+              invoice.status !== 'voided' &&
+              invoice.status !== 'draft' &&
+              invoice.status !== 'refunded'
 
             return (
               <Card
@@ -163,7 +246,7 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
                           {formatCurrency(invoice.total, invoice.currency)}
                         </p>
                         <Badge variant={config.variant} className="gap-1">
-                          <StatusIcon className="h-3 w-3" />
+                          <StatusIcon className={`h-3 w-3 ${invoice.status === 'processing' ? 'animate-spin' : ''}`} />
                           {config.label}
                         </Badge>
                       </div>

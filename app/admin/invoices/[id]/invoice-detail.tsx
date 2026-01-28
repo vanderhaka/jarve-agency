@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +35,8 @@ import {
   Receipt,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { InvoiceTimeline } from '@/components/invoices/invoice-timeline'
+import { buildInvoiceTimeline } from '@/lib/invoices/status'
 
 interface Invoice {
   id: string
@@ -49,6 +52,9 @@ interface Invoice {
   due_date: string | null
   paid_at: string | null
   last_synced_at: string | null
+  payment_status: string | null
+  payment_status_updated_at: string | null
+  last_payment_error: string | null
   created_at: string
   client?: {
     id: string
@@ -95,6 +101,7 @@ export function InvoiceDetail({ invoice }: Props) {
   const [showMarkPaidDialog, setShowMarkPaidDialog] = useState(false)
   const [currentInvoice, setCurrentInvoice] = useState(invoice)
   const [isPending, startTransition] = useTransition()
+  const supabase = useMemo(() => createClient(), [])
 
   async function handleSyncStatus() {
     setSyncing(true)
@@ -130,6 +137,51 @@ export function InvoiceDetail({ invoice }: Props) {
 
   const totalPaid = currentInvoice.payments.reduce((sum, p) => sum + p.amount, 0)
   const amountDue = (currentInvoice.total || 0) - totalPaid
+
+  const timelineEvents = buildInvoiceTimeline({
+    issueDate: currentInvoice.issue_date,
+    dueDate: currentInvoice.due_date,
+    paidAt: currentInvoice.paid_at,
+    paymentStatus: currentInvoice.payment_status,
+    paymentStatusUpdatedAt: currentInvoice.payment_status_updated_at,
+    xeroStatus: currentInvoice.xero_status,
+    lastSyncedAt: currentInvoice.last_synced_at,
+    createdAt: currentInvoice.created_at,
+    includeXero: true,
+  })
+
+  useEffect(() => {
+    async function refreshInvoice() {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select(
+          `\n          *,\n          client:clients(id, name, email, xero_contact_id),\n          project:agency_projects(id, name),\n          line_items:invoice_line_items(*),\n          payments(*)\n        `\n        )
+        .eq('id', invoice.id)
+        .single()
+
+      if (!error && data) {
+        setCurrentInvoice(data as Invoice)
+      }
+    }
+
+    const channel = supabase
+      .channel(`invoice-${invoice.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'invoices', filter: `id=eq.${invoice.id}` },
+        () => refreshInvoice()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payments', filter: `invoice_id=eq.${invoice.id}` },
+        () => refreshInvoice()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [invoice.id, supabase])
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -372,6 +424,45 @@ export function InvoiceDetail({ invoice }: Props) {
                 ))}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stripe Status */}
+      {currentInvoice.payment_status && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Stripe Status</CardTitle>
+            <CardDescription>Live payment status from Stripe</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-sm">
+              Status: <span className="font-medium capitalize">{currentInvoice.payment_status}</span>
+            </div>
+            {currentInvoice.payment_status_updated_at && (
+              <div className="text-xs text-muted-foreground">
+                Updated{' '}
+                {formatDistanceToNow(new Date(currentInvoice.payment_status_updated_at), {
+                  addSuffix: true,
+                })}
+              </div>
+            )}
+            {currentInvoice.last_payment_error && (
+              <div className="text-sm text-red-600">{currentInvoice.last_payment_error}</div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Status Timeline */}
+      {timelineEvents.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Status Timeline</CardTitle>
+            <CardDescription>Invoice lifecycle tracking</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InvoiceTimeline events={timelineEvents} />
           </CardContent>
         </Card>
       )}

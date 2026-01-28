@@ -12,68 +12,16 @@
 
 import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { createCheckoutSession } from '@/lib/integrations/stripe/client'
+import { getCheckoutSession } from '@/lib/integrations/stripe/client'
+import { mapPortalInvoiceStatus } from '@/lib/invoices/status'
 import type {
   PortalInvoice,
   PortalInvoiceLineItem,
   PortalInvoiceSummary,
-  PortalInvoiceStatus,
   PortalPayment,
   PortalPaymentInitResult,
   PortalPaymentErrorResult,
 } from '../types'
-
-/**
- * Map xero_status to client-friendly PortalInvoiceStatus
- */
-function mapInvoiceStatus(
-  xeroStatus: string | null,
-  paidAt: string | null,
-  dueDate: string | null,
-  totalPayments: number,
-  total: number | null
-): PortalInvoiceStatus {
-  // If paid_at is set, invoice is fully paid
-  if (paidAt) {
-    return 'paid'
-  }
-
-  // If total payments meet or exceed invoice total, mark as paid
-  if (total && totalPayments >= total) {
-    return 'paid'
-  }
-
-  // Check for partial payments
-  if (totalPayments > 0 && total && totalPayments < total) {
-    return 'partially_paid'
-  }
-
-  // Map xero_status
-  const status = xeroStatus?.toUpperCase()
-
-  switch (status) {
-    case 'PAID':
-      return 'paid'
-    case 'VOIDED':
-    case 'DELETED':
-      return 'voided'
-    case 'DRAFT':
-      return 'draft'
-    case 'SUBMITTED':
-    case 'AUTHORISED':
-      // Check if overdue
-      if (dueDate) {
-        const due = new Date(dueDate)
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        if (due < today) {
-          return 'overdue'
-        }
-      }
-      return 'sent'
-    default:
-      return 'draft'
-  }
-}
 
 /**
  * Validate a token has access to a specific invoice
@@ -186,7 +134,9 @@ export async function getPortalInvoices(
     // For now, show all invoices for the client to give full visibility
     const { data: allInvoices, error: invoicesError } = await supabase
       .from('invoices')
-      .select('id, invoice_number, xero_status, total, currency, issue_date, due_date, paid_at')
+      .select(
+        'id, invoice_number, xero_status, total, currency, issue_date, due_date, paid_at, payment_status, payment_status_updated_at, last_payment_error, updated_at'
+      )
       .eq('client_id', clientUser.client_id)
       .order('issue_date', { ascending: false, nullsFirst: false })
 
@@ -218,18 +168,23 @@ export async function getPortalInvoices(
     const summaries: PortalInvoiceSummary[] = (invoices || []).map((inv) => ({
       id: inv.id,
       invoice_number: inv.invoice_number,
-      status: mapInvoiceStatus(
-        inv.xero_status,
-        inv.paid_at,
-        inv.due_date,
-        paymentTotals[inv.id] || 0,
-        inv.total ? Number(inv.total) : null
-      ),
+      status: mapPortalInvoiceStatus({
+        xeroStatus: inv.xero_status,
+        paidAt: inv.paid_at,
+        dueDate: inv.due_date,
+        totalPayments: paymentTotals[inv.id] || 0,
+        total: inv.total ? Number(inv.total) : null,
+        paymentStatus: inv.payment_status,
+      }),
       total: inv.total ? Number(inv.total) : null,
       currency: inv.currency,
       issue_date: inv.issue_date,
       due_date: inv.due_date,
       paid_at: inv.paid_at,
+      payment_status: inv.payment_status,
+      payment_status_updated_at: inv.payment_status_updated_at,
+      last_payment_error: inv.last_payment_error,
+      updated_at: inv.updated_at,
     }))
 
     return { success: true, invoices: summaries }
@@ -261,7 +216,7 @@ export async function getPortalInvoiceDetails(
       .select(`
         id, client_id, project_id, invoice_number, currency, subtotal,
         gst_rate, gst_amount, total, issue_date, due_date, paid_at,
-        payment_link_url, xero_status, created_at, updated_at
+        payment_link_url, xero_status, payment_status, payment_status_updated_at, last_payment_error, created_at, updated_at
       `)
       .eq('id', invoiceId)
       .single()
@@ -305,13 +260,17 @@ export async function getPortalInvoiceDetails(
       due_date: invoice.due_date,
       paid_at: invoice.paid_at,
       payment_link_url: invoice.payment_link_url,
-      status: mapInvoiceStatus(
-        invoice.xero_status,
-        invoice.paid_at,
-        invoice.due_date,
+      payment_status: invoice.payment_status,
+      payment_status_updated_at: invoice.payment_status_updated_at,
+      last_payment_error: invoice.last_payment_error,
+      status: mapPortalInvoiceStatus({
+        xeroStatus: invoice.xero_status,
+        paidAt: invoice.paid_at,
+        dueDate: invoice.due_date,
         totalPayments,
-        invoice.total ? Number(invoice.total) : null
-      ),
+        total: invoice.total ? Number(invoice.total) : null,
+        paymentStatus: invoice.payment_status,
+      }),
       created_at: invoice.created_at,
       updated_at: invoice.updated_at,
       line_items: (lineItems || []).map(
@@ -407,7 +366,12 @@ export async function createPortalCheckoutSession(
       // All payments received but paid_at not set - update it
       await supabase
         .from('invoices')
-        .update({ paid_at: new Date().toISOString() })
+        .update({
+          paid_at: new Date().toISOString(),
+          payment_status: 'paid',
+          payment_status_updated_at: new Date().toISOString(),
+          last_payment_error: null,
+        })
         .eq('id', invoiceId)
 
       return { success: false, error: 'Invoice has already been paid' }
@@ -451,10 +415,15 @@ export async function createPortalCheckoutSession(
       }
     }
 
-    // Store checkout session ID on invoice
+    // Store checkout session ID on invoice and clear any previous errors
     await supabase
       .from('invoices')
-      .update({ stripe_checkout_session_id: checkoutResult.sessionId })
+      .update({
+        stripe_checkout_session_id: checkoutResult.sessionId,
+        payment_status: null,
+        payment_status_updated_at: null,
+        last_payment_error: null,
+      })
       .eq('id', invoiceId)
 
     return {
@@ -464,5 +433,85 @@ export async function createPortalCheckoutSession(
   } catch (error) {
     console.error('Error in createPortalCheckoutSession:', error)
     return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Confirm a Stripe Checkout session for the portal and update payment status
+ */
+export async function confirmPortalCheckoutSession(
+  token: string,
+  sessionId: string
+): Promise<
+  | {
+      success: true
+      invoiceId: string
+      paymentStatus: string
+      amount: number
+      currency: string
+      invoiceNumber: string | null
+    }
+  | { success: false; error: string }
+> {
+  try {
+    const supabase = createPortalServiceClient()
+    const session = await getCheckoutSession(sessionId)
+
+    if (!session) {
+      return { success: false, error: 'Payment session not found' }
+    }
+
+    const metadata = session.metadata || {}
+    const invoiceId = metadata.invoice_id
+    const portalToken = metadata.portal_token
+
+    if (!invoiceId || portalToken !== token) {
+      return { success: false, error: 'Invalid payment session' }
+    }
+
+    const validation = await validateTokenForInvoice(supabase, token, invoiceId)
+    if (!validation.valid) {
+      return { success: false, error: validation.error }
+    }
+
+    if (session.payment_status !== 'paid') {
+      return { success: false, error: 'Payment not completed' }
+    }
+
+    const { data: invoice } = await supabase
+      .from('invoices')
+      .select('paid_at')
+      .eq('id', invoiceId)
+      .single()
+
+    const paymentIntentId =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null
+
+    const paymentStatus = invoice?.paid_at ? 'paid' : 'processing'
+
+    await supabase
+      .from('invoices')
+      .update({
+        payment_status: paymentStatus,
+        payment_status_updated_at: new Date().toISOString(),
+        last_payment_error: null,
+        stripe_payment_intent_id: paymentIntentId,
+        stripe_checkout_session_id: session.id,
+      })
+      .eq('id', invoiceId)
+
+    return {
+      success: true,
+      invoiceId,
+      paymentStatus,
+      amount: session.amount_total ?? 0,
+      currency: session.currency ?? 'aud',
+      invoiceNumber: session.metadata?.invoice_number || null,
+    }
+  } catch (error) {
+    console.error('Error confirming portal checkout session', error)
+    return { success: false, error: 'Failed to confirm payment session' }
   }
 }

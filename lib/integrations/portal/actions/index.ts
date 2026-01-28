@@ -39,6 +39,7 @@ export {
   getPortalInvoices,
   getPortalInvoiceDetails,
   createPortalCheckoutSession,
+  confirmPortalCheckoutSession,
 } from './invoices'
 
 // Signing (proposal/MSA portal flows)

@@ -62,6 +62,12 @@ export async function createCheckoutSession(params: {
       ],
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
+      payment_intent_data: {
+        metadata: {
+          invoice_id: params.invoiceId,
+          ...params.metadata,
+        },
+      },
       metadata: {
         invoice_id: params.invoiceId,
         ...params.metadata,

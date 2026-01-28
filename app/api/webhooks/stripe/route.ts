@@ -1,5 +1,5 @@
 import { createPortalServiceClient } from '@/utils/supabase/portal-service'
-import { verifyWebhookSignature, getPaymentIntent } from '@/lib/integrations/stripe/client'
+import { verifyWebhookSignature } from '@/lib/integrations/stripe/client'
 import { xeroApiCall } from '@/lib/integrations/xero/client'
 import { notifyInvoicePaid } from '@/lib/notifications/actions'
 import { NextResponse } from 'next/server'
@@ -75,6 +75,9 @@ export async function POST(request: Request) {
           .update({
             paid_at: new Date().toISOString(),
             xero_status: 'PAID',
+            payment_status: 'paid',
+            payment_status_updated_at: new Date().toISOString(),
+            last_payment_error: null,
             stripe_payment_intent_id: session.payment_intent,
             stripe_checkout_session_id: session.id,
           })
@@ -121,6 +124,15 @@ export async function POST(request: Request) {
 
         const invoiceId = paymentIntent.metadata?.invoice_id
         if (invoiceId) {
+          await supabase
+            .from('invoices')
+            .update({
+              payment_status: 'failed',
+              payment_status_updated_at: new Date().toISOString(),
+              last_payment_error: paymentIntent.last_payment_error?.message ?? null,
+            })
+            .eq('id', invoiceId)
+
           console.warn('Stripe payment failed', {
             invoiceId,
             paymentIntentId: paymentIntent.id,
