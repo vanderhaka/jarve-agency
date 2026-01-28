@@ -10,7 +10,7 @@
 
 'use server'
 
-import { createAnonClient } from '@/utils/supabase/anon'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { createCheckoutSession } from '@/lib/integrations/stripe/client'
 import type {
   PortalInvoice,
@@ -80,7 +80,7 @@ function mapInvoiceStatus(
  * Returns client info if valid, error if not
  */
 async function validateTokenForInvoice(
-  supabase: ReturnType<typeof createAnonClient>,
+  supabase: ReturnType<typeof createPortalServiceClient>,
   token: string,
   invoiceId: string
 ): Promise<
@@ -145,7 +145,7 @@ export async function getPortalInvoices(
   | { success: false; error: string }
 > {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // First validate the token has access to this project
     const { data: tokenData, error: tokenError } = await supabase
@@ -247,7 +247,7 @@ export async function getPortalInvoiceDetails(
   invoiceId: string
 ): Promise<{ success: true; invoice: PortalInvoice } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token has access to this invoice
     const validation = await validateTokenForInvoice(supabase, token, invoiceId)
@@ -353,7 +353,7 @@ export async function createPortalCheckoutSession(
   invoiceId: string
 ): Promise<PortalPaymentInitResult | PortalPaymentErrorResult> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token has access to this invoice
     const validation = await validateTokenForInvoice(supabase, token, invoiceId)

@@ -5,7 +5,7 @@
 
 'use server'
 
-import { createAnonClient } from '@/utils/supabase/anon'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import type { PortalManifest, PortalProject } from '../types'
 
 /** Epoch timestamp used when no read state exists (user has never read messages) */
@@ -15,7 +15,7 @@ const EPOCH_TIMESTAMP = '1970-01-01T00:00:00Z'
  * Get unread message count for a project/user
  */
 async function getUnreadCount(
-  supabase: ReturnType<typeof createAnonClient>,
+  supabase: ReturnType<typeof createPortalServiceClient>,
   projectId: string,
   userType: 'owner' | 'client',
   userId: string
@@ -52,7 +52,7 @@ export async function getPortalManifest(
   token: string
 ): Promise<{ success: true; manifest: PortalManifest } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Debug: Log token lookup (first/last 4 chars for security)
     const tokenPreview = token.length > 8

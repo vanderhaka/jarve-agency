@@ -6,7 +6,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { createAnonClient } from '@/utils/supabase/anon'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import type { PortalMessage } from '../types'
 import { validateTokenForProject } from './tokens'
 
@@ -20,7 +20,7 @@ export async function getPortalMessages(
   offset: number = 0
 ): Promise<{ success: true; messages: PortalMessage[] } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -58,7 +58,7 @@ export async function postPortalMessage(
 ): Promise<{ success: true; message: PortalMessage } | { success: false; error: string }> {
   try {
     console.log('[Portal] postPortalMessage called with projectId:', projectId, 'body length:', body.length)
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -135,7 +135,7 @@ export async function updateReadState(
   projectId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)

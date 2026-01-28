@@ -5,7 +5,7 @@
 
 'use server'
 
-import { createAnonClient } from '@/utils/supabase/anon'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 
 export type TokenValidationResult =
   | { valid: true; clientUserId: string; clientId: string }
@@ -15,7 +15,7 @@ export type TokenValidationResult =
  * Validate a token has access to a specific project
  */
 export async function validateTokenForProject(
-  supabase: ReturnType<typeof createAnonClient>,
+  supabase: ReturnType<typeof createPortalServiceClient>,
   token: string,
   projectId: string
 ): Promise<TokenValidationResult> {
@@ -62,7 +62,7 @@ export async function validateTokenForProject(
  * Used for client-level documents (MSAs) that aren't tied to a specific project
  */
 export async function validateTokenForClient(
-  supabase: ReturnType<typeof createAnonClient>,
+  supabase: ReturnType<typeof createPortalServiceClient>,
   token: string,
   clientId: string
 ): Promise<TokenValidationResult> {

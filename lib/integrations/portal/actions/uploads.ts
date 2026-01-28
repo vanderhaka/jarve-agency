@@ -6,7 +6,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { createAnonClient } from '@/utils/supabase/anon'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import type { ClientUpload } from '../types'
 import { validateTokenForProject } from './tokens'
 
@@ -18,7 +18,7 @@ export async function getClientUploads(
   projectId: string
 ): Promise<{ success: true; uploads: ClientUpload[] } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -53,7 +53,7 @@ export async function uploadClientFile(
   formData: FormData
 ): Promise<{ success: true; upload: ClientUpload } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -136,7 +136,7 @@ export async function getUploadSignedUrl(
   uploadId: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Get the upload record
     const { data: upload, error: uploadError } = await supabase

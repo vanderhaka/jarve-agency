@@ -5,7 +5,7 @@
 
 'use server'
 
-import { createAnonClient } from '@/utils/supabase/anon'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import type { ContractDoc } from '../types'
 import { validateTokenForProject, validateTokenForClient } from './tokens'
 
@@ -17,7 +17,7 @@ export async function getContractDocs(
   projectId: string
 ): Promise<{ success: true; docs: ContractDoc[] } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
@@ -59,7 +59,7 @@ export async function getContractDocSignedUrl(
   docId: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
-    const supabase = createAnonClient()
+    const supabase = createPortalServiceClient()
 
     // Get the doc record
     const { data: doc, error: docError } = await supabase
