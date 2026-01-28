@@ -15,20 +15,20 @@ export function NavLink({ href, icon: Icon, children }: NavLinkProps) {
   const pathname = usePathname()
 
   // Determine if this link is active
-  // For "/app", use exact match
+  // For "/admin" (dashboard), use exact match
   // For other routes, use starts-with match
-  const isActive = href === '/app'
-    ? pathname === '/app'
+  const isActive = href === '/admin'
+    ? pathname === '/admin'
     : pathname.startsWith(href)
 
   return (
     <Link
       href={href}
       className={cn(
-        'px-4 py-2 text-sm font-medium border-b-2 transition-colors inline-flex items-center gap-2',
+        'px-3 py-1.5 text-sm font-medium rounded-md transition-all inline-flex items-center gap-2',
         isActive
-          ? 'border-primary text-foreground'
-          : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
+          ? 'bg-gray-900 text-white shadow dark:bg-white dark:text-gray-900'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       )}
     >
       {Icon && <Icon className="h-4 w-4" />}

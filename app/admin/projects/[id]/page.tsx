@@ -4,7 +4,6 @@ import { redirect, notFound } from 'next/navigation'
 import { getTasksByProjectGrouped, getTaskCounts, getOverdueCount } from '@/lib/tasks/data'
 import { getMilestonesByProject } from '@/lib/milestones/data'
 import { getChangeRequestsByProject } from '@/lib/change-requests/data'
-import { ProjectHeader } from './project-header'
 import { parseFiltersFromParams } from './filter-utils'
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs'
 import { ProjectTabs } from './project-tabs'
@@ -136,15 +135,6 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   return (
     <div className="flex flex-col gap-6 p-6">
       <Breadcrumbs />
-      <ProjectHeader
-        project={project}
-        taskCounts={taskCounts}
-        totalTasks={totalTasks}
-        progress={progress}
-        overdueCount={overdueCount}
-        currentView={view}
-        currentTab={tab}
-      />
       <ProjectTabs
         project={project}
         projectId={id}
@@ -154,6 +144,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         taskCounts={taskCounts}
         totalTasks={totalTasks}
         progress={progress}
+        overdueCount={overdueCount}
         filters={filters}
         milestones={milestones}
         changeRequests={changeRequests}

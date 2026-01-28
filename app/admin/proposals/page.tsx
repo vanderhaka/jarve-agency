@@ -88,18 +88,6 @@ export default async function ProposalsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Proposals & Contracts</h1>
-          <p className="text-muted-foreground">Create, send, and track proposals</p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/proposals/new">
-            <Plus className="mr-2 h-4 w-4" /> New Proposal
-          </Link>
-        </Button>
-      </div>
-
       <Tabs defaultValue="proposals">
         <TabsList>
           <TabsTrigger value="proposals" className="gap-2">
@@ -109,6 +97,18 @@ export default async function ProposalsPage() {
             <Settings className="h-4 w-4" /> Templates
           </TabsTrigger>
         </TabsList>
+
+        <div className="flex justify-between items-center mt-6">
+          <div>
+            <h1 className="text-3xl font-bold">Proposals & Contracts</h1>
+            <p className="text-muted-foreground">Create, send, and track proposals</p>
+          </div>
+          <Button asChild>
+            <Link href="/admin/proposals/new">
+              <Plus className="mr-2 h-4 w-4" /> New Proposal
+            </Link>
+          </Button>
+        </div>
 
         <TabsContent value="proposals" className="mt-6">
           <Card>

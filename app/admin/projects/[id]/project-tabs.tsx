@@ -10,6 +10,7 @@ import { AdminOverviewTab } from './tabs/overview'
 import { AdminChatTab } from './tabs/chat'
 import { AdminDocsTab, type ContractDoc } from './tabs/docs'
 import { AdminUploadsTab, type UploadItem } from './tabs/uploads'
+import { ProjectHeader } from './project-header'
 import type { Milestone } from '@/lib/milestones/types'
 import type { ChangeRequest } from '@/lib/change-requests/types'
 import type { TaskStatus, TaskWithAssignee } from '@/lib/tasks/types'
@@ -45,6 +46,7 @@ interface Props {
   taskCounts: Record<string, number>
   totalTasks: number
   progress: number
+  overdueCount: number
   filters: TaskFiltersState
   milestones: Milestone[]
   changeRequests: ChangeRequest[]
@@ -66,6 +68,7 @@ export function ProjectTabs({
   taskCounts,
   totalTasks,
   progress,
+  overdueCount,
   filters,
   milestones,
   changeRequests,
@@ -98,6 +101,16 @@ export function ProjectTabs({
         <TabsTrigger value="uploads">Uploads</TabsTrigger>
         <TabsTrigger value="finance">Finance</TabsTrigger>
       </TabsList>
+
+      <ProjectHeader
+        project={project}
+        taskCounts={taskCounts as Record<import('@/lib/tasks/types').TaskStatus, number>}
+        totalTasks={totalTasks}
+        progress={progress}
+        overdueCount={overdueCount}
+        currentView={currentView}
+        currentTab={currentTab}
+      />
 
       <TabsContent value="overview">
         <AdminOverviewTab

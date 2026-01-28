@@ -49,41 +49,41 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
   return (
     <div className="space-y-8">
       <Breadcrumbs />
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/clients">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            {client.name}
-            <Badge className={statusColors[client.status] || 'bg-gray-500'}>
-              {client.status}
-            </Badge>
-          </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            {client.company && (
-              <>
-                <Building className="h-3 w-3" /> {client.company}
-              </>
-            )}
-          </p>
-        </div>
-      </div>
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="contracts">Contracts</TabsTrigger>
+          <TabsTrigger value="portal">Portal</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+        </TabsList>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-8">
-          <Tabs defaultValue="overview">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="projects">Projects</TabsTrigger>
-<TabsTrigger value="contracts">Contracts</TabsTrigger>
-              <TabsTrigger value="portal">Portal</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="overview" className="space-y-6">
+        <div className="flex items-center gap-4 mt-6">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/admin/clients">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              {client.name}
+              <Badge className={statusColors[client.status] || 'bg-gray-500'}>
+                {client.status}
+              </Badge>
+            </h1>
+            <p className="text-muted-foreground flex items-center gap-2">
+              {client.company && (
+                <>
+                  <Building className="h-3 w-3" /> {client.company}
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 mt-8">
+          <div className="md:col-span-2 space-y-8">
+            <TabsContent value="overview" className="space-y-6 mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle>Contact Information</CardTitle>
@@ -130,7 +130,7 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
               </Card>
             </TabsContent>
 
-            <TabsContent value="projects">
+            <TabsContent value="projects" className="mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle>Projects</CardTitle>
@@ -157,41 +157,41 @@ export default async function ClientDetailsPage({ params }: { params: { id: stri
                 </CardContent>
               </Card>
             </TabsContent>
-            
-<TabsContent value="contracts" className="space-y-6">
+
+            <TabsContent value="contracts" className="space-y-6 mt-0">
               <ClientMSACard clientId={client.id} clientName={client.name} />
               <ContractDocsList clientId={client.id} showProject />
             </TabsContent>
 
-            <TabsContent value="portal">
+            <TabsContent value="portal" className="mt-0">
               <PortalManagement clientId={client.id} clientName={client.name} />
             </TabsContent>
 
-            <TabsContent value="activity">
+            <TabsContent value="activity" className="mt-0">
               <InteractionTimeline clientId={client.id} />
             </TabsContent>
-          </Tabs>
-        </div>
+          </div>
 
-        <div className="space-y-6">
-          <Card className="bg-muted/30">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button className="w-full justify-start" variant="outline">
-                <Mail className="mr-2 h-4 w-4" /> Send Email
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Calendar className="mr-2 h-4 w-4" /> Schedule Meeting
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Building className="mr-2 h-4 w-4" /> Create Invoice
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card className="bg-muted/30">
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full justify-start" variant="outline">
+                  <Mail className="mr-2 h-4 w-4" /> Send Email
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Calendar className="mr-2 h-4 w-4" /> Schedule Meeting
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Building className="mr-2 h-4 w-4" /> Create Invoice
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </Tabs>
     </div>
   )
 }
