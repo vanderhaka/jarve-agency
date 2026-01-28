@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Home, MessageSquare, FileText, Upload } from 'lucide-react'
+import { Home, MessageSquare, FileText, Upload, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePortal } from './portal-context'
 import { Badge } from '@/components/ui/badge'
@@ -41,16 +41,18 @@ interface PortalTabsProps {
     messages: React.ReactNode
     documents: React.ReactNode
     uploads: React.ReactNode
+    invoices: React.ReactNode
   }
 }
 
-type TabId = 'overview' | 'messages' | 'documents' | 'uploads'
+type TabId = 'overview' | 'messages' | 'documents' | 'uploads' | 'invoices'
 
 const tabs: { id: TabId; label: string; icon: typeof Home }[] = [
   { id: 'overview', label: 'Overview', icon: Home },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'uploads', label: 'Uploads', icon: Upload },
+  { id: 'invoices', label: 'Invoices', icon: Receipt },
 ]
 
 export function PortalTabs({ children }: PortalTabsProps) {
@@ -101,6 +103,7 @@ export function PortalTabs({ children }: PortalTabsProps) {
         {activeTab === 'messages' && children.messages}
         {activeTab === 'documents' && children.documents}
         {activeTab === 'uploads' && children.uploads}
+        {activeTab === 'invoices' && children.invoices}
       </div>
     </div>
   )

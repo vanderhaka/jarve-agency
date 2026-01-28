@@ -34,6 +34,13 @@ export {
 // Documents
 export { getContractDocs, getContractDocSignedUrl } from './documents'
 
+// Invoices
+export {
+  getPortalInvoices,
+  getPortalInvoiceDetails,
+  createPortalCheckoutSession,
+} from './invoices'
+
 // Token validation (internal helpers, exported for advanced use cases)
 export { validateTokenForProject, validateTokenForClient } from './tokens'
 export type { TokenValidationResult } from './tokens'
