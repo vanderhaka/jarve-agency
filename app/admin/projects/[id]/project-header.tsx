@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, LayoutGrid, List, MessageSquare } from 'lucide-react'
+import { ArrowLeft, LayoutGrid, List } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { TaskStatus } from '@/lib/tasks/types'
 import { NewTaskDialog } from './new-task-dialog'
+
+type TabValue = 'overview' | 'tasks' | 'milestones' | 'change-requests' | 'chat' | 'docs' | 'uploads' | 'finance'
 
 interface Project {
   id: string
@@ -26,7 +28,7 @@ interface Props {
   progress: number
   overdueCount: number
   currentView: 'list' | 'kanban'
-  currentTab?: 'tasks' | 'milestones' | 'change-requests'
+  currentTab?: TabValue
 }
 
 const statusColors: Record<string, string> = {
@@ -41,7 +43,7 @@ function getStatusColor(status: string): string {
   return statusColors[status] ?? statusColors.default
 }
 
-export function ProjectHeader({ project, taskCounts, totalTasks, progress, overdueCount, currentView, currentTab = 'tasks' }: Props) {
+export function ProjectHeader({ project, taskCounts, totalTasks, progress, overdueCount, currentView, currentTab = 'overview' }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -70,7 +72,7 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, overd
               </Badge>
               {project.clients && project.client_id && (
                 <Link
-                  href={`/app/clients/${project.client_id}`}
+                  href={`/admin/clients/${project.client_id}`}
                   className="text-primary hover:underline"
                 >
                   • {project.clients.name}
@@ -82,12 +84,6 @@ export function ProjectHeader({ project, taskCounts, totalTasks, progress, overd
         {/* Only show view toggle and new task button on Tasks tab */}
         {currentTab === 'tasks' && (
           <div className="flex items-center gap-2">
-            <Link href={`/admin/projects/${project.id}/chat`}>
-              <Button variant="outline" size="sm">
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Chat
-              </Button>
-            </Link>
             <div className="flex rounded-md border">
               <Button
                 variant={currentView === 'kanban' ? 'secondary' : 'ghost'}
