@@ -179,12 +179,17 @@ export async function getPortalInvoices(
 
     // Get invoices for this client (can be project-specific or client-wide)
     // For now, show all invoices for the client to give full visibility
-    const { data: invoices, error: invoicesError } = await supabase
+    const { data: allInvoices, error: invoicesError } = await supabase
       .from('invoices')
       .select('id, invoice_number, xero_status, total, currency, issue_date, due_date, paid_at')
       .eq('client_id', clientUser.client_id)
-      .not('xero_status', 'in', '("DELETED","VOIDED")')
       .order('issue_date', { ascending: false, nullsFirst: false })
+
+    // Filter out DELETED and VOIDED invoices - they shouldn't be visible to clients
+    const invoices = (allInvoices || []).filter((inv) => {
+      const status = inv.xero_status?.toUpperCase()
+      return status !== 'DELETED' && status !== 'VOIDED'
+    })
 
     if (invoicesError) {
       console.error('Error fetching invoices:', invoicesError)
