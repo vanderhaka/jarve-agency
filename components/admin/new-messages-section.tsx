@@ -59,6 +59,7 @@ export function NewMessagesSection({ projects: initial }: { projects: UnreadProj
             <Link
               key={project.projectId}
               href={`/admin/projects/${project.projectId}?tab=chat`}
+              target="_blank"
               className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group"
             >
               <div className="h-8 w-8 rounded-md flex items-center justify-center flex-shrink-0 bg-primary/10">
