@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Building2, Mail, ExternalLink, CheckCircle, Clock, Send } from 'lucide-react'
+import { Building2, Mail, ExternalLink, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { sendPortalLink } from './actions'
@@ -26,14 +25,6 @@ interface Props {
   progress: number
   milestonesCount: number
   changeRequestsCount: number
-}
-
-const statusColors: Record<string, string> = {
-  planning: 'bg-yellow-100 text-yellow-800',
-  active: 'bg-green-100 text-green-800',
-  completed: 'bg-blue-100 text-blue-800',
-  maintenance: 'bg-purple-100 text-purple-800',
-  default: 'bg-gray-100 text-gray-800',
 }
 
 export function AdminOverviewTab({
@@ -76,20 +67,20 @@ export function AdminOverviewTab({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Type</p>
-              <Badge variant="outline">{project.type}</Badge>
+              <p className="font-medium capitalize">{project.type}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
-              <Badge className={statusColors[project.status] ?? statusColors.default}>
+              <p className={`font-medium capitalize ${
+                project.status === 'planning' ? 'text-yellow-800' :
+                project.status === 'active' ? 'text-green-800' :
+                project.status === 'completed' ? 'text-blue-800' :
+                project.status === 'maintenance' ? 'text-purple-800' :
+                'text-gray-800'
+              }`}>
                 {project.status}
-              </Badge>
+              </p>
             </div>
-            {project.description && (
-              <div>
-                <p className="text-sm text-muted-foreground">Description</p>
-                <p className="text-sm">{project.description}</p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -182,30 +173,6 @@ export function AdminOverviewTab({
                 style={{ width: `${progress}%` }}
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Task Status Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Task Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {Object.entries(taskCounts).map(([status, count]) => (
-              <div key={status} className="flex items-center gap-2 p-3 border rounded-lg">
-                {status === 'Done' ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                )}
-                <div>
-                  <div className="font-medium">{count}</div>
-                  <div className="text-xs text-muted-foreground">{status}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </CardContent>
       </Card>
