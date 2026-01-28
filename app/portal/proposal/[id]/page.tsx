@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { getPortalProposalSigningData } from '@/lib/integrations/portal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -55,8 +55,6 @@ export default function PortalProposalPage() {
   const [signing, setSigning] = useState(false)
   const [signed, setSigned] = useState(false)
 
-  const supabase = createClient()
-
   const fetchProposal = useCallback(async () => {
     if (!token) {
       setError('Invalid access link')
@@ -64,83 +62,50 @@ export default function PortalProposalPage() {
       return
     }
 
-    // Validate token
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('client_portal_tokens')
-      .select('id, revoked_at, client_user_id')
-      .eq('token', token)
-      .single()
-
-    if (tokenError || !tokenData) {
-      setError('Invalid or expired access link')
+    const result = await getPortalProposalSigningData(token, proposalId)
+    if (!result.success) {
+      setError(result.error)
       setLoading(false)
       return
     }
 
-    if (tokenData.revoked_at) {
-      setError('This access link has been revoked')
-      setLoading(false)
-      return
-    }
-
-    // Fetch proposal
-    const { data, error: proposalError } = await supabase
-      .from('proposals')
-      .select(`
-        id, title, status, current_version,
-        client:clients(name),
-        versions:proposal_versions(
-          id, version, content, subtotal, gst_rate, gst_amount, total
-        )
-      `)
-      .eq('id', proposalId)
-      .single()
-
-    if (proposalError || !data) {
-      setError('Proposal not found')
-      setLoading(false)
-      return
-    }
-
-    // Transform data - Supabase joins return arrays
-    const clientData = Array.isArray(data.client) ? data.client[0] : data.client
-    const versionsData = Array.isArray(data.versions) ? data.versions : []
+    const { proposal, clientUser } = result
+    const versionsData = (Array.isArray(proposal.versions) ? proposal.versions : []) as ProposalVersion[]
     const transformedProposal: Proposal = {
-      id: data.id,
-      title: data.title,
-      status: data.status,
-      current_version: data.current_version,
-      client: clientData,
+      id: proposal.id,
+      title: proposal.title,
+      status: proposal.status,
+      current_version: proposal.current_version ?? 0,
+      client: proposal.client ?? undefined,
       versions: versionsData
     }
     setProposal(transformedProposal)
 
-    if (data.status === 'signed') {
+    if (proposal.status === 'signed') {
       setSigned(true)
     }
 
-    // Find the version that was sent
-    const version = versionsData.find(
-      (v: ProposalVersion) => v.version === data.current_version
-    )
+    // Prefer current_version if present, otherwise fall back to latest sent version
+    const current = proposal.current_version
+    let version = versionsData.find((v: ProposalVersion) => v.version === current)
+    if (!version && versionsData.length > 0) {
+      version = [...versionsData]
+        .filter((v) => v.version != null)
+        .sort((a, b) => b.version - a.version)[0]
+    }
     if (version) {
       setCurrentVersion(version)
     }
 
-    // Pre-fill signer info from client user
-    const { data: clientUser } = await supabase
-      .from('client_users')
-      .select('name, email')
-      .eq('id', tokenData.client_user_id)
-      .single()
-
-    if (clientUser) {
+    if (clientUser.name) {
       setSignerName(clientUser.name)
+    }
+    if (clientUser.email) {
       setSignerEmail(clientUser.email)
     }
 
     setLoading(false)
-  }, [supabase, proposalId, token])
+  }, [proposalId, token])
 
   useEffect(() => {
     void fetchProposal()

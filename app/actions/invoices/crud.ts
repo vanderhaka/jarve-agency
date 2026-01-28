@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { revalidatePath } from 'next/cache'
 import type { CreateInvoicePayload, CreateDepositInvoiceParams, InvoiceWithDetails } from './types'
 import { mapInvoiceToDetails } from './helpers'
@@ -190,7 +191,7 @@ export async function getAllInvoices(): Promise<InvoiceWithDetails[]> {
 export async function createDepositInvoiceInternal(
   params: CreateDepositInvoiceParams
 ): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
-  const supabase = await createClient()
+  const supabase = createPortalServiceClient()
 
   try {
     // Get agency settings for invoice configuration

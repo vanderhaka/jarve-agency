@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { getPortalMsaSigningData } from '@/lib/integrations/portal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,8 +35,6 @@ export default function PortalMSAPage() {
   const [signing, setSigning] = useState(false)
   const [signed, setSigned] = useState(false)
 
-  const supabase = createClient()
-
   const fetchMSA = useCallback(async () => {
     if (!token) {
       setError('Invalid access link')
@@ -44,86 +42,35 @@ export default function PortalMSAPage() {
       return
     }
 
-    // Validate token
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('client_portal_tokens')
-      .select('id, revoked_at, client_user_id, client_users(client_id)')
-      .eq('token', token)
-      .single()
-
-    if (tokenError || !tokenData) {
-      setError('Invalid or expired access link')
+    const result = await getPortalMsaSigningData(token, msaId)
+    if (!result.success) {
+      setError(result.error)
       setLoading(false)
       return
     }
 
-    if (tokenData.revoked_at) {
-      setError('This access link has been revoked')
-      setLoading(false)
-      return
-    }
-
-    // Supabase joins return arrays - extract first element
-    const clientUsersData = tokenData.client_users
-    const clientUser = Array.isArray(clientUsersData) ? clientUsersData[0] : clientUsersData
-
-    if (!clientUser) {
-      setError('Invalid client user')
-      setLoading(false)
-      return
-    }
-
-    // Fetch MSA
-    const { data, error: msaError } = await supabase
-      .from('client_msas')
-      .select(`
-        id, title, status, content, client_id,
-        client:clients(name)
-      `)
-      .eq('id', msaId)
-      .single()
-
-    if (msaError || !data) {
-      setError('MSA not found')
-      setLoading(false)
-      return
-    }
-
-    // Verify MSA belongs to the token's client
-    if (data.client_id !== clientUser.client_id) {
-      setError('Access denied')
-      setLoading(false)
-      return
-    }
-
-    // Transform client from array to object
-    const clientData = Array.isArray(data.client) ? data.client[0] : data.client
+    const { msa, clientUser } = result
     setMsa({
-      id: data.id,
-      title: data.title,
-      status: data.status,
-      content: data.content,
-      client: clientData
+      id: msa.id,
+      title: msa.title,
+      status: msa.status,
+      content: msa.content as MSAContent,
+      client: msa.client ?? undefined
     })
 
-    if (data.status === 'signed') {
+    if (msa.status === 'signed') {
       setSigned(true)
     }
 
-    // Pre-fill signer info
-    const { data: clientUserData } = await supabase
-      .from('client_users')
-      .select('name, email')
-      .eq('id', tokenData.client_user_id)
-      .single()
-
-    if (clientUserData) {
-      setSignerName(clientUserData.name)
-      setSignerEmail(clientUserData.email)
+    if (clientUser.name) {
+      setSignerName(clientUser.name)
+    }
+    if (clientUser.email) {
+      setSignerEmail(clientUser.email)
     }
 
     setLoading(false)
-  }, [supabase, msaId, token])
+  }, [msaId, token])
 
   useEffect(() => {
     void fetchMSA()

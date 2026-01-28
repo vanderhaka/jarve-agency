@@ -41,6 +41,12 @@ export {
   createPortalCheckoutSession,
 } from './invoices'
 
+// Signing (proposal/MSA portal flows)
+export {
+  getPortalMsaSigningData,
+  getPortalProposalSigningData,
+} from './signing'
+
 // Token validation (internal helpers, exported for advanced use cases)
 export { validateTokenForProject, validateTokenForClient } from './tokens'
 export type { TokenValidationResult } from './tokens'

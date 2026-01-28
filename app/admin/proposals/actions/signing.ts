@@ -1,7 +1,7 @@
 'use server'
 
 import { headers } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { notifyProposalSigned } from '@/lib/notifications/actions'
 import { sendProposalSignedEmail } from '@/lib/email/resend'
 import { createDepositInvoiceInternal } from '@/app/actions/invoices/crud'
@@ -32,7 +32,7 @@ export async function signProposal(rawInput: SignProposalInput) {
   }
   const input = parseResult.data
 
-  const supabase = await createClient()
+  const supabase = createPortalServiceClient()
   const clientIp = await getClientIp()
 
   // Validate token

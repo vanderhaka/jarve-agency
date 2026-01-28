@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
+import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { SignMSASchema } from '../schemas'
@@ -35,7 +36,7 @@ export async function sendMSA(msaId: string, input: SendMSAInput) {
   // Get MSA
   const { data: msa, error: msaError } = await supabase
     .from('client_msas')
-    .select('id, client_id, status')
+    .select('id, client_id, status, sent_to_client_user_id')
     .eq('id', msaId)
     .single()
 
@@ -135,7 +136,7 @@ export async function signMSA(msaId: string, rawInput: SignMSAInput) {
   }
   const input = parseResult.data
 
-  const supabase = await createClient()
+  const supabase = createPortalServiceClient()
   const clientIp = await getClientIp()
 
   // Validate token
@@ -175,7 +176,7 @@ export async function signMSA(msaId: string, rawInput: SignMSAInput) {
   // Get MSA and verify it belongs to this client
   const { data: msa, error: msaError } = await supabase
     .from('client_msas')
-    .select('id, client_id, status')
+    .select('id, client_id, status, sent_to_client_user_id')
     .eq('id', msaId)
     .single()
 
@@ -184,6 +185,9 @@ export async function signMSA(msaId: string, rawInput: SignMSAInput) {
   }
 
   if (msa.client_id !== clientUser.client_id) {
+    return { success: false, message: 'Access denied' }
+  }
+  if (msa.sent_to_client_user_id && msa.sent_to_client_user_id !== clientUser.id) {
     return { success: false, message: 'Access denied' }
   }
 
