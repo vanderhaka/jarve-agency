@@ -4,6 +4,58 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Briefcase, Mail, DollarSign, ClipboardList } from 'lucide-react'
 import { QuickActionsGrid } from '@/components/admin/quick-actions-grid'
 import { CreateNewTabs } from '@/components/admin/create-new-tabs'
+import { NewMessagesSection } from '@/components/admin/new-messages-section'
+
+async function getUnreadMessages() {
+  const supabase = await createClient()
+
+  const { data: messages } = await supabase
+    .from('portal_messages')
+    .select(`
+      project_id,
+      created_at,
+      agency_projects!inner(name)
+    `)
+    .eq('author_type', 'client')
+    .order('created_at', { ascending: false })
+
+  if (!messages || messages.length === 0) return []
+
+  const projectIds = [...new Set(messages.map(m => m.project_id))]
+  const { data: readStates } = await supabase
+    .from('portal_read_state')
+    .select('project_id, last_read_at')
+    .eq('user_type', 'owner')
+    .in('project_id', projectIds)
+
+  const readMap = new Map(
+    (readStates || []).map(rs => [rs.project_id, rs.last_read_at])
+  )
+
+  const projectMap = new Map<string, { projectName: string; unreadCount: number; latestMessageAt: string }>()
+
+  for (const msg of messages) {
+    const lastRead = readMap.get(msg.project_id)
+    if (lastRead && new Date(msg.created_at) <= new Date(lastRead)) continue
+
+    const existing = projectMap.get(msg.project_id)
+    if (existing) {
+      existing.unreadCount++
+    } else {
+      const project = msg.agency_projects as unknown as { name: string }
+      projectMap.set(msg.project_id, {
+        projectName: project.name,
+        unreadCount: 1,
+        latestMessageAt: msg.created_at,
+      })
+    }
+  }
+
+  return Array.from(projectMap.entries()).map(([projectId, data]) => ({
+    projectId,
+    ...data,
+  }))
+}
 
 async function getStats() {
   const supabase = await createClient()
@@ -47,7 +99,7 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  const stats = await getStats()
+  const [stats, unreadMessages] = await Promise.all([getStats(), getUnreadMessages()])
 
   return (
     <div className="space-y-8">
@@ -57,6 +109,8 @@ export default async function DashboardPage() {
       </div>
 
       <CreateNewTabs />
+
+      <NewMessagesSection projects={unreadMessages} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
