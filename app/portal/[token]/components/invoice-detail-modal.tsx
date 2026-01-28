@@ -116,12 +116,14 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
   }
 
   const isOpen = invoiceId !== null
-  const isPaid = invoice?.status === 'paid'
-  const isPayable = invoice && !isPaid && invoice.status !== 'voided' && invoice.status !== 'draft'
+  const isPaid = invoice?.status === 'paid' || invoice?.status === 'partially_paid' && (invoice?.payments?.reduce((sum, p) => sum + p.amount, 0) ?? 0) >= (invoice?.total ?? 0)
 
   // Calculate amount due
   const totalPaid = invoice?.payments?.reduce((sum, p) => sum + p.amount, 0) ?? 0
   const amountDue = invoice?.total ? invoice.total - totalPaid : 0
+
+  // Only payable if not paid, not voided, not draft, and has amount due > 0
+  const isPayable = invoice && !isPaid && invoice.status !== 'voided' && invoice.status !== 'draft' && amountDue > 0
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>

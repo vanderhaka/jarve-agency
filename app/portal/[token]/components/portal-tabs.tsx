@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Home, MessageSquare, FileText, Upload, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePortal } from './portal-context'
@@ -56,8 +57,24 @@ const tabs: { id: TabId; label: string; icon: typeof Home }[] = [
 ]
 
 export function PortalTabs({ children }: PortalTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const searchParams = useSearchParams()
   const { manifest } = usePortal()
+
+  // Get tab from URL query param or use state default
+  const tabParam = searchParams.get('tab')
+  const urlTab: TabId | null = tabParam && tabs.some((t) => t.id === tabParam)
+    ? (tabParam as TabId)
+    : null
+
+  const [stateTab, setStateTab] = useState<TabId>('overview')
+
+  // Use URL tab if present, otherwise use state tab
+  const activeTab = urlTab ?? stateTab
+
+  // When user clicks a tab, update state (URL param takes precedence if present)
+  const setActiveTab = (tab: TabId) => {
+    setStateTab(tab)
+  }
 
   const totalUnread = manifest.projects.reduce((sum, p) => sum + p.unread_count, 0)
 

@@ -37,6 +37,11 @@ function mapInvoiceStatus(
     return 'paid'
   }
 
+  // If total payments meet or exceed invoice total, mark as paid
+  if (total && totalPayments >= total) {
+    return 'paid'
+  }
+
   // Check for partial payments
   if (totalPayments > 0 && total && totalPayments < total) {
     return 'partially_paid'
@@ -377,6 +382,11 @@ export async function createPortalCheckoutSession(
       return { success: false, error: 'This invoice cannot be paid' }
     }
 
+    // Draft invoices cannot be paid - they must be sent first
+    if (status === 'DRAFT') {
+      return { success: false, error: 'Draft invoices cannot be paid' }
+    }
+
     if (!invoice.total || Number(invoice.total) <= 0) {
       return { success: false, error: 'Invalid invoice amount' }
     }
@@ -428,6 +438,8 @@ export async function createPortalCheckoutSession(
       metadata: {
         portal_token: token,
         client_id: validation.clientId,
+        invoice_number: invoice.invoice_number ?? '',
+        invoice_id: invoiceId,
       },
     })
 

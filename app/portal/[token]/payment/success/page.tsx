@@ -37,11 +37,12 @@ export default async function PaymentSuccessPage({ params, searchParams }: Payme
 
   if (session_id) {
     const session = await getCheckoutSession(session_id)
-    if (session && session.payment_status === 'paid') {
+    // Verify session belongs to this portal token and is paid
+    if (session && session.payment_status === 'paid' && session.metadata?.portal_token === token) {
       paymentDetails = {
         amount: session.amount_total ?? 0,
         currency: session.currency ?? 'aud',
-        invoiceNumber: session.metadata?.invoice_number ?? null,
+        invoiceNumber: session.metadata?.invoice_number || null,
       }
     }
   }
