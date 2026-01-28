@@ -14,6 +14,7 @@ import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { createCheckoutSession } from '@/lib/integrations/stripe/client'
 import { getCheckoutSession } from '@/lib/integrations/stripe/client'
 import { mapPortalInvoiceStatus } from '@/lib/invoices/status'
+import { ensureStripePaymentRecord } from '@/lib/invoices/stripe-payment'
 import type {
   PortalInvoice,
   PortalInvoiceLineItem,
@@ -480,7 +481,7 @@ export async function confirmPortalCheckoutSession(
 
     const { data: invoice } = await supabase
       .from('invoices')
-      .select('paid_at')
+      .select('paid_at, total')
       .eq('id', invoiceId)
       .single()
 
@@ -489,7 +490,35 @@ export async function confirmPortalCheckoutSession(
         ? session.payment_intent
         : session.payment_intent?.id ?? null
 
-    const paymentStatus = invoice?.paid_at ? 'paid' : 'processing'
+    const paymentDate = session.created
+      ? new Date(session.created * 1000).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+
+    const paymentAmount =
+      session.amount_total !== null && session.amount_total !== undefined
+        ? session.amount_total / 100
+        : Number(invoice?.total ?? 0)
+
+    try {
+      await ensureStripePaymentRecord(supabase, {
+        invoiceId,
+        amount: paymentAmount,
+        paymentDate,
+        paymentIntentId: paymentIntentId,
+        reference: paymentIntentId,
+      })
+    } catch (error) {
+      console.error('Failed to record Stripe payment from portal confirmation', error)
+    }
+
+    const { data: payments } = await supabase
+      .from('payments')
+      .select('amount')
+      .eq('invoice_id', invoiceId)
+
+    const totalPaid = (payments || []).reduce((sum, p) => sum + Number(p.amount), 0)
+    const isFullyPaid = invoice?.total ? totalPaid >= Number(invoice.total) : totalPaid > 0
+    const paymentStatus = isFullyPaid ? 'paid' : 'processing'
 
     await supabase
       .from('invoices')
@@ -499,6 +528,7 @@ export async function confirmPortalCheckoutSession(
         last_payment_error: null,
         stripe_payment_intent_id: paymentIntentId,
         stripe_checkout_session_id: session.id,
+        paid_at: isFullyPaid ? (invoice?.paid_at ?? new Date().toISOString()) : invoice?.paid_at ?? null,
       })
       .eq('id', invoiceId)
 

@@ -2,6 +2,7 @@ import { createPortalServiceClient } from '@/utils/supabase/portal-service'
 import { verifyWebhookSignature } from '@/lib/integrations/stripe/client'
 import { xeroApiCall } from '@/lib/integrations/xero/client'
 import { notifyInvoicePaid } from '@/lib/notifications/actions'
+import { ensureStripePaymentRecord, resolveInvoiceIdForStripe } from '@/lib/invoices/stripe-payment'
 import { NextResponse } from 'next/server'
 
 /**
@@ -34,7 +35,12 @@ export async function POST(request: Request) {
           amount_total?: number
         }
 
-        const invoiceId = session.metadata?.invoice_id
+        const invoiceId = await resolveInvoiceIdForStripe({
+          supabase,
+          invoiceId: session.metadata?.invoice_id,
+          checkoutSessionId: session.id,
+          paymentIntentId: session.payment_intent,
+        })
         if (!invoiceId) {
           console.warn('Stripe checkout completed without invoice_id', { sessionId: session.id })
           return NextResponse.json({ received: true })
@@ -56,16 +62,15 @@ export async function POST(request: Request) {
         const paymentDate = new Date().toISOString().split('T')[0]
 
         // Record the payment locally
-        const { error: paymentError } = await supabase.from('payments').insert({
-          invoice_id: invoiceId,
-          amount: paymentAmount,
-          payment_date: paymentDate,
-          method: 'stripe',
-          reference: session.payment_intent,
-          stripe_payment_intent_id: session.payment_intent,
-        })
-
-        if (paymentError) {
+        try {
+          await ensureStripePaymentRecord(supabase, {
+            invoiceId,
+            amount: paymentAmount,
+            paymentDate,
+            paymentIntentId: session.payment_intent,
+            reference: session.payment_intent,
+          })
+        } catch (paymentError) {
           console.error('Failed to record Stripe payment', { error: paymentError })
         }
 
@@ -122,7 +127,11 @@ export async function POST(request: Request) {
           last_payment_error?: { message?: string }
         }
 
-        const invoiceId = paymentIntent.metadata?.invoice_id
+        const invoiceId = await resolveInvoiceIdForStripe({
+          supabase,
+          invoiceId: paymentIntent.metadata?.invoice_id,
+          paymentIntentId: paymentIntent.id,
+        })
         if (invoiceId) {
           await supabase
             .from('invoices')
