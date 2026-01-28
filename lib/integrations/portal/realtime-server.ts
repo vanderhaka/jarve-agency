@@ -1,5 +1,5 @@
 import type { PortalMessage } from './types'
-import { getPortalChatChannel, PORTAL_CHAT_EVENT } from './realtime'
+import { getPortalChatChannel, PORTAL_CHAT_EVENT, PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT } from './realtime'
 
 type BroadcastResult = { ok: true } | { ok: false; error: string }
 
@@ -16,15 +16,23 @@ export async function broadcastPortalMessage(message: PortalMessage): Promise<Br
   }
 
   const endpoint = new URL('/realtime/v1/api/broadcast', supabaseUrl).toString()
-  const payload = {
-    messages: [
-      {
-        topic: getPortalChatChannel(message.project_id),
-        event: PORTAL_CHAT_EVENT,
-        payload: { message },
-      },
-    ],
+  const messages = [
+    {
+      topic: getPortalChatChannel(message.project_id),
+      event: PORTAL_CHAT_EVENT,
+      payload: { message },
+    },
+  ]
+
+  if (message.author_type === 'client') {
+    messages.push({
+      topic: PORTAL_DASHBOARD_CHANNEL,
+      event: PORTAL_DASHBOARD_EVENT,
+      payload: { message },
+    })
   }
+
+  const payload = { messages }
 
   const response = await fetch(endpoint, {
     method: 'POST',

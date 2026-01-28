@@ -1,16 +1,43 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { MessageSquare, ArrowRight } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { createClient } from '@/utils/supabase/client'
+import { PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT } from '@/lib/integrations/portal/realtime'
 
-interface UnreadProject {
+export interface UnreadProject {
   projectId: string
   projectName: string
   unreadCount: number
   latestMessageAt: string
 }
 
-export function NewMessagesSection({ projects }: { projects: UnreadProject[] }) {
+export function NewMessagesSection({ projects: initial }: { projects: UnreadProject[] }) {
+  const [projects, setProjects] = useState(initial)
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel(PORTAL_DASHBOARD_CHANNEL)
+      .on('broadcast', { event: PORTAL_DASHBOARD_EVENT }, () => {
+        router.refresh()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [router])
+
+  useEffect(() => {
+    setProjects(initial)
+  }, [initial])
+
   if (projects.length === 0) return null
 
   return (
