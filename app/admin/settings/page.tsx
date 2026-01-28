@@ -6,14 +6,31 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Loader2, UserCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Loader2, UserCircle, Plus, ArrowRight, FileText } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { AgencySettingsCard } from '@/components/agency-settings-card'
 import { XeroConnectionCard } from '@/components/xero-connection-card'
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [templates, setTemplates] = useState<Array<{
+    id: string
+    name: string
+    sections?: unknown[]
+    is_default?: boolean
+    updated_at: string
+  }>>([])
   const [profile, setProfile] = useState({
     id: '',
     name: '',
@@ -39,8 +56,24 @@ export default function SettingsPage() {
     setLoading(false)
   }
 
+  const fetchTemplates = async () => {
+    const { data, error } = await supabase
+      .from('proposal_templates')
+      .select('*')
+      .order('is_default', { ascending: false })
+      .order('name', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching templates:', error)
+      return
+    }
+
+    setTemplates(data || [])
+  }
+
   useEffect(() => {
     fetchProfile()
+    fetchTemplates()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -77,6 +110,80 @@ export default function SettingsPage() {
       <AgencySettingsCard />
 
       <XeroConnectionCard />
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <FileText className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <CardTitle>Proposal Templates</CardTitle>
+              <CardDescription>Manage your proposal templates</CardDescription>
+            </div>
+          </div>
+          <Button size="sm" asChild>
+            <Link href="/admin/proposals/templates/new">
+              <Plus className="mr-2 h-4 w-4" /> New Template
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Sections</TableHead>
+                <TableHead>Default</TableHead>
+                <TableHead>Updated</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No templates yet
+                  </TableCell>
+                </TableRow>
+              ) : (
+                templates.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/admin/proposals/templates/${template.id}`}
+                        className="hover:underline text-primary"
+                      >
+                        {template.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {Array.isArray(template.sections) ? template.sections.length : 0} sections
+                    </TableCell>
+                    <TableCell>
+                      {template.is_default ? (
+                        <Badge className="bg-primary">Default</Badge>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(template.updated_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" asChild>
+                        <Link href={`/admin/proposals/templates/${template.id}`}>
+                          Edit <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

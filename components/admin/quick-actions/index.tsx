@@ -3,10 +3,6 @@
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Users,
-  UserCircle,
-  Briefcase,
-  Plus,
   FileSignature,
   CheckSquare,
   Mail,
@@ -15,9 +11,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ActionCard } from './action-card'
-import { ActionDialogs } from './action-dialogs'
-import { useQuickActions } from './use-quick-actions'
 
 interface QuickActionsGridProps {
   stats?: {
@@ -29,15 +22,6 @@ interface QuickActionsGridProps {
 }
 
 export function QuickActionsGrid({ stats }: QuickActionsGridProps) {
-  const {
-    leadDialogOpen,
-    clientDialogOpen,
-    projectDialogOpen,
-    setLeadDialogOpen,
-    setClientDialogOpen,
-    setProjectDialogOpen,
-    handleSuccess,
-  } = useQuickActions()
 
   const smartViews = [
     {
@@ -77,52 +61,8 @@ export function QuickActionsGrid({ stats }: QuickActionsGridProps) {
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Create New Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                <Plus className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-base">Create New</CardTitle>
-                <CardDescription className="text-xs">Start something new</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              <ActionCard
-                icon={Users}
-                label="New Lead"
-                shortcut="⌘K → L"
-                onClick={() => setLeadDialogOpen(true)}
-              />
-              <ActionCard
-                icon={UserCircle}
-                label="New Client"
-                shortcut="⌘K → C"
-                onClick={() => setClientDialogOpen(true)}
-              />
-              <ActionCard
-                icon={Briefcase}
-                label="New Project"
-                shortcut="⌘K → P"
-                onClick={() => setProjectDialogOpen(true)}
-              />
-              <ActionCard
-                icon={FileSignature}
-                label="New Proposal"
-                shortcut="⌘K → O"
-                href="/admin/proposals/new"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Smart Views Section */}
-        <Card>
+      {/* Smart Views Section */}
+      <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
@@ -177,17 +117,6 @@ export function QuickActionsGrid({ stats }: QuickActionsGridProps) {
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      <ActionDialogs
-        leadDialogOpen={leadDialogOpen}
-        clientDialogOpen={clientDialogOpen}
-        projectDialogOpen={projectDialogOpen}
-        onLeadOpenChange={setLeadDialogOpen}
-        onClientOpenChange={setClientDialogOpen}
-        onProjectOpenChange={setProjectDialogOpen}
-        onSuccess={handleSuccess}
-      />
     </>
   )
 }

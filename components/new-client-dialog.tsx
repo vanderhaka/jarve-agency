@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { createClient } from '@/utils/supabase/client'
+import { UserCircle } from 'lucide-react'
 
 interface NewClientDialogProps {
   onSuccess?: () => void
@@ -82,7 +83,10 @@ export function NewClientDialog({ onSuccess, open: controlledOpen, onOpenChange,
           trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>
         ) : (
           <DialogTrigger asChild>
-            <Button>New Client</Button>
+            <Button className="bg-black text-white hover:bg-black/90">
+              <UserCircle className="h-4 w-4" />
+              New Client
+            </Button>
           </DialogTrigger>
         )
       )}

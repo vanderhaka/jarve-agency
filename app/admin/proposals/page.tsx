@@ -11,9 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Link from 'next/link'
-import { ArrowRight, FileText, Settings, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { ProposalActions } from './proposal-actions'
 
 async function getProposals() {
@@ -50,21 +49,6 @@ async function getProposals() {
   }))
 }
 
-async function getTemplates() {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('proposal_templates')
-    .select('*')
-    .order('is_default', { ascending: false })
-    .order('name', { ascending: true })
-
-  if (error) {
-    console.error('Error fetching templates:', error)
-    return []
-  }
-
-  return data || []
-}
 
 export default async function ProposalsPage() {
   const supabase = await createClient()
@@ -74,10 +58,7 @@ export default async function ProposalsPage() {
     redirect('/login')
   }
 
-  const [proposals, templates] = await Promise.all([
-    getProposals(),
-    getTemplates()
-  ])
+  const proposals = await getProposals()
 
   const statusColors: Record<string, string> = {
     draft: 'bg-gray-500',
@@ -88,29 +69,19 @@ export default async function ProposalsPage() {
 
   return (
     <div className="space-y-8">
-      <Tabs defaultValue="proposals">
-        <TabsList>
-          <TabsTrigger value="proposals" className="gap-2">
-            <FileText className="h-4 w-4" /> Proposals
-          </TabsTrigger>
-          <TabsTrigger value="templates" className="gap-2">
-            <Settings className="h-4 w-4" /> Templates
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="flex justify-between items-center mt-6">
-          <div>
-            <h1 className="text-3xl font-bold">Proposals & Contracts</h1>
-            <p className="text-muted-foreground">Create, send, and track proposals</p>
-          </div>
-          <Button asChild>
-            <Link href="/admin/proposals/new">
-              <Plus className="mr-2 h-4 w-4" /> New Proposal
-            </Link>
-          </Button>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Proposals & Contracts</h1>
+          <p className="text-muted-foreground">Create, send, and track proposals</p>
         </div>
+        <Button asChild className="bg-black text-white hover:bg-black/90">
+          <Link href="/admin/proposals/new">
+            <Plus className="mr-2 h-4 w-4" /> New Proposal
+          </Link>
+        </Button>
+      </div>
 
-        <TabsContent value="proposals" className="mt-6">
+      <div className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>All Proposals</CardTitle>
@@ -176,76 +147,7 @@ export default async function ProposalsPage() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="templates" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Proposal Templates</CardTitle>
-              <Button size="sm" asChild>
-                <Link href="/admin/proposals/templates/new">
-                  <Plus className="mr-2 h-4 w-4" /> New Template
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Sections</TableHead>
-                    <TableHead>Default</TableHead>
-                    <TableHead>Updated</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {templates.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        No templates yet
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    templates.map((template) => (
-                      <TableRow key={template.id}>
-                        <TableCell className="font-medium">
-                          <Link
-                            href={`/admin/proposals/templates/${template.id}`}
-                            className="hover:underline text-primary"
-                          >
-                            {template.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          {Array.isArray(template.sections) ? template.sections.length : 0} sections
-                        </TableCell>
-                        <TableCell>
-                          {template.is_default ? (
-                            <Badge className="bg-primary">Default</Badge>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(template.updated_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" asChild>
-                            <Link href={`/admin/proposals/templates/${template.id}`}>
-                              Edit <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   )
 }
