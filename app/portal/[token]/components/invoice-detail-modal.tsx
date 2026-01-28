@@ -160,6 +160,12 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
     invoice.status !== 'refunded' &&
     amountDue > 0
 
+  const processingUpdatedAt = invoice?.payment_status_updated_at
+    ? new Date(invoice.payment_status_updated_at).getTime()
+    : null
+  const processingAgeMs = processingUpdatedAt ? Date.now() - processingUpdatedAt : 0
+  const isProcessingStale = invoice?.status === 'processing' && processingAgeMs > 2 * 60 * 1000
+
   const timelineEvents = invoice
     ? buildInvoiceTimeline({
         issueDate: invoice.issue_date,
@@ -338,9 +344,13 @@ export function InvoiceDetailModal({ invoiceId, onClose }: InvoiceDetailModalPro
                 <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
                   <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
-                    <p className="font-medium text-blue-700">Payment received — confirming</p>
+                    <p className="font-medium text-blue-700">
+                      {isProcessingStale ? 'Still confirming payment' : 'Payment received — confirming'}
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      This usually updates within a minute. You can refresh if needed.
+                      {isProcessingStale
+                        ? 'This is taking longer than usual. If you were charged, no action is needed. Please refresh in a few minutes or contact support.'
+                        : 'This usually updates within a minute. You can refresh if needed.'}
                     </p>
                   </div>
                 </div>

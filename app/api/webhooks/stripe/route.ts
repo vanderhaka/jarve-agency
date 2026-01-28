@@ -5,6 +5,36 @@ import { notifyInvoicePaid } from '@/lib/notifications/actions'
 import { ensureStripePaymentRecord, resolveInvoiceIdForStripe } from '@/lib/invoices/stripe-payment'
 import { NextResponse } from 'next/server'
 
+async function recordWebhookHealth(
+  supabase: ReturnType<typeof createPortalServiceClient>,
+  params: { success: boolean; error?: string }
+) {
+  try {
+    if (params.success) {
+      await supabase.from('integration_health').upsert(
+        {
+          key: 'stripe_webhook',
+          last_success_at: new Date().toISOString(),
+          last_error_at: null,
+          last_error_message: null,
+        },
+        { onConflict: 'key' }
+      )
+    } else {
+      await supabase.from('integration_health').upsert(
+        {
+          key: 'stripe_webhook',
+          last_error_at: new Date().toISOString(),
+          last_error_message: params.error ?? 'Unknown webhook error',
+        },
+        { onConflict: 'key' }
+      )
+    }
+  } catch (error) {
+    console.warn('Failed to record webhook health', error)
+  }
+}
+
 /**
  * POST /api/webhooks/stripe
  * Handles Stripe webhook events for payment processing
@@ -117,6 +147,7 @@ export async function POST(request: Request) {
           paymentIntent: session.payment_intent,
         })
 
+        await recordWebhookHealth(supabase, { success: true })
         break
       }
 
@@ -149,16 +180,22 @@ export async function POST(request: Request) {
           })
         }
 
+        await recordWebhookHealth(supabase, { success: true })
         break
       }
 
       default:
         console.info('Unhandled Stripe event', { type: event.type })
+        await recordWebhookHealth(supabase, { success: true })
     }
 
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Stripe webhook error', { error, eventType: event.type })
+    await recordWebhookHealth(supabase, {
+      success: false,
+      error: error instanceof Error ? error.message : 'Webhook processing failed',
+    })
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
   }
 }

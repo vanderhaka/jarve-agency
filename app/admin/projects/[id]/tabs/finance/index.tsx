@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { BudgetCard } from './budget-card'
 import { InvoicesList } from './invoices-list'
+import { formatDistanceToNow } from 'date-fns'
 
 interface Invoice {
   id: string
@@ -31,9 +32,16 @@ interface Props {
   clientName: string | null
 }
 
+interface StripeWebhookHealth {
+  last_success_at: string | null
+  last_error_at: string | null
+  last_error_message: string | null
+}
+
 export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
+  const [stripeHealth, setStripeHealth] = useState<StripeWebhookHealth | null>(null)
   const supabase = useMemo(() => createClient(), [])
   const invoiceIdsRef = useRef<Set<string>>(new Set())
 
@@ -120,6 +128,25 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
     }
   }, [projectId, supabase])
 
+  useEffect(() => {
+    async function fetchStripeHealth() {
+      const { data, error } = await supabase
+        .from('integration_health')
+        .select('last_success_at, last_error_at, last_error_message')
+        .eq('key', 'stripe_webhook')
+        .maybeSingle()
+
+      if (error) {
+        console.warn('Failed to load Stripe webhook health', error)
+        return
+      }
+
+      setStripeHealth(data)
+    }
+
+    fetchStripeHealth()
+  }, [supabase])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -128,8 +155,47 @@ export function ProjectFinanceTab({ projectId, clientId, clientName }: Props) {
     )
   }
 
+  const lastSuccessAt = stripeHealth?.last_success_at ? new Date(stripeHealth.last_success_at) : null
+  const minutesSinceSuccess = lastSuccessAt ? (Date.now() - lastSuccessAt.getTime()) / 60000 : null
+  const isWebhookStale = minutesSinceSuccess === null || minutesSinceSuccess > 30
+  const lastErrorAt = stripeHealth?.last_error_at ? new Date(stripeHealth.last_error_at) : null
+
   return (
     <div className="space-y-6">
+      {stripeHealth && (
+        <div
+          className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${
+            isWebhookStale ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+          }`}
+        >
+          {isWebhookStale ? (
+            <AlertCircle className="h-4 w-4 mt-0.5" />
+          ) : (
+            <CheckCircle className="h-4 w-4 mt-0.5" />
+          )}
+          <div className="space-y-1">
+            <p className="font-medium">
+              {isWebhookStale
+                ? 'Stripe webhook has not confirmed payments recently'
+                : 'Stripe webhook is healthy'}
+            </p>
+            {lastSuccessAt && (
+              <p className="text-xs text-muted-foreground">
+                Last success {formatDistanceToNow(lastSuccessAt, { addSuffix: true })}
+              </p>
+            )}
+            {isWebhookStale && lastErrorAt && (
+              <p className="text-xs text-muted-foreground">
+                Last error {formatDistanceToNow(lastErrorAt, { addSuffix: true })}
+              </p>
+            )}
+            {isWebhookStale && stripeHealth.last_error_message && (
+              <p className="text-xs text-muted-foreground">{stripeHealth.last_error_message}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <BudgetCard invoices={invoices} />
 
       <InvoicesList

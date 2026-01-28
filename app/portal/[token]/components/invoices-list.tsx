@@ -205,6 +205,11 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
             const StatusIcon = config.icon
             const isPaid = invoice.status === 'paid'
             const isProcessing = invoice.status === 'processing'
+            const processingUpdatedAt = invoice.payment_status_updated_at
+              ? new Date(invoice.payment_status_updated_at).getTime()
+              : null
+            const processingAgeMs = processingUpdatedAt ? Date.now() - processingUpdatedAt : 0
+            const isProcessingStale = isProcessing && processingAgeMs > 2 * 60 * 1000
             const isPayable =
               !isPaid &&
               !isProcessing &&
@@ -249,6 +254,11 @@ export function InvoicesList({ initialInvoices, initialProjectId }: InvoicesList
                           <StatusIcon className={`h-3 w-3 ${invoice.status === 'processing' ? 'animate-spin' : ''}`} />
                           {config.label}
                         </Badge>
+                        {isProcessing && (
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {isProcessingStale ? 'Still confirming...' : 'Confirming payment...'}
+                          </div>
+                        )}
                       </div>
                       {isPayable && (
                         <Button
