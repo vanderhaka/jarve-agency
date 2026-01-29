@@ -1,6 +1,5 @@
 import { HeroSection } from '@/components/hero-section'
 import { TestimonialsSection } from '@/components/testimonials-section'
-import { TrustBadgesSection } from '@/components/trust-badges-section'
 import { ServicesSection } from '@/components/services-section'
 import { HowItWorksSection } from '@/components/how-it-works-section'
 import { PortfolioSection } from '@/components/portfolio-section'
@@ -56,9 +55,18 @@ export default function Home() {
         <AboutSection />
         <TestimonialsSection />
         <ServicesSection />
-        <TrustBadgesSection />
         <HowItWorksSection />
         <PortfolioSection />
+
+        {/* Mid-page CTA */}
+        <section className="py-16 px-4 text-center">
+          <FadeIn>
+            <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all">
+              <Link href="#contact">Let&apos;s Talk About Your Project</Link>
+            </Button>
+          </FadeIn>
+        </section>
+
         <WhyJarveSection />
         <PricingSection />
         <FAQSection />

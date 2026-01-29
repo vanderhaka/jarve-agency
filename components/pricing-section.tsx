@@ -1,48 +1,46 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/fade-in'
 import { Check, Shield, Eye, CreditCard } from 'lucide-react'
-import Link from 'next/link'
 import { motion } from 'framer-motion'
 
 const tiers = [
   {
-    name: 'MVP',
+    name: 'MVP — Validate Fast',
     price: '$5–12K',
-    description: 'Validate your idea with a working product.',
-    timeline: '2–3 weeks',
+    description: 'Go from idea to working product. Get real user feedback before you invest everything.',
+    timeline: '2–4 weeks',
     includes: [
-      'Core feature set',
-      'User authentication',
-      'Responsive design',
-      'Deployment & handoff',
+      'Core features that prove your idea',
+      'User auth & responsive design',
+      'Deployed and ready for users',
+      '1 week of post-launch support',
     ],
   },
   {
-    name: 'Web App',
+    name: 'Web App — Replace the Duct Tape',
     price: '$12–25K',
-    description: 'A full application your team or customers will use daily.',
-    timeline: '4–6 weeks',
+    description: 'A real application your team uses daily. No more spreadsheets, no more workarounds.',
+    timeline: '4–8 weeks',
     includes: [
       'Everything in MVP',
-      'Advanced integrations',
-      'Admin dashboard',
-      'Analytics & reporting',
+      'Integrations with your existing tools',
+      'Admin dashboard & reporting',
+      '2 weeks of post-launch support',
     ],
     featured: true,
   },
   {
-    name: 'Complex Project',
-    price: "Let's talk",
-    description: 'Multi-platform, large-scale, or highly custom builds.',
-    timeline: '6–10 weeks',
+    name: 'Complex Project — Built to Scale',
+    price: 'Custom pricing',
+    description: 'Multi-platform builds, AI/automation, or enterprise-grade requirements.',
+    timeline: '8–12 weeks',
     includes: [
       'Everything in Web App',
-      'Multiple platforms',
-      'Custom AI/automation',
-      'Ongoing support plan',
+      'Custom architecture',
+      'Ongoing support options',
+      "Let's scope it together",
     ],
   },
 ]
@@ -105,15 +103,18 @@ export function PricingSection() {
                         </li>
                       ))}
                     </ul>
-                    <Button asChild className={`w-full mt-6 rounded-full ${tier.featured ? 'bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 hover:shadow-lg hover:shadow-green-500/30' : ''}`} variant={tier.featured ? 'default' : 'outline'}>
-                      <Link href="#contact">Book a Free Call</Link>
-                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
             </FadeIn>
           ))}
         </div>
+
+        <FadeIn delay={0.2}>
+          <p className="text-center text-muted-foreground text-sm mb-16">
+            What affects price? User count, integrations, and data complexity.
+          </p>
+        </FadeIn>
 
         {/* Guarantees / Risk Reversal */}
         <FadeIn delay={0.3}>

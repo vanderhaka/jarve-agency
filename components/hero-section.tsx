@@ -39,7 +39,7 @@ export function HeroSection() {
             Custom operational tools. Fixed price. Launched in weeks.
           </p>
           <p className="text-sm md:text-base text-muted-foreground/70 max-w-2xl mx-auto mt-2">
-            Most custom software takes 3–6 months. We can ship in 2–3 weeks.
+            Most custom software takes 3–6 months. We ship in weeks, not months.
           </p>
         </FadeIn>
 
@@ -50,9 +50,6 @@ export function HeroSection() {
                 Book a Free Call
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8 h-14 rounded-full border-2">
-              <Link href="#pricing">See Pricing</Link>
             </Button>
           </div>
         </FadeIn>

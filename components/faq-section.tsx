@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     question: "What's your typical timeline?",
-    answer: "MVPs and simpler apps take 2-4 weeks. More complex applications with integrations and advanced features typically take 4-8 weeks. We'll scope it out together on a discovery call and I'll give you a realistic timeline before I start."
+    answer: "MVPs take 2-4 weeks. Web apps with integrations and dashboards typically take 4-8 weeks. Complex or multi-platform projects take 8-12 weeks. We'll scope it out together on a discovery call and I'll give you a realistic timeline before I start."
   },
   {
     question: "Do I need to be technical?",
@@ -73,19 +73,6 @@ export function FAQSection() {
           </Accordion>
         </FadeIn>
 
-        <FadeIn delay={0.2}>
-          <div className="text-center mt-12">
-            <p className="text-muted-foreground mb-4">
-              Still have questions?
-            </p>
-            <a
-              href="#contact"
-              className="text-primary font-medium hover:underline"
-            >
-              Book a free call →
-            </a>
-          </div>
-        </FadeIn>
       </div>
     </section>
   )

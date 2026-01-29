@@ -84,11 +84,12 @@ export function ContactForm() {
 
           <div className="space-y-2">
             <label htmlFor="message" className="text-sm font-medium">
-              Project Description
+              Project Description <span className="text-red-500">*</span>
             </label>
             <Input
               id="message"
               name="message"
+              required
               placeholder="What are you looking to build?"
             />
           </div>
@@ -100,7 +101,7 @@ export function ContactForm() {
           )}
 
           <Button type="submit" disabled={loading} className="w-full h-14 text-lg rounded-full bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-[1.02] transition-all">
-            {loading ? 'Sending...' : 'Book a Free Call'}
+            {loading ? 'Sending...' : 'Send Message'}
           </Button>
         </form>
       </CardContent>

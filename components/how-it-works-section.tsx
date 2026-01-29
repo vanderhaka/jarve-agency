@@ -15,14 +15,14 @@ const steps = [
     number: '02',
     icon: Rocket,
     title: 'Build & Demo',
-    subtitle: 'Weeks 2–3',
+    subtitle: 'Weeks 2–4',
     description: 'I build. You see progress every week with live demos. Feedback goes straight into the next sprint.',
   },
   {
     number: '03',
     icon: TrendingUp,
     title: 'Launch & Iterate',
-    subtitle: 'Week 4',
+    subtitle: 'Weeks 4–8',
     description: 'Your product goes live. I stick around to make sure everything runs smoothly and iterate on feedback.',
   },
 ]
