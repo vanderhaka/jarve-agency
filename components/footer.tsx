@@ -29,7 +29,7 @@ export function Footer() {
                 JARVE
               </Link>
               <p className="text-zinc-400 text-lg max-w-sm leading-relaxed">
-                We build digital products that help businesses grow. Fast delivery, fair pricing, real results.
+                I build digital products that help businesses grow. Fast delivery, fair pricing, real results.
               </p>
             </div>
 
@@ -67,9 +67,6 @@ export function Footer() {
                       >
                         hello@jarve.com.au
                       </a>
-                    </li>
-                    <li className="text-zinc-500">
-                      Adelaide, SA
                     </li>
                   </ul>
                 </div>

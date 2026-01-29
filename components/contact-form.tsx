@@ -201,14 +201,14 @@ export function ContactForm() {
               id="message"
               name="message"
               required
-              placeholder="Tell us about your project, goals, and any specific requirements..."
+              placeholder="Tell me about your project, goals, and any specific requirements..."
               rows={5}
             />
           </div>
 
           {success && (
             <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 text-sm text-green-800 dark:text-green-200">
-              Thanks for reaching out! We&apos;ll be in touch within 24 hours.
+              Thanks for reaching out! I&apos;ll be in touch within 24 hours.
             </div>
           )}
 

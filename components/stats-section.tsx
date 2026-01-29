@@ -5,19 +5,19 @@ import { motion } from 'framer-motion'
 
 const stats = [
   {
-    value: '5x',
-    label: 'Faster than agencies',
-    description: 'What takes others 6+ months',
+    value: '10+',
+    label: 'Projects shipped',
+    description: 'From MVPs to production apps',
   },
   {
-    value: '5x',
-    label: 'Lower cost',
-    description: 'Same quality, fraction of the price',
-  },
-  {
-    value: '2-4',
+    value: '2-3',
     label: 'Weeks to launch',
-    description: 'Industry average: 6+ months',
+    description: 'Most projects go live fast',
+  },
+  {
+    value: '100%',
+    label: 'Fixed pricing',
+    description: 'No hourly billing surprises',
   },
 ]
 

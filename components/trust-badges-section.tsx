@@ -8,9 +8,8 @@ const techLogos = [
   { name: 'React', src: '/logos/react.svg' },
   { name: 'Supabase', src: '/logos/supabase.svg' },
   { name: 'Vercel', src: '/logos/vercel.svg' },
-  { name: 'OpenAI', src: '/logos/openai.svg' },
+  { name: 'Stripe', src: '/logos/stripe.svg' },
   { name: 'Anthropic', src: '/logos/anthropic.svg' },
-  { name: 'Cursor', src: '/logos/cursor.svg' },
 ]
 
 export function TrustBadgesSection() {
@@ -20,7 +19,7 @@ export function TrustBadgesSection() {
         <FadeIn>
           <div className="text-center mb-8">
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Built with modern tools
+              Built on infrastructure that scales
             </p>
           </div>
 

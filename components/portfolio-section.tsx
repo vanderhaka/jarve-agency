@@ -43,7 +43,7 @@ export function PortfolioSection() {
             <div className="max-w-2xl">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">Real Results</h2>
               <p className="text-xl text-muted-foreground">
-                Projects we&apos;ve shipped—from MVPs to production apps.
+                Projects I&apos;ve shipped—from MVPs to production apps.
               </p>
             </div>
           </div>

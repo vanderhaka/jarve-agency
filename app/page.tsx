@@ -6,6 +6,7 @@ import { ServicesSection } from '@/components/services-section'
 import { HowItWorksSection } from '@/components/how-it-works-section'
 import { PortfolioSection } from '@/components/portfolio-section'
 import { WhyJarveSection } from '@/components/why-jarve-section'
+import { AboutSection } from '@/components/about-section'
 import { FAQSection } from '@/components/faq-section'
 import { ContactForm } from '@/components/contact-form'
 import { Footer } from '@/components/footer'
@@ -59,6 +60,7 @@ export default function Home() {
         <TrustBadgesSection />
         <HowItWorksSection />
         <PortfolioSection />
+        <AboutSection />
         <WhyJarveSection />
 
         <section className="py-32 px-4 bg-[#1a1f2e] text-white relative overflow-hidden">
@@ -84,7 +86,7 @@ export default function Home() {
               </h2>
 
               <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Most agencies quote $25K+ and 6 months. We&apos;ll build it for a fraction of that—and have you live in weeks.
+                Tell me what you need. I&apos;ll give you a fixed quote and have you live in weeks.
               </p>
 
               <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all group">

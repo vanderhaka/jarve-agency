@@ -7,20 +7,20 @@ const steps = [
   {
     number: '01',
     icon: MessageSquare,
-    title: 'Tell us your idea',
-    description: 'Jump on a free call. We\'ll learn about your business, your goals, and what you need built.',
+    title: 'Tell me your idea',
+    description: 'Jump on a free call. I\'ll learn about your business, your goals, and what you need built.',
   },
   {
     number: '02',
     icon: Rocket,
-    title: 'We build it fast',
-    description: 'Our team gets to work. You\'ll see progress weekly and can give feedback along the way.',
+    title: 'I build it fast',
+    description: 'I get to work. You\'ll see progress weekly and can give feedback along the way.',
   },
   {
     number: '03',
     icon: TrendingUp,
     title: 'You launch & grow',
-    description: 'Your product goes live. We stick around to make sure everything runs smoothly.',
+    description: 'Your product goes live. I stick around to make sure everything runs smoothly.',
   },
 ]
 

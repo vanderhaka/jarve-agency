@@ -11,31 +11,31 @@ import {
 const faqs = [
   {
     question: "How does pricing work?",
-    answer: "It starts with a free 15-minute call to understand your project. If it's a good fit, we do a paid 1-hour deep-dive consultation to scope everything properly—and that fee gets credited toward your project if you move forward. From there, it's fixed project pricing with a deposit structure. No hourly billing, no surprise invoices."
+    answer: "It starts with a free 15-minute call to understand your project. If it's a good fit, I do a paid 1-hour deep-dive consultation to scope everything properly—and that fee gets credited toward your project if you move forward. From there, it's fixed project pricing with a deposit structure. No hourly billing, no surprise invoices."
   },
   {
     question: "What's your typical timeline?",
-    answer: "MVPs and simpler apps take 2-4 weeks. More complex applications with integrations and advanced features typically take 4-8 weeks. We'll scope it out together on our discovery call and give you a realistic timeline before we start."
+    answer: "MVPs and simpler apps take 2-4 weeks. More complex applications with integrations and advanced features typically take 4-8 weeks. We'll scope it out together on a discovery call and I'll give you a realistic timeline before I start."
   },
   {
     question: "Do I need to be technical?",
-    answer: "Not at all. Most of our clients are non-technical founders. You bring the vision and business knowledge—we handle all the technical decisions, architecture, and implementation. We'll explain things in plain English and keep you updated with weekly demos."
+    answer: "Not at all. Most of my clients are non-technical founders. You bring the vision and business knowledge—I handle all the technical decisions, architecture, and implementation. I'll explain things in plain English and keep you updated with weekly demos."
   },
   {
     question: "What happens after launch?",
-    answer: "You own your code completely. After launch, you can take the codebase and run with it, hire your own team, or we can continue managing it for you on a retainer basis. We provide full documentation and handoff either way."
+    answer: "You own your code completely. After launch, you can take the codebase and run with it, hire your own team, or I can continue managing it for you on a retainer basis. I provide full documentation and handoff either way."
   },
   {
     question: "What if I need changes during the project?",
-    answer: "We build in flexibility. Small changes and refinements are included—that's why we do weekly demos, so you can give feedback early before anything is set in stone. If you want to pivot significantly, we'll re-scope together and adjust the timeline."
+    answer: "I build in flexibility. Small changes and refinements are included—that's why I do weekly demos, so you can give feedback early before anything is set in stone. If you want to pivot significantly, we'll re-scope together and adjust the timeline."
   },
   {
     question: "What's your tech stack?",
-    answer: "We primarily build with Next.js and React for web applications, with Supabase for backend services (database, authentication, storage). For mobile apps, we use React Native, Swift, or Kotlin—whatever's the right fit for your project. We pick the best tools for each situation."
+    answer: "I primarily build with Next.js and React for web applications, with Supabase for backend services (database, authentication, storage). For mobile apps, I use React Native, Swift, or Kotlin—whatever's the right fit for your project. I pick the best tools for each situation."
   },
   {
     question: "What projects are NOT a good fit?",
-    answer: "We focus on building new products, not maintaining legacy code. We also don't take on crypto/Web3 projects—it's not our specialty. If you're looking to build a web app, mobile app, or MVP from scratch, we're probably a great fit."
+    answer: "I focus on building new products, not maintaining legacy code. I also don't take on crypto/Web3 projects—it's not my specialty. If you're looking to build a web app, mobile app, or MVP from scratch, I'm probably a great fit."
   },
 ]
 

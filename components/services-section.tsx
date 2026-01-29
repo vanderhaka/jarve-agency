@@ -17,7 +17,7 @@ export function ServicesSection() {
     {
       image: '/images/services/reach-mobile.jpeg',
       title: 'Mobile Apps',
-      description: 'Native iOS and Android apps. From idea to App Store, we handle the entire journey.',
+      description: 'Native iOS and Android apps. From idea to App Store, I handle the entire journey.',
       features: ['Smooth native feel', 'Works offline', 'Instant updates'],
     },
     {
@@ -41,9 +41,9 @@ export function ServicesSection() {
       <div className="container mx-auto relative z-10">
         <FadeIn>
           <div className="text-center mb-16 max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">What we can build for you</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">What I can build for you</h2>
             <p className="text-xl text-muted-foreground">
-              Stop paying enterprise prices for software. Modern tools let us deliver more, faster, for less.
+              Stop paying enterprise prices for software. Modern tools let me deliver more, faster, for less.
             </p>
           </div>
         </FadeIn>
