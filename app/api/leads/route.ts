@@ -29,6 +29,9 @@ export async function POST(request: Request) {
     .single()
 
   if (error) {
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'This email has already been submitted.' }, { status: 409 })
+    }
     console.error('[api/leads] Insert failed:', error)
     return NextResponse.json({ error: 'Failed to create lead' }, { status: 500 })
   }

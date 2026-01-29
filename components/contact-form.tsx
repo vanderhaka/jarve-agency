@@ -68,7 +68,14 @@ export function ContactForm() {
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to submit')
+      if (!res.ok) {
+        if (res.status === 409) {
+          alert('This email has already been submitted. We\'ll be in touch soon!')
+          setLoading(false)
+          return
+        }
+        throw new Error('Failed to submit')
+      }
     } catch (err) {
       console.error('Error submitting form:', err)
       alert('Something went wrong. Please try again.')
