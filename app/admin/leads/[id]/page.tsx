@@ -40,6 +40,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     redirect('/admin/leads')
   }
 
+  // Check if lead has a signed proposal
+  const { data: signedProposal } = await supabase
+    .from('proposals')
+    .select('id')
+    .eq('lead_id', id)
+    .eq('status', 'signed')
+    .limit(1)
+    .maybeSingle()
+
+  const hasSignedProposal = !!signedProposal
+
   return (
     <div className="space-y-8">
       <Breadcrumbs />
@@ -72,7 +83,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               </Link>
             </Button>
           )}
-          {!lead.converted_at && (
+          {!lead.converted_at && hasSignedProposal && (
             <ConvertLeadDialog lead={lead} />
           )}
           <Button variant="outline" asChild>

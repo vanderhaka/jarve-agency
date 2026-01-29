@@ -77,6 +77,19 @@ export async function convertLeadToProject(
     return { success: false, message: 'This lead has already been converted' }
   }
 
+  // Check for a signed proposal before allowing conversion
+  const { data: signedProposal } = await supabase
+    .from('proposals')
+    .select('id')
+    .eq('lead_id', leadId)
+    .eq('status', 'signed')
+    .limit(1)
+    .maybeSingle()
+
+  if (!signedProposal) {
+    return { success: false, message: 'A proposal must be sent and signed before converting to a project' }
+  }
+
   const leadEmail = lead.email.toLowerCase().trim()
   const now = new Date().toISOString()
 
