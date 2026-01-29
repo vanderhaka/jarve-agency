@@ -17,9 +17,6 @@ export function PortfolioSection() {
       result: 'Live Product',
       href: '/work/diggable',
     },
-  ]
-
-  const experiments = [
     {
       title: 'BlurbBuddy',
       category: 'AI Book Discovery',
@@ -28,6 +25,9 @@ export function PortfolioSection() {
       result: 'Live Product',
       href: '/work/blurbbuddy',
     },
+  ]
+
+  const experiments = [
     {
       title: 'Terra Flow',
       category: 'Booking Platform',
@@ -58,7 +58,7 @@ export function PortfolioSection() {
             <h3 className="text-2xl font-bold mb-6">Client Work</h3>
           </div>
         </FadeIn>
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
           {clientWork.map((project, index) => {
             const cardContent = (
               <Card className="overflow-hidden group border-none shadow-none bg-transparent h-full flex flex-col rounded-none">
