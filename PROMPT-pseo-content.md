@@ -124,6 +124,20 @@ Generate each section with the specified word count. Be specific and practical, 
 - Compelling reason to click
 - Natural, not keyword-stuffed
 
+### 9. Two FAQs
+Generate 2 frequently asked questions specific to this service + city combination.
+- Questions should feel natural, like something a real prospect would ask
+- Answers should be 50-70 words each
+- First FAQ: About the service in this location
+- Second FAQ: About working with JARVE for this service type
+- Don't repeat information already covered in other sections
+
+### 10. Page-Specific Testimonial Prompt
+- Write a realistic testimonial request that describes the ideal client for this page
+- 20-30 words
+- This will be used to find/filter matching testimonials from the database
+- Example: "A Sydney startup founder who built an MVP to validate their fintech idea"
+
 ## Output Format
 
 Return your response as JSON with this exact structure:
@@ -150,7 +164,18 @@ Return your response as JSON with this exact structure:
     }
   ],
   "ctaText": "Your CTA text here",
-  "metaDescription": "Your meta description here"
+  "metaDescription": "Your meta description here",
+  "faqs": [
+    {
+      "question": "First question here?",
+      "answer": "First answer here"
+    },
+    {
+      "question": "Second question here?",
+      "answer": "Second answer here"
+    }
+  ],
+  "idealTestimonialMatch": "Description of ideal testimonial for this page"
 }
 ```
 
@@ -171,6 +196,9 @@ After generating, verify:
 - [ ] First person singular ("I" not "we")
 - [ ] No emojis
 - [ ] JSON is valid
+- [ ] FAQs are specific to this service+city (not generic)
+- [ ] FAQ answers don't repeat content from other sections
+- [ ] Testimonial match description is specific enough to filter
 
 ---
 
