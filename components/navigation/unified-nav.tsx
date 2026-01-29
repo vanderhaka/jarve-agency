@@ -2,9 +2,9 @@
 
 import { NavLink } from './nav-link'
 import { MessagesNavLink } from './messages-nav-link'
+import { LeadsNavLink } from './leads-nav-link'
 import {
   LayoutDashboard,
-  Users,
   Briefcase,
   UserCircle,
   CheckSquare,
@@ -50,9 +50,7 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
         <NavLink href="/admin" icon={LayoutDashboard}>
           Dashboard
         </NavLink>
-        <NavLink href="/admin/leads" icon={Users}>
-          Leads
-        </NavLink>
+        <LeadsNavLink />
         <NavLink href="/admin/projects" icon={Briefcase}>
           Projects
         </NavLink>

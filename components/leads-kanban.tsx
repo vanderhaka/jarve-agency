@@ -34,6 +34,10 @@ type Lead = {
   amount: number
   status: string
   source: string
+  project_type?: string
+  budget?: string
+  timeline?: string
+  created_at?: string
 }
 
 const stages = ['new', 'contacted', 'converted', 'closed']
@@ -78,6 +82,23 @@ function SortableLead({ lead }: { lead: Lead }) {
             )}
           </div>
           <div className="text-xs text-muted-foreground truncate">{lead.email}</div>
+          <div className="flex flex-wrap gap-1">
+            {lead.project_type && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                {lead.project_type.replace(/_/g, ' ')}
+              </Badge>
+            )}
+            {lead.budget && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                {lead.budget.replace(/_/g, ' ')}
+              </Badge>
+            )}
+            {lead.timeline && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                {lead.timeline.replace(/_/g, ' ')}
+              </Badge>
+            )}
+          </div>
           {lead.source && (
             <div className="text-xs text-muted-foreground">Via: {lead.source}</div>
           )}

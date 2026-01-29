@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { createClient } from '@/utils/supabase/client'
 
 const PROJECT_TYPES = [
   { value: 'web_app', label: 'Web Application' },
@@ -42,8 +41,6 @@ export function ContactForm() {
   const [projectType, setProjectType] = useState('')
   const [budget, setBudget] = useState('')
   const [timeline, setTimeline] = useState('')
-  const supabase = createClient()
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
@@ -56,26 +53,30 @@ export function ContactForm() {
     const company = formData.get('company') as string
     const message = formData.get('message') as string
 
-    const { error } = await supabase
-      .from('leads')
-      .insert({
-        name,
-        email,
-        company: company || null,
-        project_type: projectType || null,
-        budget,
-        timeline,
-        message,
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          company: company || null,
+          project_type: projectType || null,
+          budget: budget || null,
+          timeline: timeline || null,
+          message: message || null,
+        }),
       })
 
-    setLoading(false)
-
-    if (error) {
-      console.error('Error submitting form:', error)
+      if (!res.ok) throw new Error('Failed to submit')
+    } catch (err) {
+      console.error('Error submitting form:', err)
       alert('Something went wrong. Please try again.')
+      setLoading(false)
       return
     }
 
+    setLoading(false)
     setSuccess(true)
     setProjectType('')
     setBudget('')

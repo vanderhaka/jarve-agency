@@ -46,7 +46,7 @@ export default function LeadsPage() {
   const searchParams = useSearchParams()
   const viewParam = searchParams.get('view')
   const archivedParam = searchParams.get('archived')
-  const view = viewParam === 'kanban' ? 'kanban' : 'list'
+  const view = viewParam === 'list' ? 'list' : 'kanban'
   const showArchived = archivedParam === 'true'
 
   const [leads, setLeads] = useState<Lead[]>([])
@@ -110,9 +110,19 @@ export default function LeadsPage() {
     default: 'bg-gray-500',
   }
 
+  const stageOrder = ['new', 'contacted', 'converted', 'closed']
+
   function getStatusColor(status: string): string {
     return statusColors[status] ?? statusColors.default
   }
+
+  // Sort leads by stage order, then by created_at within each stage
+  const sortedLeads = [...leads].sort((a, b) => {
+    const aIdx = stageOrder.indexOf(a.status)
+    const bIdx = stageOrder.indexOf(b.status)
+    if (aIdx !== bIdx) return aIdx - bIdx
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 
   return (
     <div className="space-y-8">
@@ -186,7 +196,7 @@ export default function LeadsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  leads.map((lead) => (
+                  sortedLeads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
