@@ -1,8 +1,7 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowRight, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FadeIn } from '@/components/fade-in'
@@ -47,9 +46,6 @@ export function PortfolioSection() {
                 Projects we&apos;ve shipped—from MVPs to production apps.
               </p>
             </div>
-            <Button variant="outline" className="hidden md:inline-flex">
-              View All Projects <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
           </div>
         </FadeIn>
         
@@ -113,13 +109,6 @@ export function PortfolioSection() {
           })}
         </div>
         
-        <FadeIn delay={0.4}>
-          <div className="mt-12 text-center md:hidden">
-            <Button variant="outline">
-              View All Projects <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </FadeIn>
       </div>
     </section>
   )
