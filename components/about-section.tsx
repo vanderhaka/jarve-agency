@@ -5,8 +5,9 @@ import Image from 'next/image'
 
 export function AboutSection() {
   return (
-    <section className="py-24 px-4 bg-background" id="about">
-      <div className="container mx-auto max-w-5xl">
+    <section className="py-24 px-4 bg-gradient-to-r from-primary/20 via-primary/20 to-blue-600/20 relative overflow-hidden" id="about">
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.04)_25%,rgba(255,255,255,0.04)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.04)_75%)] bg-[length:60px_60px]" />
+      <div className="container mx-auto max-w-5xl relative z-10">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Copy */}

@@ -1,5 +1,4 @@
 import { HeroSection } from '@/components/hero-section'
-import { StatsSection } from '@/components/stats-section'
 import { TestimonialsSection } from '@/components/testimonials-section'
 import { TrustBadgesSection } from '@/components/trust-badges-section'
 import { ServicesSection } from '@/components/services-section'
@@ -54,13 +53,12 @@ export default function Home() {
       </header>
       <main className="flex-1">
         <HeroSection />
-        <StatsSection />
+        <AboutSection />
         <TestimonialsSection />
         <ServicesSection />
         <TrustBadgesSection />
         <HowItWorksSection />
         <PortfolioSection />
-        <AboutSection />
         <WhyJarveSection />
         <PricingSection />
         <FAQSection />
