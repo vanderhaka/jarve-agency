@@ -9,6 +9,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
@@ -111,6 +112,44 @@ function SortableLead({ lead }: { lead: Lead }) {
   )
 }
 
+function StageColumn({ stage, leads }: { stage: string; leads: Lead[] }) {
+  const { setNodeRef, isOver } = useDroppable({ id: stage })
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4 p-2 bg-muted/50 rounded-lg">
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${statusColors[stage]}`} />
+          <span className="capitalize font-medium">{stage}</span>
+        </div>
+        <Badge variant="secondary">
+          {leads.length}
+        </Badge>
+      </div>
+
+      <div
+        ref={setNodeRef}
+        className={`flex-1 bg-muted/20 rounded-lg p-2 overflow-y-auto transition-colors ${isOver ? 'bg-muted/40 ring-2 ring-primary/20' : ''}`}
+      >
+        <SortableContext
+          id={stage}
+          items={leads.map((l) => l.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {leads.map((lead) => (
+            <SortableLead key={lead.id} lead={lead} />
+          ))}
+        </SortableContext>
+        {leads.length === 0 && (
+          <div className="h-full min-h-[100px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+            Drop here
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
   const dndId = useId()
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
@@ -127,8 +166,7 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 300,
-        tolerance: 5,
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -237,39 +275,7 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
         {stages.map((stage) => (
-          <div key={stage} className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4 p-2 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${statusColors[stage]}`} />
-                <span className="capitalize font-medium">{stage}</span>
-              </div>
-              <Badge variant="secondary">
-                {leads.filter((l) => l.status === stage).length}
-              </Badge>
-            </div>
-            
-            <div className="flex-1 bg-muted/20 rounded-lg p-2 overflow-y-auto">
-              <SortableContext
-                id={stage}
-                items={leads.filter((l) => l.status === stage).map((l) => l.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {leads
-                  .filter((l) => l.status === stage)
-                  .map((lead) => (
-                    <SortableLead key={lead.id} lead={lead} />
-                  ))}
-              </SortableContext>
-              {/* Drop zone for empty columns */}
-              {leads.filter((l) => l.status === stage).length === 0 && (
-                 <SortableContext id={stage} items={[]} strategy={verticalListSortingStrategy}>
-                    <div className="h-full min-h-[100px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
-                      Drop here
-                    </div>
-                 </SortableContext>
-              )}
-            </div>
-          </div>
+          <StageColumn key={stage} stage={stage} leads={leads.filter((l) => l.status === stage)} />
         ))}
       </div>
       
