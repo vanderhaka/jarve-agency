@@ -25,7 +25,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
 type Lead = {
   id: string
@@ -50,12 +49,14 @@ const statusColors: Record<string, string> = {
 }
 
 function SortableLead({ lead }: { lead: Lead }) {
+  const router = useRouter()
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
+    isDragging,
   } = useSortable({ id: lead.id })
 
   const style = {
@@ -63,18 +64,20 @@ function SortableLead({ lead }: { lead: Lead }) {
     transition,
   }
 
+  function handleClick() {
+    if (!isDragging) {
+      router.push(`/admin/leads/${lead.id}`)
+    }
+  }
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="mb-3 touch-none">
-      <Card className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="mb-3 touch-none" onClick={handleClick}>
+      <Card className="cursor-pointer active:cursor-grabbing hover:shadow-md transition-shadow">
         <CardContent className="p-4 space-y-2">
           <div className="flex justify-between items-start">
-            <Link
-                href={`/admin/leads/${lead.id}`}
-                className="font-medium text-primary hover:underline"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
+            <span className="font-medium text-primary hover:underline">
                 {lead.name}
-              </Link>
+              </span>
             {lead.amount > 0 && (
               <Badge variant="secondary" className="text-xs">
                 ${lead.amount.toLocaleString()}
@@ -122,7 +125,12 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
   }, [initialLeads])
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 300,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

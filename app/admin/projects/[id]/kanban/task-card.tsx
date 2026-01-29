@@ -63,7 +63,7 @@ export function SortableTaskCard({ task, onClick }: SortableTaskCardProps) {
     <Card
       ref={setNodeRef}
       style={style}
-      className="cursor-grab bg-white shadow-md hover:shadow-lg transition-all active:cursor-grabbing border border-gray-300 hover:border-gray-400"
+      className="cursor-pointer bg-white shadow-md hover:shadow-lg transition-all active:cursor-grabbing border border-gray-300 hover:border-gray-400"
       {...attributes}
       {...listeners}
       onClick={e => {

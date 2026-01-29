@@ -34,7 +34,8 @@ export function useKanbanDnd({ projectId, tasksByStatus }: UseKanbanDndProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        delay: 300,
+        tolerance: 5,
       },
     })
   )
