@@ -54,7 +54,7 @@ export function WhyJarveSection() {
                   whileHover={{ y: -3 }}
                   className="h-full"
                 >
-                  <div className="h-full rounded-2xl bg-background border border-border/50 hover:shadow-lg transition-all p-6 flex gap-4">
+                  <div className="h-full rounded-2xl bg-white border border-gray-300 hover:shadow-lg transition-all p-6 flex gap-4">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
