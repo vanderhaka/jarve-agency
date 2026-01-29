@@ -45,8 +45,8 @@ export default function Home() {
             </Button>
           </nav>
           <div className="md:hidden">
-             <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Login</Link>
+            <Button asChild size="sm" className="rounded-full px-5 bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 hover:shadow-lg hover:shadow-green-500/30 transition-all">
+              <Link href="#contact">Book a Free Call</Link>
             </Button>
           </div>
         </div>
