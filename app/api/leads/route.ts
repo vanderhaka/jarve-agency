@@ -1,12 +1,39 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { rateLimit } from '@/lib/rate-limit'
+import { headers } from 'next/headers'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export async function POST(request: Request) {
+  // Rate limit by IP
+  const headersList = await headers()
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const { ok } = rateLimit(ip, { limit: 5, windowMs: 60_000 })
+  if (!ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again shortly.' },
+      { status: 429 }
+    )
+  }
+
   const body = await request.json()
-  const { name, email, company, project_type, budget, timeline, message } = body
+  const { name, email, company, project_type, budget, timeline, message, website } = body
+
+  // Honeypot: bots filling the hidden "website" field get silently rejected
+  if (website) {
+    return NextResponse.json({ success: true, id: 'ok' })
+  }
 
   if (!name || !email) {
     return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
@@ -42,10 +69,18 @@ export async function POST(request: Request) {
 
   if (notifyEmail && siteUrl) {
     try {
+      const safeName = escapeHtml(name)
+      const safeEmail = escapeHtml(email)
+      const safeCompany = company ? escapeHtml(company) : ''
+      const safeProjectType = project_type ? escapeHtml(project_type.replace(/_/g, ' ')) : ''
+      const safeBudget = budget ? escapeHtml(budget.replace(/_/g, ' ')) : ''
+      const safeTimeline = timeline ? escapeHtml(timeline.replace(/_/g, ' ')) : ''
+      const safeMessage = message ? escapeHtml(message) : ''
+
       await resend.emails.send({
         from: 'JARVE <leads@jarve.com.au>',
         to: notifyEmail,
-        subject: `New Lead: ${name}`,
+        subject: `New Lead: ${safeName}`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -59,13 +94,13 @@ export async function POST(request: Request) {
                 <p style="margin: 0; color: #666;">A new enquiry has come through the website.</p>
               </div>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; font-weight: 600; width: 120px;">Name</td><td style="padding: 8px 0;">${name}</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Email</td><td style="padding: 8px 0;"><a href="mailto:${email}">${email}</a></td></tr>
-                ${company ? `<tr><td style="padding: 8px 0; font-weight: 600;">Company</td><td style="padding: 8px 0;">${company}</td></tr>` : ''}
-                ${project_type ? `<tr><td style="padding: 8px 0; font-weight: 600;">Project Type</td><td style="padding: 8px 0;">${project_type.replace(/_/g, ' ')}</td></tr>` : ''}
-                ${budget ? `<tr><td style="padding: 8px 0; font-weight: 600;">Budget</td><td style="padding: 8px 0;">${budget.replace(/_/g, ' ')}</td></tr>` : ''}
-                ${timeline ? `<tr><td style="padding: 8px 0; font-weight: 600;">Timeline</td><td style="padding: 8px 0;">${timeline.replace(/_/g, ' ')}</td></tr>` : ''}
-                ${message ? `<tr><td style="padding: 8px 0; font-weight: 600;">Message</td><td style="padding: 8px 0;">${message}</td></tr>` : ''}
+                <tr><td style="padding: 8px 0; font-weight: 600; width: 120px;">Name</td><td style="padding: 8px 0;">${safeName}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: 600;">Email</td><td style="padding: 8px 0;"><a href="mailto:${safeEmail}">${safeEmail}</a></td></tr>
+                ${safeCompany ? `<tr><td style="padding: 8px 0; font-weight: 600;">Company</td><td style="padding: 8px 0;">${safeCompany}</td></tr>` : ''}
+                ${safeProjectType ? `<tr><td style="padding: 8px 0; font-weight: 600;">Project Type</td><td style="padding: 8px 0;">${safeProjectType}</td></tr>` : ''}
+                ${safeBudget ? `<tr><td style="padding: 8px 0; font-weight: 600;">Budget</td><td style="padding: 8px 0;">${safeBudget}</td></tr>` : ''}
+                ${safeTimeline ? `<tr><td style="padding: 8px 0; font-weight: 600;">Timeline</td><td style="padding: 8px 0;">${safeTimeline}</td></tr>` : ''}
+                ${safeMessage ? `<tr><td style="padding: 8px 0; font-weight: 600;">Message</td><td style="padding: 8px 0;">${safeMessage}</td></tr>` : ''}
               </table>
               <div style="margin-top: 24px;">
                 <a href="${siteUrl}/admin/leads/${lead.id}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">View Lead</a>
@@ -75,7 +110,6 @@ export async function POST(request: Request) {
         `,
       })
     } catch (emailError) {
-      // Log but don't fail the request — lead is already saved
       console.error('[api/leads] Email notification failed:', emailError)
     }
   }

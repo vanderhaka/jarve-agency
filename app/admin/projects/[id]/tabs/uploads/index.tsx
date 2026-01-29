@@ -12,7 +12,6 @@ import { toast } from 'sonner'
 interface AdminUploadsTabProps {
   projectId: string
   projectName: string
-  currentUserId: string
   initialUploads: UploadItem[]
 }
 
@@ -33,7 +32,6 @@ function getFileIcon(mimeType: string | null) {
 export function AdminUploadsTab({
   projectId,
   projectName,
-  currentUserId,
   initialUploads,
 }: AdminUploadsTabProps) {
   const [uploads, setUploads] = useState<UploadItem[]>(initialUploads)
@@ -60,7 +58,7 @@ export function AdminUploadsTab({
       const formData = new FormData()
       formData.append('file', file)
 
-      const result = await uploadAdminFile(projectId, formData, currentUserId)
+      const result = await uploadAdminFile(projectId, formData)
 
       if (result.success && result.upload) {
         setUploads((prev) => [result.upload!, ...prev])

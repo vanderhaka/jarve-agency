@@ -149,7 +149,6 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         clientId={project.client_id ?? null}
         clientName={project.clients?.name ?? null}
         clientUserName={clientUserName}
-        currentUserId={user.id}
         initialMessages={messages}
         initialDocs={docsResult.docs}
         initialUploads={uploadsResult.uploads}

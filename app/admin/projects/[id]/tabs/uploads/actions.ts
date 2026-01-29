@@ -62,14 +62,18 @@ export async function getUploadSignedUrl(uploadId: string): Promise<{
 
 export async function uploadAdminFile(
   projectId: string,
-  formData: FormData,
-  userId: string
+  formData: FormData
 ): Promise<{
   success: boolean
   upload?: UploadItem
   error?: string
 }> {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
 
   const file = formData.get('file') as File
   if (!file) {
@@ -97,7 +101,7 @@ export async function uploadAdminFile(
     .insert({
       project_id: projectId,
       uploaded_by_type: 'owner',
-      uploaded_by_id: userId,
+      uploaded_by_id: user.id,
       file_name: file.name,
       file_path: filePath,
       file_size: file.size,

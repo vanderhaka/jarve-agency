@@ -6,11 +6,6 @@ import { ensureStripePaymentRecord } from '@/lib/invoices/stripe-payment'
 function verifyCronSecret(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  const vercelCron = request.headers.get('x-vercel-cron') === '1'
-
-  if (vercelCron) {
-    return true
-  }
 
   if (!cronSecret) {
     console.warn('CRON_SECRET not set')

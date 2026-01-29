@@ -56,7 +56,6 @@ interface Props {
   clientId: string | null
   clientName: string | null
   clientUserName: string | null
-  currentUserId: string
   initialMessages: Message[]
   initialDocs: ContractDoc[]
   initialUploads: UploadItem[]
@@ -78,7 +77,6 @@ export function ProjectTabs({
   clientId,
   clientName,
   clientUserName,
-  currentUserId,
   initialMessages,
   initialDocs,
   initialUploads,
@@ -177,7 +175,6 @@ export function ProjectTabs({
         <AdminUploadsTab
           projectId={projectId}
           projectName={project.name}
-          currentUserId={currentUserId}
           initialUploads={initialUploads}
         />
       </TabsContent>

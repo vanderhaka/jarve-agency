@@ -19,6 +19,7 @@ export function ContactForm() {
     const name = formData.get('name') as string
     const email = formData.get('email') as string
     const message = formData.get('message') as string
+    const website = formData.get('website') as string
 
     try {
       const res = await fetch('/api/leads', {
@@ -28,6 +29,7 @@ export function ContactForm() {
           name,
           email,
           message: message || null,
+          website: website || undefined,
         }),
       })
 
@@ -92,6 +94,11 @@ export function ContactForm() {
               required
               placeholder="What are you looking to build?"
             />
+          </div>
+
+          {/* Honeypot - hidden from real users */}
+          <div className="absolute -left-[9999px]" aria-hidden="true">
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
           </div>
 
           {success && (

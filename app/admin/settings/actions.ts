@@ -10,6 +10,11 @@ import type { AgencySettings, UpdateAgencySettingsInput } from './constants'
 export async function getAgencySettings(): Promise<{ data: AgencySettings | null; error: string | null }> {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { data: null, error: 'Unauthorized' }
+  }
+
   // Try to get existing settings
   const { data, error } = await supabase
     .from('agency_settings')
@@ -48,6 +53,11 @@ export async function updateAgencySettings(
   input: UpdateAgencySettingsInput
 ): Promise<{ success: boolean; error: string | null }> {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
 
   // GST rate cannot be changed (fixed at 10%)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
