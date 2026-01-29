@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { UserNav } from '@/components/user-nav'
 import { NotificationBell } from '@/components/notification-bell'
-import { MessagesBell } from '@/components/admin/messages-bell'
 import { UnifiedNav } from '@/components/navigation/unified-nav'
 import { GlobalSearchProvider } from '@/components/search/global-search-provider'
 import { CommandPalette } from '@/components/search/command-palette'
@@ -53,7 +52,6 @@ export default async function AdminLayout({
                   View Site
                 </Link>
               </Button>
-              <MessagesBell />
               <NotificationBell />
               <UserNav user={user} employee={employee || undefined} />
             </div>

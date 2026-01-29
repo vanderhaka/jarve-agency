@@ -1,6 +1,7 @@
 'use client'
 
 import { NavLink } from './nav-link'
+import { MessagesNavLink } from './messages-nav-link'
 import {
   LayoutDashboard,
   Users,
@@ -64,6 +65,8 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
         <NavLink href="/admin/proposals" icon={FileSignature}>
           Proposals
         </NavLink>
+
+        <MessagesNavLink />
 
         {/* Admin-only items with visual separator */}
         {isAdmin && (
