@@ -9,28 +9,22 @@ import { Check } from 'lucide-react'
 export function ServicesSection() {
   const services = [
     {
-      image: '/images/services/test-before-bet.jpeg',
-      title: 'Web Applications',
-      description: 'Fast, responsive web apps that convert. Built for performance, SEO, and user engagement.',
-      features: ['Lightning fast', 'Works everywhere', 'SEO-optimized'],
-    },
-    {
-      image: '/images/services/reach-mobile.jpeg',
-      title: 'Mobile Apps',
-      description: 'Native iOS and Android apps. From idea to App Store, I handle the entire journey.',
-      features: ['Smooth native feel', 'Works offline', 'Instant updates'],
-    },
-    {
       image: '/images/services/convert-visitors.jpeg',
       title: 'MVP Development',
       description: 'Validate your idea before investing everything. Get to market fast, learn from real users, iterate quickly.',
       features: ['Live in weeks', 'Real user feedback', 'Adapt as you learn'],
     },
     {
+      image: '/images/services/test-before-bet.jpeg',
+      title: 'Web Applications',
+      description: 'Custom web apps that replace spreadsheets, automate workflows, and actually get used. Not marketing sites.',
+      features: ['Lightning fast', 'Works everywhere', 'SEO-optimized'],
+    },
+    {
       image: '/images/services/automate-busywork.jpeg',
-      title: 'AI Automation',
-      description: 'Let AI handle the tasks eating your team\'s time. Smarter support, instant answers, automated workflows.',
-      features: ['24/7 customer support', 'Answers from your data', 'Hands-free operations'],
+      title: 'Internal Tools',
+      description: 'Dashboards, admin panels, and workflow tools your team will actually use. Built around how you already work.',
+      features: ['Custom to your process', 'Integrates with your stack', 'Hands-free operations'],
     },
   ]
 
@@ -43,12 +37,12 @@ export function ServicesSection() {
           <div className="text-center mb-16 max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">What I can build for you</h2>
             <p className="text-xl text-muted-foreground">
-              Stop paying enterprise prices for software. Modern tools let me deliver more, faster, for less.
+              Web apps and internal tools — not marketing sites. Modern tools let me deliver more, faster, for less.
             </p>
           </div>
         </FadeIn>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {services.map((service, index) => (
               <FadeIn key={service.title} delay={index * 0.1}>
                 <motion.div

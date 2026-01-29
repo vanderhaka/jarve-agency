@@ -39,7 +39,7 @@ export function HeroSection() {
             One place. No spreadsheet chaos. Fixed price. Launched in weeks, not months.
           </p>
           <p className="text-sm md:text-base text-muted-foreground/70 max-w-2xl mx-auto mt-2">
-            Most projects ship in 2–3 weeks. Blurb Buddy went from idea to MVP in 10 days.
+            Most custom software takes 3–6 months. We can ship in 2–3 weeks.
           </p>
         </FadeIn>
 
@@ -52,7 +52,7 @@ export function HeroSection() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="text-lg px-8 h-14 rounded-full border-2">
-              <Link href="#portfolio">View My Work</Link>
+              <Link href="#pricing">See Pricing</Link>
             </Button>
           </div>
         </FadeIn>

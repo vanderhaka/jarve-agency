@@ -10,11 +10,11 @@ import { AboutSection } from '@/components/about-section'
 import { FAQSection } from '@/components/faq-section'
 import { ContactForm } from '@/components/contact-form'
 import { Footer } from '@/components/footer'
+import { PricingSection } from '@/components/pricing-section'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FadeIn } from '@/components/fade-in'
-import { ArrowRight } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -62,43 +62,7 @@ export default function Home() {
         <PortfolioSection />
         <AboutSection />
         <WhyJarveSection />
-
-        <section className="py-32 px-4 bg-[#1a1f2e] text-white relative overflow-hidden">
-          {/* Animated background elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 -left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-white/5 to-transparent rounded-full blur-3xl" />
-          </div>
-
-          {/* Grid pattern overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
-
-          <FadeIn>
-            <div className="container mx-auto text-center max-w-3xl relative z-10">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                Ready to{' '}
-                <span className="relative inline-block">
-                  <span className="relative z-10">launch</span>
-                  <span className="absolute bottom-2 left-0 right-0 h-3 bg-white/30 -z-10 rounded" />
-                </span>
-                {' '}your app?
-              </h2>
-
-              <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Tell me what you need. I&apos;ll give you a fixed quote and have you live in weeks.
-              </p>
-
-              <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all group">
-                <Link href="#contact" className="flex items-center gap-2">
-                  Book a Free Call
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-            </div>
-          </FadeIn>
-        </section>
-
+        <PricingSection />
         <FAQSection />
 
         <section id="contact" className="py-24 px-4 bg-muted/30 relative">

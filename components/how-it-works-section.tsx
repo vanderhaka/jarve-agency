@@ -7,20 +7,23 @@ const steps = [
   {
     number: '01',
     icon: MessageSquare,
-    title: 'Tell me your idea',
-    description: 'Jump on a free call. I\'ll learn about your business, your goals, and what you need built.',
+    title: 'Scope & Plan',
+    subtitle: 'Week 1',
+    description: 'Free call to understand your business. Then a paid deep-dive to nail the scope, timeline, and fixed-price quote.',
   },
   {
     number: '02',
     icon: Rocket,
-    title: 'I build it fast',
-    description: 'I get to work. You\'ll see progress weekly and can give feedback along the way.',
+    title: 'Build & Demo',
+    subtitle: 'Weeks 2–3',
+    description: 'I build. You see progress every week with live demos. Feedback goes straight into the next sprint.',
   },
   {
     number: '03',
     icon: TrendingUp,
-    title: 'You launch & grow',
-    description: 'Your product goes live. I stick around to make sure everything runs smoothly.',
+    title: 'Launch & Iterate',
+    subtitle: 'Week 4',
+    description: 'Your product goes live. I stick around to make sure everything runs smoothly and iterate on feedback.',
   },
 ]
 
@@ -36,7 +39,7 @@ export function HowItWorksSection() {
           <div className="text-center mb-16 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">How it works</h2>
             <p className="text-xl text-slate-400">
-              From first conversation to live product in three simple steps.
+              From first conversation to live product — with weekly demos and direct access to me.
             </p>
           </div>
         </FadeIn>
@@ -61,6 +64,9 @@ export function HowItWorksSection() {
                         {step.number}
                       </span>
                     </div>
+                    {step.subtitle && (
+                      <span className="text-sm font-medium text-primary mb-1 block">{step.subtitle}</span>
+                    )}
                     <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
                     <p className="text-slate-400 text-lg leading-relaxed">
                       {step.description}
