@@ -9,50 +9,16 @@ import { FAQSection } from '@/components/faq-section'
 import { ContactForm } from '@/components/contact-form'
 import { Footer } from '@/components/footer'
 import { PricingSection } from '@/components/pricing-section'
+import { QualitySignalsSection } from '@/components/quality-signals-section'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import Image from 'next/image'
 import { FadeIn } from '@/components/fade-in'
+import { Header } from '@/components/header'
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col font-sans">
-      <header className="border-b sticky top-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/ship_no_background.png"
-              alt="JARVE"
-              width={48}
-              height={26}
-              className="w-12 h-auto"
-            />
-            <span className="text-2xl font-bold tracking-tight">JARVE</span>
-          </Link>
-          <nav className="hidden md:flex gap-8 items-center">
-            <Link href="#about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              About
-            </Link>
-            <Link href="#portfolio" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Work
-            </Link>
-            <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
-            </Link>
-            <Link href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Contact
-            </Link>
-            <Button asChild size="sm" className="rounded-full px-6 bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 hover:shadow-lg hover:shadow-green-500/30 transition-all">
-              <Link href="#contact">Book a Free Call</Link>
-            </Button>
-          </nav>
-          <div className="md:hidden">
-            <Button asChild size="sm" className="rounded-full px-5 bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 hover:shadow-lg hover:shadow-green-500/30 transition-all">
-              <Link href="#contact">Book a Free Call</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
       <main className="flex-1">
         <HeroSection />
         <AboutSection />
@@ -72,6 +38,7 @@ export default function Home() {
 
         <WhyJarveSection />
         <PricingSection />
+        <QualitySignalsSection />
         <FAQSection />
 
         <section id="contact" className="py-24 px-4 bg-muted/30 relative">

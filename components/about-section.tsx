@@ -16,8 +16,11 @@ export function AboutSection() {
               <p className="text-lg text-muted-foreground leading-relaxed mb-4">
                 I&apos;m James. I ran a painting business for 20 years — and got tired of being held together by spreadsheets, paper, and a dozen disconnected apps.
               </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-lg text-muted-foreground leading-relaxed mb-4">
                 So I taught myself to code and built my own. What started as a side hustle became a passion — and now it&apos;s what I do full time. MVPs, internal tools, web apps that replace the duct tape.
+              </p>
+              <p className="text-lg leading-relaxed font-semibold">
+                5 years building production software with Next.js, TypeScript, Supabase, and PostgreSQL.
               </p>
             </div>
 

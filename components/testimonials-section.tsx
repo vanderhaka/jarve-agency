@@ -6,25 +6,25 @@ import { Star, Quote } from 'lucide-react'
 
 const testimonials = [
   {
+    quote: "James took a 20-year vision and turned it into a working marketplace in 10 weeks.",
+    author: "Jonathan Butler",
+    role: "Founder, Diggable",
+    rating: 5,
+    highlight: "20-year vision launched in 10 weeks",
+  },
+  {
     quote: "Went from idea to working MVP in under a week—gave me what I needed to validate fast.",
-    author: "Mike",
+    author: "Mike Andrews",
     role: "Startup Founder",
     rating: 5,
     highlight: "Idea to MVP in under a week",
   },
   {
     quote: "Helped me cut through the noise and pivot to what actually worked.",
-    author: "Amanda",
+    author: "Amanda Wickham",
     role: "Startup Founder",
     rating: 5,
     highlight: "Pivoted to what worked",
-  },
-  {
-    quote: "James took a 20-year vision and turned it into a working marketplace in 10 weeks.",
-    author: "Jonathan Butler",
-    role: "Founder, Diggable",
-    rating: 5,
-    highlight: "20-year vision launched in 10 weeks",
   },
 ]
 

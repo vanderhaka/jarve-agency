@@ -17,8 +17,8 @@ export function ServicesSection() {
     {
       image: '/images/services/test-before-bet.jpeg',
       title: 'Web Applications',
-      description: 'Custom web apps that replace spreadsheets, automate workflows, and actually get used. Not marketing sites.',
-      features: ['Lightning fast', 'Works everywhere', 'SEO-optimized'],
+      description: 'Custom web apps that replace spreadsheets, automate workflows, and actually get used. Built for operations, not marketing.',
+      features: ['Lightning fast', 'Works everywhere', 'Built for your process'],
     },
     {
       image: '/images/services/automate-busywork.jpeg',

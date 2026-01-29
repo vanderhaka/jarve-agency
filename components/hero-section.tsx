@@ -36,7 +36,7 @@ export function HeroSection() {
 
         <FadeIn delay={0.3}>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Custom operational tools. Fixed price. Launched in weeks.
+            Custom web apps & internal tools. Fixed price. Launched in weeks.
           </p>
           <p className="text-sm md:text-base text-muted-foreground/70 max-w-2xl mx-auto mt-2">
             Most custom software takes 3–6 months. We ship in weeks, not months.
@@ -47,7 +47,7 @@ export function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all group">
               <Link href="#contact" className="flex items-center gap-2">
-                Book a Free Call
+                Request a Call
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>

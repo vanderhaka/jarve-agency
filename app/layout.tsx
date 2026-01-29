@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JARVE — Custom Tools for Growing Businesses",
-  description: "Custom operational tools for growing businesses. Fixed price. Launched in weeks.",
+  title: "JARVE — Custom Web Apps & Internal Tools",
+  description: "Custom web apps and internal tools for growing businesses. Fixed price. Launched in weeks.",
 };
 
 export default function RootLayout({

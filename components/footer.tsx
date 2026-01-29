@@ -80,14 +80,6 @@ export function Footer() {
           <p className="text-zinc-500 text-sm">
             &copy; {currentYear ?? '2024'} JARVE. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 text-sm text-zinc-500">
-            <Link href="#" className="hover:text-white transition-colors">
-              Privacy
-            </Link>
-            <Link href="#" className="hover:text-white transition-colors">
-              Terms
-            </Link>
-          </div>
         </div>
       </div>
     </footer>
