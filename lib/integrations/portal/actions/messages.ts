@@ -14,6 +14,88 @@ import { broadcastPortalMessage } from '../realtime-server'
 const MAX_MESSAGE_LENGTH = 2000
 
 /**
+ * Get unread messages with preview for the admin messages bell
+ */
+export async function getUnreadMessagesWithPreview(): Promise<{
+  success: true
+  data: {
+    projectId: string
+    projectName: string
+    unreadCount: number
+    latestMessageAt: string
+    latestMessageBody: string
+  }[]
+} | { success: false; error: string }> {
+  try {
+    await requireEmployee()
+
+    const supabase = createPortalServiceClient()
+
+    const { data: messages } = await supabase
+      .from('portal_messages')
+      .select(`
+        project_id,
+        body,
+        created_at,
+        agency_projects!inner(name)
+      `)
+      .eq('author_type', 'client')
+      .order('created_at', { ascending: false })
+
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [] }
+    }
+
+    const projectIds = [...new Set(messages.map(m => m.project_id))]
+    const { data: readStates } = await supabase
+      .from('portal_read_state')
+      .select('project_id, last_read_at')
+      .eq('user_type', 'owner')
+      .in('project_id', projectIds)
+
+    const readMap = new Map(
+      (readStates || []).map(rs => [rs.project_id, rs.last_read_at])
+    )
+
+    const projectMap = new Map<string, {
+      projectName: string
+      unreadCount: number
+      latestMessageAt: string
+      latestMessageBody: string
+    }>()
+
+    for (const msg of messages) {
+      const lastRead = readMap.get(msg.project_id)
+      if (lastRead && new Date(msg.created_at) <= new Date(lastRead)) continue
+
+      const existing = projectMap.get(msg.project_id)
+      if (existing) {
+        existing.unreadCount++
+      } else {
+        const project = msg.agency_projects as unknown as { name: string }
+        projectMap.set(msg.project_id, {
+          projectName: project.name,
+          unreadCount: 1,
+          latestMessageAt: msg.created_at,
+          latestMessageBody: msg.body,
+        })
+      }
+    }
+
+    return {
+      success: true,
+      data: Array.from(projectMap.entries()).map(([projectId, d]) => ({
+        projectId,
+        ...d,
+      })),
+    }
+  } catch (error) {
+    console.error('Error getting unread messages with preview:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
  * Get messages for a project
  */
 export async function getPortalMessages(
