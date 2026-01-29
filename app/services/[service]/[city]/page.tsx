@@ -1,0 +1,85 @@
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { getPublishedPage, getPublishedSlugs, parseContent } from '@/lib/seo/queries'
+import { services } from '@/lib/seo/services'
+import { cities } from '@/lib/seo/cities'
+import { Breadcrumbs, SeoPageSections } from '@/lib/seo/components'
+
+interface Props {
+  params: Promise<{ service: string; city: string }>
+}
+
+function buildSlug(service: string, city: string) {
+  return `${service}-${city}`
+}
+
+export async function generateStaticParams() {
+  const slugs = await getPublishedSlugs('services-city')
+  return slugs.map((slug) => {
+    // Find matching service and city from the slug
+    for (const svc of services) {
+      for (const c of cities) {
+        if (buildSlug(svc.slug, c.slug) === slug) {
+          return { service: svc.slug, city: c.slug }
+        }
+      }
+    }
+    return null
+  }).filter(Boolean)
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { service, city } = await params
+  const page = await getPublishedPage(buildSlug(service, city))
+  if (!page) return {}
+  return {
+    title: page.meta_title,
+    description: page.meta_description,
+  }
+}
+
+export default async function ServiceCityPage({ params }: Props) {
+  const { service, city } = await params
+  const page = await getPublishedPage(buildSlug(service, city))
+  if (!page) notFound()
+
+  const content = parseContent(page)
+  const serviceData = services.find((s) => s.slug === service)
+  const cityData = cities.find((c) => c.slug === city)
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: serviceData?.name ?? service,
+    description: page.meta_description,
+    provider: {
+      '@type': 'LocalBusiness',
+      name: 'Jarve',
+      url: 'https://jarve.com.au',
+    },
+    areaServed: {
+      '@type': 'City',
+      name: cityData?.name ?? city,
+    },
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="container mx-auto px-4 pt-8">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Services', href: '/#services' },
+            { label: serviceData?.name ?? service, href: `/services/${service}/${cities[0]?.slug}` },
+            { label: cityData?.name ?? city },
+          ]}
+        />
+      </div>
+      <SeoPageSections content={content} />
+    </div>
+  )
+}
