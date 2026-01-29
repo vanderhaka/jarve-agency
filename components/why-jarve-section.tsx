@@ -34,7 +34,6 @@ const comparisons = [
     icon: Globe,
     color: "green",
     points: [
-      { text: "Same timezone", ours: true },
       { text: "No language barrier", ours: true },
       { text: "Quality assurance built-in", ours: true },
       { text: "Cultural alignment", ours: true },
