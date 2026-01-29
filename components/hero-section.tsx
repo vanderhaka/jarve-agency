@@ -27,16 +27,16 @@ export function HeroSection() {
       <div className="container mx-auto text-center space-y-8 max-w-5xl">
         <FadeIn delay={0.2}>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-foreground">
-            Custom software that businesses{' '}
+            Your business has{' '}
             <span className="bg-gradient-to-r from-green-500 to-emerald-400 bg-clip-text text-transparent">
-              actually use.
+              outgrown spreadsheets.
             </span>
           </h1>
         </FadeIn>
 
         <FadeIn delay={0.3}>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            One place. No spreadsheet chaos. Fixed price. Launched in weeks, not months.
+            Custom operational tools. Fixed price. Launched in weeks.
           </p>
           <p className="text-sm md:text-base text-muted-foreground/70 max-w-2xl mx-auto mt-2">
             Most custom software takes 3–6 months. We can ship in 2–3 weeks.
