@@ -25,21 +25,36 @@ Key Features:
 ```
 City Name: Sydney
 State: NSW
-Business Context: Australia's largest city and tech hub, home to thousands of startups and established businesses. Strong presence of finance, professional services, and technology companies.
+Local Details:
+- Startup ecosystem: 2,500+ tech startups, largest in Australia
+- Key hubs: Tech Central (Central-Eveleigh), Barangaroo, North Sydney
+- Dominant industries: Fintech, SaaS, professional services, property tech
+- Local accelerators: Startmate, Antler, Stone & Chalk
+- Business culture: Fast-moving, competitive, high expectations
 ```
 
 ### City: Melbourne (Alternative Test)
 ```
 City Name: Melbourne
 State: VIC
-Business Context: Australia's creative and cultural capital with a thriving startup ecosystem. Known for its strong retail, hospitality, and professional services sectors.
+Local Details:
+- Startup ecosystem: 2,000+ startups, strong creative/design focus
+- Key hubs: Cremorne (tech precinct), Collingwood, CBD
+- Dominant industries: Retail tech, health tech, creative industries, hospitality
+- Local accelerators: LaunchVic programs, Melbourne Accelerator Program
+- Business culture: Design-conscious, relationship-focused, strong café culture
 ```
 
 ### City: Perth (Alternative Test)
 ```
 City Name: Perth
 State: WA
-Business Context: Western Australia's economic engine, driven by mining, resources, and construction. Growing tech scene with businesses looking to modernise operations.
+Local Details:
+- Business context: Mining and resources capital, $170B+ export industry
+- Key industries: Mining tech, construction, engineering services, agriculture
+- Pain points: Legacy systems, remote workforce management, compliance
+- Business culture: Practical, results-focused, less hype than east coast
+- Unique factor: 2-3 hour time difference from eastern states
 ```
 
 ---
@@ -50,136 +65,146 @@ Copy everything below this line and paste into your LLM:
 
 ---
 
-You are writing landing page content for JARVE, an Australian web development agency run by James. 
+You are writing landing page content for JARVE, a one-person Australian web development business run by James, based in Australia.
+
+## Background on James/JARVE
+- Ran a painting business for 20 years before teaching himself to code
+- Builds custom web apps, MVPs, and internal tools
+- Direct, practical communication style — not corporate or salesy
+- Solo operator, not an agency with account managers
+- Australian business (ABN registered, AUD pricing, AEST/AEDT timezone)
 
 ## Page Context
 
-**Service:** MVP Development
-**City:** Sydney, NSW
-**Price Range:** $5-12K
+**Service:** MVP Development  
+**City:** Sydney, NSW  
+**Price Range:** $5-12K  
 **Timeline:** 2-4 weeks
-**Business Context:** Australia's largest city and tech hub, home to thousands of startups and established businesses. Strong presence of finance, professional services, and technology companies.
 
-## Brand Voice
+**Local Details:**
+- Startup ecosystem: 2,500+ tech startups, largest in Australia
+- Key hubs: Tech Central (Central-Eveleigh), Barangaroo, North Sydney
+- Dominant industries: Fintech, SaaS, professional services, property tech
+- Local accelerators: Startmate, Antler, Stone & Chalk
+- Business culture: Fast-moving, competitive, high expectations
 
-- Direct and confident, not salesy or corporate
-- Speak to business owners and founders, not developers
-- Focus on outcomes and business results, not technical details
-- Australian English spelling (colour, optimise, etc.)
-- First person singular when referring to JARVE ("I build..." not "We build...")
-- No clichés like "in today's fast-paced world" or "cutting-edge solutions"
-- No emojis
+## Voice and Tone
+
+Write like James would — a practical tradesman who now builds software. NOT like a marketing agency.
+
+**DO:**
+- Be direct and matter-of-fact
+- Use simple language a business owner understands
+- Sound like a real person, not a brochure
+- Be specific and concrete (numbers, examples)
+- Australian English spelling
+
+**DON'T:**
+- Use filler phrases like "[City] moves fast" or "in today's competitive landscape"
+- Sound corporate or polished
+- Use buzzwords (cutting-edge, innovative, leverage, synergy)
+- Name-drop suburbs just to seem local — only reference locations if genuinely relevant
+- Say "we" — James works alone, use "I"
 
 ## Required Sections
 
-Generate each section with the specified word count. Be specific and practical, not generic.
+Keep content SHORT and SCANNABLE. These are pSEO pages, not blog posts.
 
-### 1. Hero Headline
-- Maximum 10 words
-- Mention the city name naturally
-- Focus on the core benefit/outcome
-- Make it punchy and direct
+### 1. Hero Headline (max 8 words)
+- Punchy, direct benefit
+- City name should feel natural, not forced
+- If the headline works better without the city name, leave it out
 
-### 2. Hero Subheadline  
-- Maximum 30 words
-- Expand on the headline
-- Mention the service type
-- Include a hint of the timeline or value proposition
+### 2. Hero Subheadline (max 20 words)
+- One clear sentence
+- Mention timeline or price if it fits naturally
 
-### 3. City Context
-- 60-80 words
-- Why businesses in this specific city need this service
-- Reference the local business environment genuinely
-- Make it feel locally relevant, not like you just swapped in a city name
-- Mention specific industries or business types common in this city
+### 3. City Context (max 50 words)
+- ONE specific, genuinely local insight about why this service matters here
+- Reference a real local detail (industry concentration, specific business challenge, ecosystem fact)
+- NOT generic "lots of businesses here need software"
 
-### 4. Problem Statement
-- 80-100 words
-- What pain points does this service solve?
-- Be specific to the service type (MVP = validation, speed to market, etc.)
-- Use "you" language to speak directly to the reader
-- Paint a picture of their current frustration
+### 4. Problem Statement (max 60 words)
+- What's the actual pain?
+- Be specific to this service type
+- Short, punchy sentences
+- "You" language
 
-### 5. Solution Overview
-- 80-100 words
-- How JARVE solves this problem
-- Mention the timeline naturally
-- Focus on the process and what they'll get
-- Keep it practical, not abstract
+### 5. Solution (max 60 words)
+- How James solves it
+- Mention timeline naturally
+- Concrete, not abstract
 
-### 6. Three Key Benefits
-- Each benefit needs a bold title (3-5 words) and description (30-40 words)
-- Make benefits specific to this service type
-- Focus on business outcomes, not features
-- Vary the angle of each benefit (speed, cost, quality, etc.)
+### 6. Three Benefits (max 25 words each)
+- Title: 3-4 words
+- Description: One sentence, specific outcome
+- No fluff
 
-### 7. CTA Text
-- Maximum 8 words
-- Action-oriented
-- Creates urgency without being pushy
+### 7. Local Signals
+Things that matter to a local business owner choosing a developer:
+- Timezone alignment
+- Australian business context (ABN, AUD, local payment)
+- Communication style
+- Any in-person availability (if applicable to this city)
 
-### 8. Meta Description
-- Maximum 155 characters
-- Include city name and service
-- Compelling reason to click
-- Natural, not keyword-stuffed
+Generate 2-3 short, practical local signals.
 
-### 9. Two FAQs
-Generate 2 frequently asked questions specific to this service + city combination.
-- Questions should feel natural, like something a real prospect would ask
-- Answers should be 50-70 words each
-- First FAQ: About the service in this location
-- Second FAQ: About working with JARVE for this service type
-- Don't repeat information already covered in other sections
+### 8. CTA Text (max 6 words)
+- Direct action
+- No "Let's" or "Let us" — sounds corporate
 
-### 10. Page-Specific Testimonial Prompt
-- Write a realistic testimonial request that describes the ideal client for this page
-- 20-30 words
-- This will be used to find/filter matching testimonials from the database
-- Example: "A Sydney startup founder who built an MVP to validate their fintech idea"
+### 9. Meta Description (max 150 characters)
+- City + service + key differentiator
+- Written for humans, not keyword stuffing
+
+### 10. One FAQ
+- A genuinely useful question someone in this city might ask about this service
+- Answer in 40-50 words, practical and direct
+
+### 11. Testimonial Match
+- 15-word description of the ideal testimonial for this page
+- Specific enough to filter a database
 
 ## Output Format
 
-Return your response as JSON with this exact structure:
+Return as JSON:
 
 ```json
 {
-  "heroHeadline": "Your headline here",
-  "heroSubheadline": "Your subheadline here",
-  "cityContext": "Your city context paragraph here",
-  "problemStatement": "Your problem statement paragraph here",
-  "solutionOverview": "Your solution overview paragraph here",
+  "heroHeadline": "",
+  "heroSubheadline": "",
+  "cityContext": "",
+  "problemStatement": "",
+  "solution": "",
   "benefits": [
-    {
-      "title": "Benefit One Title",
-      "description": "Benefit one description here"
-    },
-    {
-      "title": "Benefit Two Title",
-      "description": "Benefit two description here"
-    },
-    {
-      "title": "Benefit Three Title",
-      "description": "Benefit three description here"
-    }
+    { "title": "", "description": "" },
+    { "title": "", "description": "" },
+    { "title": "", "description": "" }
   ],
-  "ctaText": "Your CTA text here",
-  "metaDescription": "Your meta description here",
-  "faqs": [
-    {
-      "question": "First question here?",
-      "answer": "First answer here"
-    },
-    {
-      "question": "Second question here?",
-      "answer": "Second answer here"
-    }
+  "localSignals": [
+    "",
+    "",
+    ""
   ],
-  "idealTestimonialMatch": "Description of ideal testimonial for this page"
+  "ctaText": "",
+  "metaDescription": "",
+  "faq": {
+    "question": "",
+    "answer": ""
+  },
+  "testimonialMatch": ""
 }
 ```
 
-Generate unique, natural-sounding content now.
+## Quality Check Before Responding
+
+Before outputting, verify:
+1. Could this content work for ANY city if you swapped the name? If yes, it's too generic. Add real local specificity.
+2. Does it sound like marketing copy or like a practical person explaining their service? It should be the latter.
+3. Is anything over the word limit? Cut it down.
+4. Did you use any filler phrases? Remove them.
+
+Generate the content now.
 
 ---
 
@@ -187,18 +212,28 @@ Generate unique, natural-sounding content now.
 
 After generating, verify:
 
-- [ ] Headline mentions city naturally (not forced)
-- [ ] No generic filler phrases
-- [ ] Benefits are specific, not vague
-- [ ] City context feels genuine, not templated
-- [ ] Word counts are within range
-- [ ] Australian spelling used
+**Authenticity:**
+- [ ] Would this work for ANY city if you swapped the name? (If yes, it's too generic)
+- [ ] Does it sound like a real person or a marketing brochure?
+- [ ] City context references something genuinely specific to that market
+- [ ] No filler phrases ("moves fast", "competitive landscape", "cutting-edge")
+
+**Voice:**
 - [ ] First person singular ("I" not "we")
-- [ ] No emojis
+- [ ] Direct and practical, not polished
+- [ ] Sounds like an ex-tradie who builds software, not a marketing agency
+- [ ] Australian English spelling
+
+**Structure:**
+- [ ] All sections within word limits
+- [ ] Content is scannable (short paragraphs, punchy sentences)
+- [ ] Local signals are practical (timezone, ABN, etc.), not fluff
 - [ ] JSON is valid
-- [ ] FAQs are specific to this service+city (not generic)
-- [ ] FAQ answers don't repeat content from other sections
-- [ ] Testimonial match description is specific enough to filter
+
+**Local Specificity:**
+- [ ] City context mentions a real local detail (ecosystem size, specific industry, hub)
+- [ ] Local signals would actually matter to someone in that city
+- [ ] FAQ is something a local business owner would genuinely ask
 
 ---
 
@@ -215,6 +250,13 @@ Key Features:
 - Integrations with your existing tools
 - Admin dashboard & reporting
 - 2 weeks of post-launch support
+Common Use Cases:
+- Client portals
+- Booking/scheduling systems
+- Custom CRM
+- Operations dashboards
+- Quote/proposal systems
+Typical Client: Established business (5-50 staff) that's outgrown spreadsheets and generic tools
 ```
 
 ### Internal Tools
@@ -228,6 +270,13 @@ Key Features:
 - Integrates with your existing stack
 - Built for daily operations
 - Training and documentation included
+Common Use Cases:
+- Admin dashboards
+- Staff scheduling
+- Job/project management
+- Inventory tracking
+- Reporting tools
+Typical Client: Operations manager or business owner tired of workarounds
 ```
 
 ### Custom Software
@@ -241,6 +290,12 @@ Key Features:
 - Scalable infrastructure
 - Ongoing support options
 - Full documentation and handoff
+Common Use Cases:
+- Multi-user platforms
+- Complex business logic
+- Industry-specific requirements
+- Integration-heavy systems
+Typical Client: Business with a specific problem that off-the-shelf tools can't solve
 ```
 
 ### Business Automation
@@ -254,6 +309,13 @@ Key Features:
 - Tool integrations (Xero, Google, Slack, etc.)
 - Custom dashboards
 - Reduce manual data entry
+Common Use Cases:
+- Invoice automation
+- Lead routing
+- Report generation
+- Data sync between tools
+- Notification systems
+Typical Client: Business owner who spends hours on repetitive admin tasks
 ```
 
 ---
@@ -261,40 +323,108 @@ Key Features:
 ## All Cities Reference
 
 ### Tier 1 (Priority)
-| City | State | Business Context |
-|------|-------|------------------|
-| Sydney | NSW | Australia's largest city and tech hub. Finance, professional services, startups. |
-| Melbourne | VIC | Creative capital with thriving startup ecosystem. Retail, hospitality, professional services. |
-| Brisbane | QLD | Fast-growing business centre. Construction, property, tourism, emerging tech scene. |
-| Perth | WA | Resources and mining capital. Construction, engineering, businesses modernising operations. |
-| Adelaide | SA | Defence, health, and wine industries. Growing tech sector, cost-effective business environment. |
+
+**Sydney, NSW**
+```
+- Startup ecosystem: 2,500+ tech startups, largest in Australia
+- Key hubs: Tech Central (Central-Eveleigh), Barangaroo, North Sydney
+- Dominant industries: Fintech, SaaS, professional services, property tech
+- Local accelerators: Startmate, Antler, Stone & Chalk
+- Business culture: Fast-moving, competitive, high expectations
+- Unique: ~40% of Australia's tech investment flows here
+```
+
+**Melbourne, VIC**
+```
+- Startup ecosystem: 2,000+ startups, strong creative/design focus
+- Key hubs: Cremorne (tech precinct), Collingwood, CBD
+- Dominant industries: Retail tech, health tech, creative industries, hospitality
+- Local accelerators: LaunchVic programs, Melbourne Accelerator Program
+- Business culture: Design-conscious, relationship-focused
+- Unique: Australia's largest concentration of health tech startups
+```
+
+**Brisbane, QLD**
+```
+- Growing tech scene: $1B+ annual tech investment
+- Key industries: Construction tech, property, mining services, tourism
+- Business challenges: Rapid growth, need to scale operations
+- Local context: Major infrastructure boom (Olympics 2032)
+- Business culture: Practical, less formal than Sydney/Melbourne
+- Unique: Fastest-growing capital city in Australia
+```
+
+**Perth, WA**
+```
+- Economy: Mining and resources capital, $170B+ export industry
+- Key industries: Mining tech, construction, engineering services, agriculture
+- Business challenges: Legacy systems, remote workforce, compliance
+- Business culture: Practical, results-focused, less hype than east coast
+- Unique: 2-3 hour time difference from eastern states
+- Pain point: Hard to find developers who understand resources sector
+```
+
+**Adelaide, SA**
+```
+- Key industries: Defence ($90B shipbuilding program), health, wine, manufacturing
+- Growing tech: Lot Fourteen innovation precinct, Australian Space Agency HQ
+- Business culture: Relationship-driven, lower cost base than east coast
+- Unique: Australia's defence capital, Lot Fourteen is largest innovation precinct
+- Advantage: 30-40% lower operating costs than Sydney
+```
 
 ### Tier 2
-| City | State | Business Context |
-|------|-------|------------------|
-| Gold Coast | QLD | Tourism and lifestyle businesses. Property development, hospitality, health and wellness. |
-| Newcastle | NSW | Industrial heritage transitioning to services. Mining support, healthcare, education. |
-| Canberra | ACT | Government and public sector. Defence contractors, policy organisations, associations. |
-| Hobart | TAS | Tourism, agriculture, and Antarctic research. Small business community, creative industries. |
-| Wollongong | NSW | Manufacturing and university town. Steel industry, education, healthcare services. |
+
+**Gold Coast, QLD**
+```
+- Industries: Tourism ($5B+), property development, health & wellness, marine
+- Business challenges: Seasonal fluctuations, booking/scheduling systems
+- Culture: Lifestyle-focused, small business heavy
+- Unique: Australia's 6th largest city, massive short-term rental market
+```
+
+**Newcastle, NSW**
+```
+- Transition: From coal/steel to diversified economy
+- Key industries: Mining services, healthcare, university/education, renewable energy
+- Business culture: Working class roots, practical approach
+- Unique: Major hub for Hunter Valley region businesses
+```
+
+**Canberra, ACT**
+```
+- Economy: 75% government-related
+- Key industries: Defence contractors, policy/research, associations, education
+- Business challenges: Government procurement, compliance, security clearances
+- Unique: Highest average income in Australia, very stable economy
+```
+
+**Hobart, TAS**
+```
+- Key industries: Tourism, agriculture, Antarctic research, creative industries
+- Business culture: Small community, relationships matter, boutique focus
+- Unique: Smallest capital but fastest growing property market
+- Challenge: Limited local tech talent, remote work essential
+```
 
 ### Tier 3
-| City | State | Business Context |
-|------|-------|------------------|
-| Geelong | VIC | Manufacturing hub south of Melbourne. Automotive transition, education, health. |
-| Townsville | QLD | North Queensland's largest city. Mining services, defence, tropical agriculture. |
-| Cairns | QLD | Tourism gateway to Great Barrier Reef. Hospitality, marine industries, tropical agriculture. |
-| Darwin | NT | Northern gateway to Asia. Defence, resources, tourism, government services. |
-| Toowoomba | QLD | Agricultural hub. Farming, logistics, regional services, growing tech presence. |
+
+**Geelong, VIC** — Manufacturing transition, health precinct, commuter city to Melbourne
+**Townsville, QLD** — Defence (Lavarack Barracks), mining services, James Cook University
+**Cairns, QLD** — Tourism gateway, marine industries, tropical agriculture
+**Darwin, NT** — Defence, resources, Asian trade gateway, government services
+**Toowoomba, QLD** — Agricultural hub, Inland Rail terminus, logistics
 
 ---
 
 ## Quick Test Combinations
 
-1. **MVP Development + Sydney** (tech startup angle)
-2. **Web App Development + Perth** (mining/resources modernisation angle)
-3. **Internal Tools + Brisbane** (construction/trades angle)
-4. **Business Automation + Melbourne** (professional services efficiency angle)
-5. **Custom Software + Adelaide** (defence/manufacturing angle)
+Test these to see genuine variation:
 
-Try generating content for each to see the variation.
+1. **MVP Development + Sydney** — Startup validation angle
+2. **Web App Development + Perth** — Mining/resources modernisation  
+3. **Internal Tools + Brisbane** — Construction boom, scaling operations
+4. **Business Automation + Adelaide** — Defence compliance, process efficiency
+5. **Custom Software + Canberra** — Government contractor needs
+
+The content should feel meaningfully different for each, not just city-name swaps.

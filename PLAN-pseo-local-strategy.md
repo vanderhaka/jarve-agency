@@ -1100,40 +1100,53 @@ const getCachedContent = unstable_cache(
 
 ## Content Strategy for pSEO Pages
 
-### Avoid Thin/Duplicate Content
+### The Golden Rule
 
-**DO:**
-- Include city-specific details (business landscape, local industries)
-- Mention state regulations if relevant
-- Reference local success stories
-- Include genuine regional variations
+**If you can swap the city name and the content still works identically, it's too generic.**
 
-**DON'T:**
-- Just swap city name in identical content
-- Create pages with only a few sentences
-- Have near-duplicate meta descriptions
+Google's helpful content system specifically targets this pattern. Every page must have genuine local specificity that couldn't apply to another city.
 
-### Content Uniqueness Framework
+### Content Quality Criteria
 
-For each service+city page, include:
+**Genuine Local Signals (Required):**
+- Reference real local details: ecosystem size, specific industries, hubs, accelerators
+- Mention practical Australian business context: ABN, AUD, timezone alignment
+- Include challenges specific to that market (e.g., Perth's mining tech needs, Canberra's government compliance)
 
-1. **City Context (50-100 words)**
-   - "[City] is home to [X businesses/startups]..."
-   - "As [City's] tech scene grows..."
+**Voice (Required):**
+- Sound like James (practical tradie who builds software), not a marketing agency
+- First person singular ("I build..." not "We build...")
+- Direct and matter-of-fact, not polished corporate copy
+- No filler phrases: "moves fast", "competitive landscape", "cutting-edge"
 
-2. **Local Problem Statement (100-150 words)**
-   - Specific challenges in that market
-   - Industry mix of that region
+**Brevity (Required):**
+- City context: max 50 words
+- Problem statement: max 60 words
+- Solution: max 60 words
+- Benefits: max 25 words each
+- These are pSEO pages, not blog posts. Scannable beats comprehensive.
 
-3. **Service Details (shared/modular)**
-   - Can be similar across cities
+### What Makes Content Feel Local
 
-4. **Local Proof (if available)**
-   - Testimonials from that region
-   - Case studies from local businesses
+**Good (Specific):**
+- "Sydney's 2,500+ startups compete for the same developer talent"
+- "Perth's mining sector runs on legacy systems built 15 years ago"
+- "Brisbane's construction boom means everyone needs job management software yesterday"
 
-5. **Local CTA**
-   - "Book a call with a [City]-based developer"
+**Bad (Generic):**
+- "Sydney is a fast-moving business environment"
+- "Perth businesses need modern software solutions"
+- "Brisbane companies are looking to grow"
+
+### Local Signals Section
+
+Every page includes 2-3 practical signals that matter to local business owners:
+- Timezone alignment (especially for Perth)
+- Australian business setup (ABN, AUD, local invoicing)
+- Communication style (direct, same working hours)
+- In-person availability if relevant
+
+These aren't fluff — they're genuine differentiators vs. offshore developers.
 
 ---
 
@@ -1313,14 +1326,17 @@ create table pseo_content (
     {
       "heroHeadline": "...",
       "heroSubheadline": "...",
-      "cityContext": "...",
-      "problemStatement": "...",
-      "solutionOverview": "...",
-      "benefits": [...],
+      "cityContext": "...",           -- max 50 words, genuinely local
+      "problemStatement": "...",       -- max 60 words
+      "solution": "...",               -- max 60 words
+      "benefits": [
+        { "title": "...", "description": "..." }  -- max 25 words each
+      ],
+      "localSignals": ["...", "...", "..."],  -- timezone, ABN, Australian context
       "ctaText": "...",
       "metaDescription": "...",
-      "faqs": [...],
-      "idealTestimonialMatch": "..."
+      "faq": { "question": "...", "answer": "..." },  -- one specific FAQ
+      "testimonialMatch": "..."
     }
   */
   
