@@ -79,7 +79,7 @@ export function WhyJarveSection() {
           </div>
         </FadeIn>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {comparisons.map((comparison, index) => {
             const colors = colorClasses[comparison.color as keyof typeof colorClasses]
             const Icon = comparison.icon
@@ -90,7 +90,7 @@ export function WhyJarveSection() {
                   whileHover={{ y: -5 }}
                   className="h-full"
                 >
-                  <div className="h-full rounded-2xl bg-background border border-border/50 hover:shadow-xl transition-all overflow-hidden">
+                  <div className="h-full rounded-2xl bg-background border border-border/50 hover:shadow-xl transition-all flex flex-col">
                     {/* Solid color header block */}
                     <div className={`${colors.header} px-6 py-5`}>
                       <div className="flex items-center gap-3">
@@ -99,25 +99,23 @@ export function WhyJarveSection() {
                       </div>
                     </div>
 
-                    <div className="p-6">
-                      {/* Their pain point */}
-                      <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
-                        <div className="flex items-start gap-3">
-                          <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-red-700 dark:text-red-300">{comparison.theirPain}</p>
-                        </div>
-                      </div>
-
+                    <div className="p-6 flex flex-col flex-1 min-w-0">
                       {/* Our advantages */}
-                      <div className="space-y-4">
+                      <div className="space-y-4 flex-1">
                         {comparison.points.map((point) => (
                           <div key={point.text} className="flex items-center gap-3">
                             <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
                               <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                             </div>
-                            <span className="text-sm font-medium text-foreground">{point.text}</span>
+                            <span className="text-sm font-medium text-foreground break-words">{point.text}</span>
                           </div>
                         ))}
+                      </div>
+
+                      {/* Their pain point */}
+                      <div className="mt-6 flex items-start gap-3">
+                        <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-muted-foreground break-words">{comparison.theirPain}</p>
                       </div>
                     </div>
                   </div>
