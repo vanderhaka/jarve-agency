@@ -6,7 +6,7 @@ import { MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/terra-flow/utils'
 import { useState, useEffect, useCallback, useTransition } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT } from '@/lib/integrations/portal/realtime'
+import { PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT, PORTAL_MESSAGES_READ_EVENT } from '@/lib/integrations/portal/realtime'
 import { getUnreadMessagesWithPreview } from '@/lib/integrations/portal/actions/messages'
 
 export function MessagesNavLink() {
@@ -37,6 +37,9 @@ export function MessagesNavLink() {
     const channel = supabase
       .channel(`${PORTAL_DASHBOARD_CHANNEL}-messages-nav`)
       .on('broadcast', { event: PORTAL_DASHBOARD_EVENT }, () => {
+        fetchUnread()
+      })
+      .on('broadcast', { event: PORTAL_MESSAGES_READ_EVENT }, () => {
         fetchUnread()
       })
       .subscribe()

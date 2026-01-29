@@ -9,7 +9,7 @@ import { MessageSquare, Send, ExternalLink } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT } from '@/lib/integrations/portal/realtime'
+import { PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT, PORTAL_MESSAGES_READ_EVENT } from '@/lib/integrations/portal/realtime'
 import { postOwnerMessage, updateOwnerReadState } from '@/lib/integrations/portal/actions/messages'
 
 interface Conversation {
@@ -57,6 +57,13 @@ export function MessagesClient({ initialConversations }: { initialConversations:
         await updateOwnerReadState(projectId)
         // Remove conversation from list after reply + read
         setConversations(prev => prev.filter(c => c.projectId !== projectId))
+        // Notify nav link to refresh unread state
+        const supabase = createClient()
+        supabase.channel(PORTAL_DASHBOARD_CHANNEL).send({
+          type: 'broadcast',
+          event: PORTAL_MESSAGES_READ_EVENT,
+          payload: {},
+        })
       }
     } catch (error) {
       console.error('Failed to send reply:', error)
