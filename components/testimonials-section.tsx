@@ -6,26 +6,25 @@ import { Star, Quote } from 'lucide-react'
 
 const testimonials = [
   {
-    quote: "What I thought may take a day he had done under 2 hours. His knowledge and execution was on point and super professional.",
+    quote: "Went from idea to working MVP in under a week—gave me what I needed to validate fast.",
+    author: "Mike",
+    role: "Startup Founder",
+    rating: 5,
+    highlight: "Idea to MVP in under a week",
+  },
+  {
+    quote: "Helped me cut through the noise and pivot to what actually worked.",
     author: "Amanda",
     role: "Startup Founder",
     rating: 5,
-    highlight: "Done in 2 hours instead of a day",
+    highlight: "Pivoted to what worked",
   },
   {
-    quote: "James was fantastic and a pleasure to work with. Can't recommend him highly enough.",
-    author: "Jonathan",
-    role: "Product Owner",
-    project: "Marketplace MVP",
+    quote: "James took a 20-year vision and turned it into a working marketplace in 10 weeks.",
+    author: "Jonathan Butler",
+    role: "Founder, Diggable",
     rating: 5,
-    highlight: "Marketplace MVP delivered",
-  },
-  {
-    quote: "Extremely fast and quality delivery of what was asked.",
-    author: "Mike",
-    role: "App Developer",
-    rating: 5,
-    highlight: "Fast and quality delivery",
+    highlight: "20-year vision launched in 10 weeks",
   },
 ]
 
