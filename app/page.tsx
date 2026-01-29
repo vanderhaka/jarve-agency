@@ -30,11 +30,14 @@ export default function Home() {
             <span className="text-2xl font-bold tracking-tight">JARVE</span>
           </Link>
           <nav className="hidden md:flex gap-8 items-center">
-            <Link href="#services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Services
+            <Link href="#about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              About
             </Link>
             <Link href="#portfolio" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Work
+            </Link>
+            <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
             </Link>
             <Link href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Contact

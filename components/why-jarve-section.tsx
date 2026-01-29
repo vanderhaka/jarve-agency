@@ -29,16 +29,13 @@ const benefits = [
 
 export function WhyJarveSection() {
   return (
-    <section className="py-24 px-4 bg-muted/30 relative overflow-hidden">
+    <section className="py-24 px-4 bg-gradient-to-r from-primary/20 via-primary/20 to-blue-600/20 relative overflow-hidden">
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.04)_25%,rgba(255,255,255,0.04)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.04)_75%)] bg-[length:60px_60px]" />
 
       <div className="container mx-auto relative z-10">
         <FadeIn>
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <span className="text-sm font-medium text-primary">How I Work</span>
-            </div>
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
               Why founders choose JARVE
             </h2>

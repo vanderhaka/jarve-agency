@@ -15,7 +15,7 @@ export function PortfolioSection() {
       description: 'AI-powered book recommendation engine that helps readers find their next great read. Ask for suggestions by mood, topic, or similar titles and get personalized recommendations instantly.',
       image: '/portfolio/blurbbuddy.png',
       result: 'Live Product',
-      href: 'https://blurbbuddy.com',
+      href: '/work/blurbbuddy',
     },
     {
       title: 'Diggable',
@@ -23,7 +23,7 @@ export function PortfolioSection() {
       description: 'Architectural salvage marketplace connecting buyers with antique dealers nationwide. Browse thousands of vintage fixtures, fireplace mantels, and reclaimed materials from trusted shops.',
       image: '/portfolio/diggable.png',
       result: 'Live Product',
-      href: 'https://diggable.vercel.app',
+      href: '/work/diggable',
     },
     {
       title: 'Terra Flow',
@@ -98,7 +98,7 @@ export function PortfolioSection() {
             return (
               <FadeIn key={project.title} delay={index * 0.1} className="h-full">
                 {project.href ? (
-                  <Link href={project.href} target="_blank" className="block cursor-pointer h-full">
+                  <Link href={project.href} className="block cursor-pointer h-full">
                     {cardContent}
                   </Link>
                 ) : (
