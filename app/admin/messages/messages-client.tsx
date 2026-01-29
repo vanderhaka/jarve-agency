@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MessageSquare, Send, ExternalLink } from 'lucide-react'
+import { MessageSquare, Send, ExternalLink, Check, CheckCheck } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { PORTAL_DASHBOARD_CHANNEL, PORTAL_DASHBOARD_EVENT, PORTAL_MESSAGES_READ_EVENT } from '@/lib/integrations/portal/realtime'
-import { postOwnerMessage, updateOwnerReadState } from '@/lib/integrations/portal/actions/messages'
+import { postOwnerMessage, updateOwnerReadState, reactToMessage } from '@/lib/integrations/portal/actions/messages'
 
 interface Conversation {
   projectId: string
@@ -54,19 +54,48 @@ export function MessagesClient({ initialConversations }: { initialConversations:
       const result = await postOwnerMessage(projectId, text)
       if (result.success) {
         setReplyTexts(prev => ({ ...prev, [projectId]: '' }))
-        await updateOwnerReadState(projectId)
-        // Remove conversation from list after reply + read
-        setConversations(prev => prev.filter(c => c.projectId !== projectId))
-        // Notify nav link to refresh unread state
-        const supabase = createClient()
-        supabase.channel(PORTAL_DASHBOARD_CHANNEL).send({
-          type: 'broadcast',
-          event: PORTAL_MESSAGES_READ_EVENT,
-          payload: {},
-        })
+        await dismissConversation(projectId)
       }
     } catch (error) {
       console.error('Failed to send reply:', error)
+    } finally {
+      setSending(prev => ({ ...prev, [projectId]: false }))
+    }
+  }
+
+  const broadcastReadEvent = () => {
+    const supabase = createClient()
+    supabase.channel(PORTAL_DASHBOARD_CHANNEL).send({
+      type: 'broadcast',
+      event: PORTAL_MESSAGES_READ_EVENT,
+      payload: {},
+    })
+  }
+
+  const dismissConversation = async (projectId: string) => {
+    await updateOwnerReadState(projectId)
+    setConversations(prev => prev.filter(c => c.projectId !== projectId))
+    broadcastReadEvent()
+  }
+
+  const handleAcknowledge = async (projectId: string, messageIds: string[]) => {
+    setSending(prev => ({ ...prev, [projectId]: true }))
+    try {
+      await Promise.all(messageIds.map(id => reactToMessage(id, '✅')))
+      await dismissConversation(projectId)
+    } catch (error) {
+      console.error('Failed to acknowledge:', error)
+    } finally {
+      setSending(prev => ({ ...prev, [projectId]: false }))
+    }
+  }
+
+  const handleMarkRead = async (projectId: string) => {
+    setSending(prev => ({ ...prev, [projectId]: true }))
+    try {
+      await dismissConversation(projectId)
+    } catch (error) {
+      console.error('Failed to mark as read:', error)
     } finally {
       setSending(prev => ({ ...prev, [projectId]: false }))
     }
@@ -98,15 +127,37 @@ export function MessagesClient({ initialConversations }: { initialConversations:
                   {conv.unreadCount} unread
                 </span>
               </div>
-              <Link
-                href={`/admin/projects/${conv.projectId}?tab=chat`}
-                target="_blank"
-              >
-                <Button variant="ghost" size="sm">
-                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                  Full chat
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleAcknowledge(conv.projectId, conv.recentMessages.map(m => m.id))}
+                  disabled={sending[conv.projectId]}
+                  title="Acknowledge with ✅ and mark as read"
+                >
+                  <Check className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+                  Acknowledge
                 </Button>
-              </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleMarkRead(conv.projectId)}
+                  disabled={sending[conv.projectId]}
+                  title="Mark as read without replying"
+                >
+                  <CheckCheck className="h-3.5 w-3.5 mr-1.5" />
+                  Mark read
+                </Button>
+                <Link
+                  href={`/admin/projects/${conv.projectId}?tab=chat`}
+                  target="_blank"
+                >
+                  <Button variant="ghost" size="sm">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    Full chat
+                  </Button>
+                </Link>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">

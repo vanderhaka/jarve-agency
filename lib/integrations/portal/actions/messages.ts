@@ -252,6 +252,41 @@ export async function postOwnerMessage(
 }
 
 /**
+ * React to a message with an emoji (e.g. ✅ acknowledgment)
+ */
+export async function reactToMessage(
+  messageId: string,
+  emoji: string = '✅'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { user } = await requireEmployee()
+    const supabase = createPortalServiceClient()
+
+    const { error } = await supabase
+      .from('portal_message_reactions')
+      .upsert(
+        {
+          message_id: messageId,
+          user_id: user.id,
+          user_type: 'owner',
+          emoji,
+        },
+        { onConflict: 'message_id,user_id,emoji' }
+      )
+
+    if (error) {
+      console.error('[Admin] React to message error:', error)
+      return { success: false, error: 'Failed to react to message' }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error reacting to message:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
  * Update read state for a user on a project
  */
 export async function updateReadState(
