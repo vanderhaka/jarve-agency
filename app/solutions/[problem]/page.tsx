@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getPublishedPage, getPublishedSlugs, parseContent } from '@/lib/seo/queries'
+import { getPublishedPage, getPublishedSlugs, parseContent, buildFaqJsonLd } from '@/lib/seo/queries'
 import { solutions } from '@/lib/seo/solutions'
 import { Breadcrumbs, SeoPageSections } from '@/lib/seo/components'
 
@@ -49,12 +49,20 @@ export default async function SolutionPage({ params }: Props) {
     },
   }
 
+  const faqJsonLd = buildFaqJsonLd(content)
+
   return (
     <div className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <div className="container mx-auto px-4 pt-8">
         <Breadcrumbs
           items={[

@@ -39,10 +39,29 @@ These are example outputs from the content generation prompt. Use these as refer
   ],
   "ctaText": "Discuss Your MVP",
   "metaDescription": "MVP development for Sydney startups. $5-12K, 2-4 weeks. Solo Australian developer who builds working products, not pitch decks.",
-  "faq": {
-    "question": "Can you work with my accelerator's timeline?",
-    "answer": "Yes. Most accelerators want progress in weeks, not months. My 2-4 week timeline fits batch schedules at Startmate, Antler, and similar programs. I've hit tight demo day deadlines before."
-  },
+  "faq": [
+    {
+      "question": "What's included in the $5-12K price range?",
+      "answer": "Core features, user authentication, responsive design, deployment, and one week post-launch support. Price depends on complexity — I'll give you a fixed quote upfront."
+    },
+    {
+      "question": "Can you work with my accelerator's timeline?",
+      "answer": "Yes. Most accelerators want progress in weeks, not months. My 2-4 week timeline fits batch schedules at Startmate, Antler, and similar programs. I've hit tight demo day deadlines before."
+    },
+    {
+      "question": "How do you work remotely with Sydney clients?",
+      "answer": "Daily check-ins via video call, shared project board so you see progress, and I'm available during business hours. Distance doesn't slow things down."
+    },
+    {
+      "question": "What happens if the MVP needs changes after launch?",
+      "answer": "First week of tweaks is included. After that, I can build new features based on user feedback or hand over the code if you're hiring developers."
+    },
+    {
+      "question": "How is this different from hiring a full development team?",
+      "answer": "You get one experienced developer focused on your project, not junior devs managed by account people. Faster decisions, clearer communication, better results."
+    }
+  ],
+  "layout": "standard",
   "testimonialMatch": "Sydney startup founder who validated their idea with an MVP before raising seed funding."
 }
 ```
@@ -91,10 +110,21 @@ These are example outputs from the content generation prompt. Use these as refer
   ],
   "ctaText": "Talk Through Your Requirements",
   "metaDescription": "Internal tools for Perth businesses. $8-20K, 3-6 weeks. Replace spreadsheet workarounds with software built for resources and construction workflows.",
-  "faq": {
-    "question": "Can site crews access this on tablets or phones?",
-    "answer": "Yes. Everything I build is responsive and works on mobile. For remote sites with patchy internet, I can build offline-capable tools that sync when connection's available. We'd discuss your specific site conditions upfront."
-  },
+  "faq": [
+    {
+      "question": "Can site crews access this on tablets or phones?",
+      "answer": "Yes. Everything I build is responsive and works on mobile. For remote sites with patchy internet, I can build offline-capable tools that sync when connection's available."
+    },
+    {
+      "question": "How do you handle the timezone difference from Adelaide?",
+      "answer": "I work AWST hours when needed. Message me at 9am Perth time, get a response the same morning. Most communication happens async via Slack or email anyway."
+    },
+    {
+      "question": "What's included in the $8-20K price range?",
+      "answer": "Custom tool built to your process, integrations with your existing systems, team training, full documentation, and two weeks post-launch support for fixes and tweaks."
+    }
+  ],
+  "layout": "problem-first",
   "testimonialMatch": "Perth operations manager in mining services or construction who replaced spreadsheet workarounds with a custom internal tool."
 }
 ```
@@ -144,10 +174,21 @@ These are example outputs from the content generation prompt. Use these as refer
   ],
   "ctaText": "Discuss Your Project",
   "metaDescription": "Web app development for Brisbane businesses. $12-25K, 4-8 weeks. Client portals, dashboards, and custom tools that replace what you've outgrown.",
-  "faq": {
-    "question": "We're growing fast — can the app handle more users later?",
-    "answer": "Yes. I build on infrastructure that scales. If you're at 20 users now and need 200 in two years, the app handles it without a rebuild. We'll discuss expected growth upfront so the architecture makes sense for where you're heading."
-  },
+  "faq": [
+    {
+      "question": "We're growing fast — can the app handle more users later?",
+      "answer": "Yes. I build on infrastructure that scales. If you're at 20 users now and need 200 in two years, the app handles it without a rebuild."
+    },
+    {
+      "question": "What happens after the app launches?",
+      "answer": "Two weeks of post-launch support included. After that, I offer ongoing development at hourly rates or hand over the codebase with full documentation."
+    },
+    {
+      "question": "Can you integrate with Xero and our existing tools?",
+      "answer": "Yes. Most Brisbane businesses I work with use Xero, Google Workspace, and some kind of project management tool. I build integrations so data flows between systems automatically."
+    }
+  ],
+  "layout": "benefits-grid",
   "testimonialMatch": "Brisbane business owner in construction or professional services who replaced outdated systems to handle rapid growth."
 }
 ```
@@ -198,7 +239,8 @@ Use this to evaluate generated content:
 - [ ] Problem: ≤60 words
 - [ ] Solution: ≤60 words
 - [ ] Benefits: ≤25 words each
-- [ ] FAQ answer: 40-50 words
+- [ ] FAQ: 3-5 questions, each answer 40-50 words
+- [ ] Layout variant assigned (standard, problem-first, faq-heavy, benefits-grid, story-flow)
 
 ### Local Relevance
 - [ ] Local signals are practical (timezone, ABN, availability)

@@ -30,6 +30,23 @@ export async function getAllPublishedPages(): Promise<Pick<SeoPage, 'slug' | 'ro
   return data ?? []
 }
 
+export function buildFaqJsonLd(content: SeoContent) {
+  const faqs = Array.isArray(content.faq) ? content.faq : content.faq ? [content.faq] : []
+  if (faqs.length === 0) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.answer,
+      },
+    })),
+  }
+}
+
 export function parseContent(page: SeoPage): SeoContent {
   const c = page.content as Record<string, unknown>
   return {
@@ -41,7 +58,8 @@ export function parseContent(page: SeoPage): SeoContent {
     benefits: (c.benefits as SeoContent['benefits']) ?? [],
     localSignals: c.localSignals as string[] | undefined,
     ctaText: (c.ctaText as string) ?? 'Get in Touch',
-    faq: (c.faq as SeoContent['faq']) ?? { question: '', answer: '' },
+    faq: Array.isArray(c.faq) ? c.faq as SeoContent['faq'] : c.faq ? [c.faq as { question: string; answer: string }] : [],
+    layout: c.layout as SeoContent['layout'],
     testimonialMatch: c.testimonialMatch as string | undefined,
   }
 }

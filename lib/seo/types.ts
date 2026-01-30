@@ -73,6 +73,7 @@ export interface SeoContent {
   faq: {
     question: string
     answer: string
-  }
+  }[]
+  layout?: 'standard' | 'problem-first' | 'faq-heavy' | 'benefits-grid' | 'story-flow'
   testimonialMatch?: string
 }

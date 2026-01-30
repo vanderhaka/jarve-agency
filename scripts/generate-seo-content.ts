@@ -67,7 +67,7 @@ Keep content SHORT and SCANNABLE. These are pSEO pages, not blog posts.
 
 Return valid JSON:
 {
-  "heroHeadline": "max 8 words, punchy direct benefit. City name only if natural",
+  "heroHeadline": "max 8 words, punchy direct benefit. NEVER just '[Service] [City]' — that's keyword stuffing, not a headline. Lead with the outcome or transformation. City name only if it fits naturally.",
   "heroSubheadline": "max 20 words, one clear sentence. Mention timeline or price if natural",
   "cityContext": "max 50 words. ONE specific, genuinely local insight about why this service matters here. Reference a real local detail. NOT generic 'lots of businesses here need software'",
   "problemStatement": "max 60 words. What's the actual pain? Specific to this service. Short punchy sentences. You language.",
@@ -78,17 +78,20 @@ Return valid JSON:
     { "title": "3-4 words", "description": "One sentence, specific outcome. Max 25 words." }
   ],
   "localSignals": [
-    "Practical signal about working with someone based in Adelaide but serving ${cityName}",
-    "ABN/AUD/timezone signal",
-    "Communication style or availability signal"
+    "Signal 1 — choose from: timezone/availability, past work in this city's industries, how remote collaboration works for ${cityName} specifically, or a practical detail about working across states",
+    "Signal 2 — choose a DIFFERENT angle from signal 1. Options: ABN/AUD/invoicing, turnaround expectations, communication style, or specific availability for this timezone",
+    "Signal 3 — choose a DIFFERENT angle again. Make each signal unique — never repeat the same point across signals"
   ],
-  "ctaText": "max 6 words, direct action. No 'Let's' or 'Let us'",
-  "faq": {
-    "question": "A genuinely useful question someone in ${cityName} might ask about ${serviceName.toLowerCase()}",
-    "answer": "40-50 words, practical and direct"
-  },
+  "ctaText": "max 6 words, direct action. No 'Let's' or 'Let us'. MUST be unique — not 'Get Your [Service] Quote' every time. Vary the verb and framing.",
+  "faq": [
+    { "question": "A genuinely useful question someone in ${cityName} might ask about ${serviceName.toLowerCase()}", "answer": "40-50 words, practical and direct" },
+    { "question": "Different angle — pricing, process, or timeline question", "answer": "40-50 words" },
+    { "question": "Different angle — technical or industry-specific question", "answer": "40-50 words" }
+  ],
   "testimonialMatch": "15-word description of ideal testimonial for this page"
 }
+
+Generate 3-5 FAQs. Each must be a genuinely different question — not rephrased versions of the same thing. Cover pricing, process, timeline, technical, and local angles.
 
 ## Quality Check Before Responding
 
@@ -96,7 +99,10 @@ Return valid JSON:
 2. Does it sound like marketing copy or like a practical person explaining their service? Must be the latter.
 3. Is anything over the word limit? Cut it down.
 4. Did you use any filler phrases? Remove them.
-5. Did you say "we" anywhere? Change to "I".`
+5. Did you say "we" anywhere? Change to "I".
+6. Is your heroHeadline just "[Service] [City]"? That's keyword stuffing. Rewrite it as a benefit.
+7. Is your ctaText identical to what you'd write for any other page? Make it specific to this service/city combination.
+8. Are your localSignals just generic "ABN registered, AUD pricing" that could apply to any page? Add something specific to ${cityName}.`
 }
 
 function buildIndustryPrompt(industryName: string, painPoints: string[], cityName?: string, cityState?: string, localDetails?: string): string {
@@ -134,12 +140,15 @@ Return valid JSON:
   ],
   ${cityName ? '"localSignals": ["Adelaide-based, serving ' + cityName + '", "ABN/AUD signal", "Communication signal"],' : ''}
   "ctaText": "max 6 words",
-  "faq": {
-    "question": "Genuine question about software for ${industryName.toLowerCase()}",
-    "answer": "40-50 words, practical"
-  },
+  "faq": [
+    { "question": "Genuine question about software for ${industryName.toLowerCase()}", "answer": "40-50 words, practical" },
+    { "question": "Different angle — pricing, process, or timeline", "answer": "40-50 words" },
+    { "question": "Different angle — technical or industry-specific", "answer": "40-50 words" }
+  ],
   "testimonialMatch": "15-word description of ideal testimonial"
-}`
+}
+
+Generate 3-5 FAQs. Each must be genuinely different — cover pricing, process, timeline, technical, and industry angles.`
 }
 
 function buildSolutionPrompt(problem: string, description: string): string {
@@ -165,12 +174,15 @@ Return valid JSON:
     { "title": "3-4 words", "description": "max 25 words" }
   ],
   "ctaText": "max 6 words",
-  "faq": {
-    "question": "Genuine question about this solution",
-    "answer": "40-50 words, practical"
-  },
+  "faq": [
+    { "question": "Genuine question about this solution", "answer": "40-50 words, practical" },
+    { "question": "Different angle — pricing, process, or timeline", "answer": "40-50 words" },
+    { "question": "Different angle — technical question", "answer": "40-50 words" }
+  ],
   "testimonialMatch": "15-word description of ideal testimonial"
-}`
+}
+
+Generate 3-5 FAQs. Each must be genuinely different.`
 }
 
 function buildComparisonPrompt(tool: string, category: string): string {
@@ -196,12 +208,15 @@ Return valid JSON:
     { "title": "3-4 words", "description": "max 25 words" }
   ],
   "ctaText": "max 6 words",
-  "faq": {
-    "question": "Genuine question about custom vs ${tool}",
-    "answer": "40-50 words, fair and practical"
-  },
+  "faq": [
+    { "question": "Genuine question about custom vs ${tool}", "answer": "40-50 words, fair and practical" },
+    { "question": "Different angle — migration, cost, or timeline", "answer": "40-50 words" },
+    { "question": "Different angle — when to stick with ${tool}", "answer": "40-50 words" }
+  ],
   "testimonialMatch": "15-word description of ideal testimonial"
-}`
+}
+
+Generate 3-5 FAQs. Each must be genuinely different.`
 }
 
 function buildPageDefinitions(): PageDefinition[] {
@@ -270,17 +285,68 @@ function buildPageDefinitions(): PageDefinition[] {
   return pages
 }
 
+const LAYOUTS = ['standard', 'problem-first', 'faq-heavy', 'benefits-grid', 'story-flow'] as const
+
+function pickLayout(): string {
+  return LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)]
+}
+
 async function generateContent(page: PageDefinition): Promise<Record<string, unknown>> {
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1500,
+    max_tokens: 2000,
     messages: [{ role: 'user', content: page.prompt }],
   })
 
   const text = message.content[0].type === 'text' ? message.content[0].text : ''
   const jsonMatch = text.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error(`No JSON found in response for ${page.slug}`)
-  return JSON.parse(jsonMatch[0])
+  const content = JSON.parse(jsonMatch[0])
+
+  // Normalize single FAQ to array (in case LLM returns old format)
+  if (content.faq && !Array.isArray(content.faq)) {
+    content.faq = [content.faq]
+  }
+
+  // Post-process: replace "we/We" with "I" (James is solo)
+  // Catch-all: "We" or "we" followed by a verb-like word, plus contractions
+  const fixWe = (str: string) => {
+    return str
+      .replace(/\bWe're\b/g, "I'm")
+      .replace(/\bwe're\b/g, "I'm")
+      .replace(/\bWe've\b/g, "I've")
+      .replace(/\bwe've\b/g, "I've")
+      .replace(/\bWe'll\b/g, "I'll")
+      .replace(/\bwe'll\b/g, "I'll")
+      .replace(/\bWe'd\b/g, "I'd")
+      .replace(/\bwe'd\b/g, "I'd")
+      .replace(/\bWe (?=[a-z])/g, 'I ')
+      .replace(/\bwe (?=[a-z])/g, 'I ')
+  }
+  // Apply to all string fields
+  for (const key of Object.keys(content)) {
+    const val = content[key]
+    if (typeof val === 'string') {
+      content[key] = fixWe(val)
+    } else if (Array.isArray(val)) {
+      content[key] = val.map((item: unknown) => {
+        if (typeof item === 'string') return fixWe(item)
+        if (item && typeof item === 'object') {
+          const obj = { ...(item as Record<string, unknown>) }
+          for (const k of Object.keys(obj)) {
+            if (typeof obj[k] === 'string') obj[k] = fixWe(obj[k] as string)
+          }
+          return obj
+        }
+        return item
+      })
+    }
+  }
+
+  // Assign random layout variant
+  content.layout = pickLayout()
+
+  return content
 }
 
 async function upsertPage(page: PageDefinition, content: Record<string, unknown>) {

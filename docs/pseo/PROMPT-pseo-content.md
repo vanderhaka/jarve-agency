@@ -157,9 +157,10 @@ Generate 2-3 short, practical local signals.
 - City + service + key differentiator
 - Written for humans, not keyword stuffing
 
-### 10. One FAQ
-- A genuinely useful question someone in this city might ask about this service
-- Answer in 40-50 words, practical and direct
+### 10. FAQs (3-5)
+- 3-5 genuinely different questions — cover pricing, process, timeline, technical, and local angles
+- Each answer 40-50 words, practical and direct
+- No rephrased versions of the same question
 
 ### 11. Testimonial Match
 - 15-word description of the ideal testimonial for this page
@@ -188,10 +189,11 @@ Return as JSON:
   ],
   "ctaText": "",
   "metaDescription": "",
-  "faq": {
-    "question": "",
-    "answer": ""
-  },
+  "faq": [
+    { "question": "", "answer": "" },
+    { "question": "", "answer": "" },
+    { "question": "", "answer": "" }
+  ],
   "testimonialMatch": ""
 }
 ```
@@ -203,8 +205,13 @@ Before outputting, verify:
 2. Does it sound like marketing copy or like a practical person explaining their service? It should be the latter.
 3. Is anything over the word limit? Cut it down.
 4. Did you use any filler phrases? Remove them.
+5. Is your heroHeadline just "[Service] [City]"? That's keyword stuffing — rewrite as a benefit.
+6. Is your ctaText identical to what you'd write for any other page? Make it specific.
+7. Did you say "we" anywhere? Change to "I".
 
 Generate the content now.
+
+**Note:** The generator script also assigns a random `layout` variant (standard, problem-first, faq-heavy, benefits-grid, story-flow) and post-processes all "we" → "I" automatically.
 
 ---
 
