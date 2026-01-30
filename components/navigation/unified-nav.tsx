@@ -11,6 +11,7 @@ import {
   Shield,
   FileSignature,
   Search,
+  BarChart3,
 } from 'lucide-react'
 import { Button } from '@/components/terra-flow/ui/button'
 import { Kbd } from '@/components/terra-flow/ui/kbd'
@@ -62,6 +63,10 @@ export function UnifiedNav({ isAdmin = false }: UnifiedNavProps) {
         </NavLink>
         <NavLink href="/admin/proposals" icon={FileSignature}>
           Proposals
+        </NavLink>
+
+        <NavLink href="/admin/seo-dashboard" icon={BarChart3}>
+          SEO
         </NavLink>
 
         <MessagesNavLink />
