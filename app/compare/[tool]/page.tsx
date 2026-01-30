@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPublishedPage, getPublishedSlugs, parseContent, buildFaqJsonLd } from '@/lib/seo/queries'
 import { comparisons } from '@/lib/seo/comparisons'
-import { Breadcrumbs, SeoPageSections } from '@/lib/seo/components'
+import { Breadcrumbs, SeoPageSections, InternalLinksSection } from '@/lib/seo/components'
+import { getRelatedPages } from '@/lib/seo/internal-links'
 
 interface Props {
   params: Promise<{ tool: string }>
@@ -23,9 +24,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tool } = await params
   const page = await getPublishedPage(buildSlug(tool))
   if (!page) return {}
+  const ogTitle = encodeURIComponent(page.meta_title)
+  const ogDesc = encodeURIComponent(page.meta_description)
   return {
     title: page.meta_title,
     description: page.meta_description,
+    openGraph: {
+      images: [`/api/og?title=${ogTitle}&description=${ogDesc}`],
+    },
   }
 }
 
@@ -35,6 +41,7 @@ export default async function ComparisonPage({ params }: Props) {
   if (!page) notFound()
 
   const content = parseContent(page)
+  const relatedLinks = await getRelatedPages(page.slug, page.route_pattern)
   const compData = comparisons.find((c) => c.slug === tool)
 
   const jsonLd = {
@@ -73,6 +80,7 @@ export default async function ComparisonPage({ params }: Props) {
         />
       </div>
       <SeoPageSections content={content} />
+      <InternalLinksSection links={relatedLinks} />
     </div>
   )
 }

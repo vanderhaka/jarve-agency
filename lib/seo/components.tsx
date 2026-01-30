@@ -213,6 +213,50 @@ function CombinedContextProblem({ content }: { content: SeoContent }) {
   )
 }
 
+export function InternalLinksSection({ links }: { links: { title: string; href: string; group: string }[] }) {
+  if (!links || links.length === 0) return null
+
+  // Group links by their group label
+  const grouped = links.reduce<Record<string, { title: string; href: string }[]>>((acc, link) => {
+    if (!acc[link.group]) acc[link.group] = []
+    acc[link.group].push({ title: link.title, href: link.href })
+    return acc
+  }, {})
+
+  return (
+    <section className="py-16 border-t border-border/50">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <FadeIn>
+          <h2 className="text-2xl font-bold tracking-tight mb-8">Related Pages</h2>
+        </FadeIn>
+        <div className="grid gap-8 md:grid-cols-2">
+          {Object.entries(grouped).map(([group, groupLinks]) => (
+            <FadeIn key={group}>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                  {group}
+                </h3>
+                <ul className="space-y-2">
+                  {groupLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-foreground hover:text-primary transition-colors"
+                      >
+                        {link.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function CtaSection({ content }: { content: SeoContent }) {
   return (
     <section className="py-20 md:py-28">

@@ -1,12 +1,11 @@
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { cities, services, industries, solutions, comparisons, tier1Cities } from '../lib/seo'
 import type { RoutePattern } from '../lib/seo'
+import { generateContent } from '../lib/seo/generation'
 
-const anthropic = new Anthropic()
 const supabase = createClient(
   process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -397,85 +396,8 @@ function buildPageDefinitions(): PageDefinition[] {
   return pages
 }
 
-const LAYOUTS = ['standard', 'problem-first', 'faq-heavy', 'benefits-grid', 'story-flow'] as const
-
-function pickLayout(): string {
-  return LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)]
-}
-
-async function generateContent(page: PageDefinition): Promise<Record<string, unknown>> {
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2000,
-    messages: [{ role: 'user', content: page.prompt }],
-  })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error(`No JSON found in response for ${page.slug}`)
-  const content = JSON.parse(jsonMatch[0])
-
-  // Normalize single FAQ to array (in case LLM returns old format)
-  if (content.faq && !Array.isArray(content.faq)) {
-    content.faq = [content.faq]
-  }
-
-  // Post-process: fix voice issues (James is solo, no buzzwords)
-  const fixVoice = (str: string) => {
-    return str
-      // Fix pronouns
-      .replace(/\bWe're\b/g, "I'm")
-      .replace(/\bwe're\b/g, "I'm")
-      .replace(/\bWe've\b/g, "I've")
-      .replace(/\bwe've\b/g, "I've")
-      .replace(/\bWe'll\b/g, "I'll")
-      .replace(/\bwe'll\b/g, "I'll")
-      .replace(/\bWe'd\b/g, "I'd")
-      .replace(/\bwe'd\b/g, "I'd")
-      .replace(/\bWe (?=[a-z])/g, 'I ')
-      .replace(/\bwe (?=[a-z])/g, 'I ')
-      // Fix team language
-      .replace(/\b[Oo]ur team\b/g, 'I')
-      .replace(/\b[Oo]ur company\b/g, 'my business')
-      .replace(/\b[Oo]ur experts?\b/g, 'I')
-      .replace(/\b[Oo]ur developers?\b/g, 'I')
-      .replace(/\b[Oo]ur specialists?\b/g, 'I')
-      // Fix buzzwords
-      .replace(/\bcutting-edge\b/gi, 'modern')
-      .replace(/\binnovative\b/gi, 'practical')
-      .replace(/\bleverage\b/gi, 'use')
-      .replace(/\bsynergy\b/gi, 'collaboration')
-      .replace(/\bindustry-leading\b/gi, 'solid')
-      .replace(/\bbest-in-class\b/gi, 'reliable')
-      .replace(/\bworld-class\b/gi, 'quality')
-      // Fix Let's in CTAs
-      .replace(/^Let's /g, '')
-      .replace(/^Let us /g, '')
-  }
-  // Apply to all string fields
-  for (const key of Object.keys(content)) {
-    const val = content[key]
-    if (typeof val === 'string') {
-      content[key] = fixVoice(val)
-    } else if (Array.isArray(val)) {
-      content[key] = val.map((item: unknown) => {
-        if (typeof item === 'string') return fixVoice(item)
-        if (item && typeof item === 'object') {
-          const obj = { ...(item as Record<string, unknown>) }
-          for (const k of Object.keys(obj)) {
-            if (typeof obj[k] === 'string') obj[k] = fixVoice(obj[k] as string)
-          }
-          return obj
-        }
-        return item
-      })
-    }
-  }
-
-  // Assign random layout variant
-  content.layout = pickLayout()
-
-  return content
+async function generatePageContent(page: PageDefinition): Promise<Record<string, unknown>> {
+  return generateContent(page.prompt)
 }
 
 async function upsertPage(page: PageDefinition, content: Record<string, unknown>) {
@@ -529,7 +451,7 @@ async function generate(pattern?: string, limit?: number) {
     const page = pages[i]
     console.log(`[${i + 1}/${pages.length}] ${page.slug}`)
     try {
-      const content = await generateContent(page)
+      const content = await generatePageContent(page)
       await upsertPage(page, content)
       console.log(`  -> saved as draft`)
     } catch (err) {

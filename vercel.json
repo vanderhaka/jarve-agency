@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/stripe-reconcile",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/seo-drip",
+      "schedule": "0 2 * * *"
     }
   ]
 }
