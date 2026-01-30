@@ -413,18 +413,54 @@ async function generate(pattern?: string, limit?: number) {
   }
 }
 
+function slugToPath(slug: string, routePattern: string): string {
+  switch (routePattern) {
+    case 'services-city': {
+      for (const svc of services) {
+        for (const c of cities) {
+          if (`${svc.slug}-${c.slug}` === slug) return `/services/${svc.slug}/${c.slug}`
+        }
+      }
+      return `/services/${slug}`
+    }
+    case 'industries':
+      return `/industries/${slug.replace('industry-', '')}`
+    case 'industries-city': {
+      for (const ind of industries) {
+        for (const c of tier1Cities) {
+          if (`industry-${ind.slug}-${c.slug}` === slug) return `/industries/${ind.slug}/${c.slug}`
+        }
+      }
+      return `/industries/${slug.replace('industry-', '')}`
+    }
+    case 'solutions':
+      return `/solutions/${slug.replace('solution-', '')}`
+    case 'comparisons':
+      return `/compare/${slug.replace('compare-', '')}`
+    default:
+      return `/${slug}`
+  }
+}
+
 async function publish(slugPattern: string) {
   const { data, error } = await supabase
     .from('seo_pages')
     .update({ status: 'published', updated_at: new Date().toISOString() })
     .like('slug', slugPattern)
-    .select('slug')
+    .select('slug, route_pattern')
 
   if (error) {
     console.error(`Publish failed: ${error.message}`)
     return
   }
   console.log(`Published ${data?.length ?? 0} pages matching "${slugPattern}"`)
+  if (data && data.length > 0) {
+    console.log('\nLinks:')
+    for (const page of data) {
+      const path = slugToPath(page.slug, page.route_pattern)
+      console.log(`  http://localhost:3000${path}`)
+    }
+  }
 }
 
 // CLI
