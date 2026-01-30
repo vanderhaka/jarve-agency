@@ -29,22 +29,35 @@ Build pSEO system for Jarve agency Next.js site with Supabase backend.
 - [x] Phase 8: Content structure v2 — heroHeadline, cityContext, localSignals
 - [x] Phase 9: TypeScript + lint + build passing
 - [x] Phase 10: Committed and pushed
-- [ ] Phase 11: James reviews test pages (mvp-development sydney + melbourne)
-- [ ] Phase 12: Generate all 187 pages
-- [ ] Phase 13: Publish tier-1 service+city batch (30 pages)
-- [ ] Phase 14: Deploy to Vercel, verify SSG
-- [ ] Phase 15: Monitor SEO impact, publish remaining batches
+- [x] Phase 11: Quality gate (`lib/seo/quality-gate.ts`) — blocks false claims, pronouns, buzzwords
+- [x] Phase 12: Shared generation module (`lib/seo/generation.ts`) — fixVoice, pickLayout, generateContent
+- [x] Phase 13: Internal links (`lib/seo/internal-links.ts`) — organic cross-linking
+- [x] Phase 14: OG image generation (`app/api/og/route.tsx`) — Edge, 1200x630
+- [x] Phase 15: Daily cron drip (`app/api/cron/seo-drip/route.ts`) — ~5 pages/day
+- [x] Phase 16: All 5 SEO routes updated with OG images + internal links
+- [x] Phase 17: vercel.json cron entry, @vercel/og dependency, metaDescription type
+- [ ] Phase 18: James reviews test pages (mvp-development sydney + melbourne)
+- [ ] Phase 19: Generate all 187 pages
+- [ ] Phase 20: Set CRON_SECRET env var in Vercel
+- [ ] Phase 21: Deploy to Vercel, verify SSG + cron execution
+- [ ] Phase 22: Monitor SEO impact, cron publishes remaining batches automatically
 
 ## Files to Modify
 - `supabase/migrations/20260130000001_create_seo_pages.sql` - new migration
-- `lib/seo/types.ts` - TypeScript types
+- `lib/seo/types.ts` - TypeScript types (incl. metaDescription)
 - `lib/seo/cities.ts` - Australian cities data
 - `lib/seo/services.ts` - Services data
 - `lib/seo/industries.ts` - Industries data
 - `lib/seo/solutions.ts` - Solutions data
 - `lib/seo/comparisons.ts` - Comparisons data
 - `lib/seo/index.ts` - barrel export
-- `scripts/generate-seo-content.ts` - content generation CLI
+- `lib/seo/quality-gate.ts` - pre-publish content validation
+- `lib/seo/generation.ts` - shared: fixVoice, pickLayout, generateContent
+- `lib/seo/internal-links.ts` - cross-page linking queries
+- `lib/seo/components.tsx` - Breadcrumbs, SeoPageSections, InternalLinksSection
+- `scripts/generate-seo-content.ts` - content generation CLI (imports from generation.ts)
+- `app/api/og/route.tsx` - OG image generation (Edge runtime)
+- `app/api/cron/seo-drip/route.ts` - daily cron publisher
 - `app/services/[service]/[city]/page.tsx` - service+city template
 - `app/industries/[industry]/page.tsx` - industry template
 - `app/industries/[industry]/[city]/page.tsx` - industry+city template
@@ -60,10 +73,15 @@ Build pSEO system for Jarve agency Next.js site with Supabase backend.
 
 ## Decisions Made
 - Use `createAnonClient()` from `utils/supabase/anon.ts` for public page data fetching
-- Content structure matches PROMPT-pseo-content.md (heroHeadline, cityContext, localSignals, single FAQ)
+- Content structure matches PROMPT-pseo-content.md (heroHeadline, cityContext, localSignals, faq array, metaDescription)
 - James's voice: first person, Adelaide-based, ex-tradesman, practical
 - Never claims to be in any city other than Adelaide
 - Services include concrete pricing ($5-40K ranges) and timelines
 - Cities include rich localDetails (accelerators, industries, culture)
 - Duplicate migration timestamps fixed (20260124000001 → 000002/3/4)
 - dotenv added for script to auto-load .env.local
+- Drip pipeline publishes ~5 pages/day via Vercel cron at 2am UTC
+- Quality gate validates content before publishing (false claims, pronouns, buzzwords, word counts)
+- Internal links grow organically (same-service/diff-city + same-city/diff-service)
+- OG images auto-generated via Edge runtime endpoint
+- Generation functions extracted to shared module (used by both CLI and cron)
