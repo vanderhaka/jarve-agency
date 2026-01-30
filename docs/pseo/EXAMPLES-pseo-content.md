@@ -202,15 +202,82 @@ These are example outputs from the content generation prompt. Use these as refer
 
 ---
 
+## Example 4: Industry Page — Construction
+
+**Route:** `/industries/construction`
+**Type:** Industry page (no city)
+
+```json
+{
+  "heroHeadline": "Software for Builders Who Build",
+  "heroSubheadline": "Job tracking, quoting, and compliance tools for construction businesses. $8-25K.",
+  "cityContext": "Construction across Australia runs on paper job sheets, WhatsApp groups, and someone's memory. Margins are thin enough without losing hours to admin that software should handle.",
+  "problemStatement": "Your site manager tracks 30 jobs on a whiteboard. Quotes live in Word docs nobody can find. Compliance paperwork gets done at 10pm because the day was spent actually building. Subcontractor invoices sit in an email folder labelled 'TO DO'.",
+  "solution": "I build tools that match how construction actually works — mobile-first job tracking, quoting systems that pull from your rate cards, compliance dashboards that flag what's overdue. Built by someone who ran a trades business for 20 years.",
+  "benefits": [
+    {
+      "title": "Mobile-First Job Tracking",
+      "description": "Your crew updates job status from site. No more calling the office to find out what's happening."
+    },
+    {
+      "title": "Quoting in Minutes",
+      "description": "Pull from saved rate cards, add variations, send a professional quote — without opening a spreadsheet."
+    },
+    {
+      "title": "Compliance That Flags Itself",
+      "description": "Expiring licences, overdue safety docs, missing sign-offs — the system tells you before it's a problem."
+    }
+  ],
+  "localSignals": [
+    "Australian-based developer, ABN registered, invoices in AUD with GST.",
+    "I ran a painting business for 20 years — I understand trades workflows, not just code.",
+    "ACST timezone, available during business hours."
+  ],
+  "ctaText": "Talk About Your Workflow",
+  "metaDescription": "Construction software by an ex-tradesman turned developer. Job tracking, quoting, compliance tools. $8-25K, built for how construction actually works.",
+  "faq": [
+    {
+      "question": "Do you understand construction workflows or just software?",
+      "answer": "Both. I ran a painting business for 20 years before switching to software. I know what it's like to juggle jobs, subs, and paperwork. That experience shapes everything I build."
+    },
+    {
+      "question": "Can site crews use this on their phones?",
+      "answer": "Yes. Everything is mobile-first and works on any device. For remote sites with poor reception, I can build offline capability that syncs when connection returns."
+    },
+    {
+      "question": "What's the typical price range?",
+      "answer": "Between $8K and $25K depending on complexity. A simple job tracker is at the lower end. A full quoting, scheduling, and compliance system is at the higher end. Fixed quote upfront."
+    },
+    {
+      "question": "How long does it take?",
+      "answer": "Three to eight weeks depending on scope. I start with the most painful problem first so you see value quickly, then build out from there."
+    }
+  ],
+  "layout": "problem-first",
+  "testimonialMatch": "Construction business owner who replaced paper-based job tracking and quoting with a custom tool."
+}
+```
+
+### Why This Works
+
+- **Industry page, no city** — speaks to the entire Australian construction sector
+- **James's background shines:** 20 years in painting gives genuine credibility with tradies
+- **Problem is visceral:** Whiteboard, WhatsApp groups, 10pm compliance — recognisable pain
+- **4 FAQs** — demonstrates mid-range of the 3-5 FAQ guideline
+- **Voice is authentic:** "Builders who build", "someone's memory" — not marketing speak
+
+---
+
 ## Variation Analysis
 
-| Element | Sydney | Perth | Brisbane |
-|---------|--------|-------|----------|
-| **Core narrative** | Startup validation | Legacy system replacement | Scaling with growth |
-| **Key local reference** | Startmate, 40% funding | AWST timezone, Pilbara | Olympics pipeline, 15→50 jobs |
-| **Problem framing** | Proving idea works | Spreadsheets from 2014, sites | Outgrown systems, workarounds |
-| **FAQ topic** | Accelerator timelines | Mobile/offline for remote sites | Handling more users |
-| **Tone** | Startup-speak | Operations/practical | Growth/scaling |
+| Element | Sydney (service+city) | Perth (service+city) | Brisbane (service+city) | Construction (industry) |
+|---------|--------|-------|----------|-------------|
+| **Core narrative** | Startup validation | Legacy system replacement | Scaling with growth | Trades workflow automation |
+| **Key reference** | Startmate, 40% funding | AWST timezone, Pilbara | Olympics pipeline, 15→50 jobs | 20 years painting business |
+| **Problem framing** | Proving idea works | Spreadsheets from 2014, sites | Outgrown systems, workarounds | Paper job sheets, WhatsApp |
+| **FAQ topic** | Accelerator timelines | Mobile/offline for remote sites | Handling more users | Trades background credibility |
+| **Tone** | Startup-speak | Operations/practical | Growth/scaling | Tradesman-to-tradesman |
+| **Route type** | service+city | service+city | service+city | industry (no city) |
 
 ### The Swap Test
 

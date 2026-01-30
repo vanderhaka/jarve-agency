@@ -72,7 +72,7 @@ You are writing landing page content for JARVE, a one-person Australian web deve
 - Builds custom web apps, MVPs, and internal tools
 - Direct, practical communication style — not corporate or salesy
 - Solo operator, not an agency with account managers
-- Australian business (ABN registered, AUD pricing, AEST/AEDT timezone)
+- Australian business (ABN registered, AUD pricing, ACST/ACDT timezone)
 
 ## Page Context
 
@@ -194,8 +194,11 @@ Return as JSON:
     { "question": "", "answer": "" },
     { "question": "", "answer": "" }
   ],
-  "testimonialMatch": ""
+  "testimonialMatch": "",
+  "layout": ""
 }
+
+**Note on `layout`:** The generator script assigns a random layout variant (standard, problem-first, faq-heavy, benefits-grid, story-flow) automatically. The LLM does not need to output this field — it will be overwritten by post-processing.
 ```
 
 ## Quality Check Before Responding
@@ -211,7 +214,7 @@ Before outputting, verify:
 
 Generate the content now.
 
-**Note:** The generator script also assigns a random `layout` variant (standard, problem-first, faq-heavy, benefits-grid, story-flow) and post-processes all "we" → "I" automatically.
+**Note:** The generator script assigns `layout` automatically (overrides any LLM output) and post-processes all "we" → "I" using word-boundary matching (`\bwe\b`) to avoid corrupting words like "somewhere" or "between".
 
 ---
 
@@ -371,8 +374,9 @@ Typical Client: Business owner who spends hours on repetitive admin tasks
 - Pain point: Hard to find developers who understand resources sector
 ```
 
-**Adelaide, SA**
+**Adelaide, SA** ⭐ HOME BASE
 ```
+- HOME BASE: James/JARVE is based in Adelaide — only city where in-person meetings are standard
 - Key industries: Defence ($90B shipbuilding program), health, wine, manufacturing
 - Growing tech: Lot Fourteen innovation precinct, Australian Space Agency HQ
 - Business culture: Relationship-driven, lower cost base than east coast

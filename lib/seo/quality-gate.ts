@@ -49,8 +49,12 @@ export function runQualityGate(content: SeoContent): QualityResult {
   // Check false claims across all content
   checkStringValue(content, 'content', falseClaimsRegex, 'False claim detected')
 
-  // Check "we" pronouns across all content
-  checkStringValue(content, 'content', wePronouns, '"We/our" pronoun detected (James is solo operator)')
+  // Check "we" pronouns in James's voice only (not customer-voiced FAQ questions)
+  const contentWithoutFaqQuestions = { ...content }
+  if (contentWithoutFaqQuestions.faq) {
+    contentWithoutFaqQuestions.faq = content.faq.map(f => ({ ...f, question: '' }))
+  }
+  checkStringValue(contentWithoutFaqQuestions, 'content', wePronouns, '"We/our" pronoun detected (James is solo operator)')
 
   // Check buzzwords across all content
   checkStringValue(content, 'content', buzzwords, 'Buzzword detected')

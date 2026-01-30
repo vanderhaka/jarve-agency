@@ -14,7 +14,7 @@
 - [x] Content structure: heroHeadline, heroSubheadline, cityContext, problemStatement, solution, benefits, localSignals, ctaText, faq (array), layout, testimonialMatch, metaDescription
 - [x] **FAQ expanded: 3-5 FAQs per page** (was single FAQ)
 - [x] **5 layout variants**: standard, problem-first, faq-heavy, benefits-grid, story-flow — randomly assigned at generation
-- [x] **Post-processing**: auto-replaces "we/We" → "I" in all generated content
+- [x] **Post-processing**: auto-replaces "we/We" → "I" using word-boundary regex (`\bwe\b`) to avoid corrupting words like "somewhere"
 - [x] **Prompt improvements**: headline quality gate (no keyword stuffing), CTA variation enforced, localSignals diversity enforced
 - [x] **FAQPage JSON-LD** structured data on all 5 page templates
 - [x] **Styling matched to main site**: FadeIn animations, green gradient CTAs, radial gradient backgrounds, grid patterns, hover card effects, max-w-5xl containers, Check badges on benefits
@@ -39,7 +39,7 @@
 - [ ] **Copy review by James** — check localhost:3000/services/mvp-development/sydney and /melbourne
 - [ ] Generate remaining 185 pages (`npm run generate-seo generate`)
 - [ ] Set `CRON_SECRET` env var in Vercel for drip cron authentication
-- [ ] Add testimonial/social proof sections (testimonialMatch field exists but no UI yet)
+- [ ] Add testimonial/social proof sections (`testimonialMatch` field is generated for future use — no UI yet)
 - [ ] robots.ts may need updating for new routes
 - [ ] Deploy to Vercel and verify static generation + cron execution
 
@@ -80,7 +80,7 @@
 - `metaDescription` field added to SeoContent type
 - Components use FadeIn animations, green gradient CTAs, radial backgrounds (matches main site)
 - **Drip pipeline**: cron runs daily at 2am UTC, publishes 5 draft pages per run
-- **Quality gate** blocks: false claims, "we" pronouns, buzzwords, missing fields, word count violations
+- **Quality gate** blocks: false claims, "we" pronouns (in James's voice only — customer-voiced FAQ questions like "We're growing fast" are allowed), buzzwords, missing fields, word count violations
 - **Internal links** grow organically as more pages are published
 - **OG images** auto-generated via `/api/og?title=...&description=...`
 
@@ -115,5 +115,5 @@ curl -X POST http://localhost:3000/api/cron/seo-drip -H "Authorization: Bearer $
 
 ## Blockers
 - Copy quality depends on prompt — if output is generic, tweak prompt in generate-seo-content.ts
-- Rotate ANTHROPIC_API_KEY (was exposed in chat history)
+- ⚠️ **URGENT**: Rotate ANTHROPIC_API_KEY (was exposed in chat history) — do this BEFORE generating content
 - Set `CRON_SECRET` env var in Vercel for cron authentication

@@ -1,5 +1,7 @@
 # Jarve Agency - Claude Instructions
 
+use /o skill or command every time
+
 ## Testing Strategy
 
 **Automate UI testing with Claude in Chrome wherever possible.**
@@ -63,3 +65,4 @@ vercel env pull .env.check --environment=production
 cat .env.check | od -c | head -20  # Check for embedded \n
 rm .env.check
 ```
+use vercel cli when needed
