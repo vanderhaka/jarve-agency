@@ -1,9 +1,9 @@
 # pSEO System - Status
 
 **Updated**: 2026-01-30
-**Branch**: cursor/pseo-local-strategy-d19c
+**Branch**: main
 
-## Current State: Drip Pipeline Complete — Ready for Automated Publishing
+## Current State: Drip Pipeline + SERP Rank Tracking Live
 
 ### What's Done
 - [x] Database: `seo_pages` table live in Supabase (migration applied)
@@ -33,6 +33,11 @@
 - [x] **All 5 SEO routes updated**: OG images in metadata + InternalLinksSection component
 - [x] **vercel.json**: cron entry `0 2 * * *` for `/api/cron/seo-drip`
 - [x] **@vercel/og** dependency added
+- [x] **SERP rank tracker**: daily SerpAPI cron at 4am UTC, 30 keywords tracked for jarve.com.au
+- [x] **Admin SEO dashboard** (`/admin/seo-dashboard`): position charts, summary cards, top movers, keyword management
+- [x] **Rank tracker DB**: `tracked_sites`, `tracked_keywords`, `ranking_history` tables in Supabase
+- [x] **SERPAPI_KEY** set in Vercel production
+- [x] **SEO tab** added to admin navigation
 
 ### What's NOT Done
 - [ ] **Publish test pages** and review on localhost (run `npm run generate-seo publish "mvp-development-%"`)
@@ -66,8 +71,15 @@
 | `app/solutions/[problem]/page.tsx` | 15 solution pages |
 | `app/compare/[tool]/page.tsx` | 10 comparison pages |
 | `app/sitemap.ts` | Dynamic sitemap |
-| `vercel.json` | Cron schedules (reminders, stripe-reconcile, seo-drip) |
-| `supabase/migrations/20260130000001_create_seo_pages.sql` | DB migration |
+| `lib/seo/serp-tracker.ts` | SerpAPI client + runDailyRankCheck() |
+| `app/api/cron/serp-check/route.ts` | Daily SERP check cron (4am UTC) |
+| `app/api/admin/rankings/route.ts` | Rankings data API (date range + site filter) |
+| `app/api/admin/rankings/summary/route.ts` | Summary stats, top movers, drops |
+| `app/api/admin/rankings/keywords/route.ts` | CRUD for tracked keywords |
+| `app/admin/seo-dashboard/page.tsx` | Admin dashboard with Recharts graphs |
+| `vercel.json` | Cron schedules (reminders, stripe-reconcile, seo-drip, serp-check) |
+| `supabase/migrations/20260130000001_create_seo_pages.sql` | SEO pages migration |
+| `supabase/migrations/20260130100000_seo_rank_tracker.sql` | Rank tracker migration |
 
 ## Important Context
 - **Jarve = James, solo operator, Adelaide-based, works Australia-wide**
@@ -112,6 +124,13 @@ curl -X POST http://localhost:3000/api/cron/seo-drip -H "Authorization: Bearer $
 # Test OG image
 # Visit http://localhost:3000/api/og?title=Test+Page&description=Test+description
 ```
+
+## SERP Rank Tracking
+- **API**: SerpAPI ($75/mo, 5,000 searches)
+- **Keywords**: 30 tracked for jarve.com.au (Adelaide services, industries, national, solutions)
+- **Frequency**: Daily at 4am UTC via Vercel cron
+- **Dashboard**: `/admin/seo-dashboard` — position over time, top movers, keyword management
+- **Cost**: 30 keywords × 30 days = 900 searches/mo (well within 5,000 limit)
 
 ## Blockers
 - Copy quality depends on prompt — if output is generic, tweak prompt in generate-seo-content.ts
