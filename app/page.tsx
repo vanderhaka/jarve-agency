@@ -1,48 +1,50 @@
-import { HeroSection } from '@/components/hero-section'
-import { TestimonialsSection } from '@/components/testimonials-section'
-import { ServicesSection } from '@/components/services-section'
-import { HowItWorksSection } from '@/components/how-it-works-section'
-import { PortfolioSection } from '@/components/portfolio-section'
-import { WhyJarveSection } from '@/components/why-jarve-section'
-import { AboutSection } from '@/components/about-section'
 import { FAQSection } from '@/components/faq-section'
-import { ContactForm } from '@/components/contact-form'
-import { Footer } from '@/components/footer'
-import { PricingSection } from '@/components/pricing-section'
 import { QualitySignalsSection } from '@/components/quality-signals-section'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
 import { FadeIn } from '@/components/fade-in'
-import { Header } from '@/components/header'
+import Link from 'next/link'
+import '@/components/v2/v2.css'
+import { V2Header } from '@/components/v2/v2-header'
+import { V2HeroSection } from '@/components/v2/v2-hero-section'
+import { V2Footer } from '@/components/v2/v2-footer'
+import { V2AboutSection } from '@/components/v2/v2-about-section'
+import { V2TestimonialsSection } from '@/components/v2/v2-testimonials-section'
+import { V2ServicesSection } from '@/components/v2/v2-services-section'
+import { V2HowItWorksSection } from '@/components/v2/v2-how-it-works'
+import { V2PortfolioSection } from '@/components/v2/v2-portfolio-section'
+import { V2WhyJarveSection } from '@/components/v2/v2-why-jarve-section'
+import { V2PricingSection } from '@/components/v2/v2-pricing-section'
+import { V2ContactForm } from '@/components/v2/v2-contact-form'
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col font-sans">
-      <Header />
+    <div className="flex min-h-screen flex-col font-sans theme-earthy">
+      <V2Header />
       <main className="flex-1">
-        <HeroSection />
-        <AboutSection />
-        <TestimonialsSection />
-        <ServicesSection />
-        <HowItWorksSection />
-        <PortfolioSection />
+        <V2HeroSection />
+        <V2AboutSection />
+        <V2TestimonialsSection />
+        <V2ServicesSection />
+        <V2HowItWorksSection />
+        <V2PortfolioSection />
 
         {/* Mid-page CTA */}
         <section className="py-16 px-4 text-center">
           <FadeIn>
-            <Button asChild size="lg" className="h-14 px-8 rounded-full text-lg bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:scale-105 transition-all">
-              <Link href="#contact">Let&apos;s Talk About Your Project</Link>
-            </Button>
+            <Link
+              href="#contact"
+              className="inline-flex items-center h-14 px-8 rounded-full text-lg font-medium bg-[hsl(140,18%,38%)] text-white shadow-md hover:shadow-lg hover:bg-[hsl(140,18%,33%)] hover:scale-105 transition-all"
+            >
+              Let&apos;s Talk About Your Project
+            </Link>
           </FadeIn>
         </section>
 
-        <WhyJarveSection />
-        <PricingSection />
+        <V2WhyJarveSection />
+        <V2PricingSection />
         <QualitySignalsSection />
         <FAQSection />
 
         <section id="contact" className="py-24 px-4 bg-muted/30 relative">
-          {/* Subtle background pattern */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
           <div className="container mx-auto max-w-2xl relative z-10">
@@ -54,13 +56,12 @@ export default function Home() {
                 </p>
               </div>
 
-              <ContactForm />
+              <V2ContactForm />
             </FadeIn>
           </div>
         </section>
       </main>
-      <Footer />
+      <V2Footer />
     </div>
   )
 }
-
