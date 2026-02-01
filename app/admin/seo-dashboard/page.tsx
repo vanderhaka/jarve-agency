@@ -29,7 +29,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUp, ArrowDown, Minus, TrendingUp, Target, Search, BarChart3, Plus, Trash2 } from 'lucide-react'
+import { ArrowUp, ArrowDown, Minus, TrendingUp, Target, Search, BarChart3, Plus, Trash2, FileText, Clock, ExternalLink } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
 
 interface TrackedKeyword {
   id: string
@@ -50,6 +51,19 @@ interface RankingEntry {
   url: string | null
   date: string
   keyword: { id: string; keyword: string; site_id: string }
+}
+
+interface PseoStats {
+  published: number
+  draft: number
+  total: number
+  breakdown: Record<string, { published: number; draft: number; total: number }>
+  recentPages: { id: string; slug: string; meta_title: string | null; updated_at: string }[]
+  dripRate: number
+  estCompletionDate: string
+  estDaysRemaining: number
+  pagesRanking: number
+  publishedTotal: number
 }
 
 interface Summary {
@@ -85,6 +99,7 @@ export default function SeoRankingsPage() {
   const [addingSiteId, setAddingSiteId] = useState<string>('')
   const [saving, setSaving] = useState(false)
 
+  const [pseoStats, setPseoStats] = useState<PseoStats | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -94,10 +109,11 @@ export default function SeoRankingsPage() {
     const signal = controller.signal
 
     async function fetchData() {
-      const [sumRes, rankRes, kwRes] = await Promise.all([
+      const [sumRes, rankRes, kwRes, pseoRes] = await Promise.all([
         fetch(`/api/admin/rankings/summary?${siteParam}`, { signal }),
         fetch(`/api/admin/rankings?days=${days}${siteParam}`, { signal }),
         fetch('/api/admin/rankings/keywords', { signal }),
+        fetch('/api/admin/seo-pages/stats', { signal }),
       ])
 
       if (cancelled) return
@@ -106,6 +122,7 @@ export default function SeoRankingsPage() {
         summary: Summary
         rankings: RankingEntry[]
         keywords: TrackedKeyword[]
+        pseo: PseoStats
       }> = {}
 
       if (sumRes.ok) results.summary = await sumRes.json()
@@ -117,6 +134,7 @@ export default function SeoRankingsPage() {
         const data = await kwRes.json()
         results.keywords = data.keywords ?? []
       }
+      if (pseoRes.ok) results.pseo = await pseoRes.json()
 
       return results
     }
@@ -126,6 +144,7 @@ export default function SeoRankingsPage() {
       if (results.summary) setSummary(results.summary)
       if (results.rankings) setRankings(results.rankings)
       if (results.keywords) setTrackedKeywords(results.keywords)
+      if (results.pseo) setPseoStats(results.pseo)
       setLoading(false)
     }).catch(() => {})
 
@@ -198,6 +217,140 @@ export default function SeoRankingsPage() {
           </Select>
         </div>
       </div>
+
+      {/* pSEO Content Pipeline */}
+      {pseoStats && (
+        <>
+          <div>
+            <h2 className="text-xl font-semibold mb-3">Content Pipeline</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Published / Total</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {pseoStats.published} / {pseoStats.total}
+                  </div>
+                  <Progress
+                    value={pseoStats.total > 0 ? (pseoStats.published / pseoStats.total) * 100 : 0}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {pseoStats.total > 0 ? Math.round((pseoStats.published / pseoStats.total) * 100) : 0}% complete
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Drip Rate</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{pseoStats.dripRate} pages/day</div>
+                  <p className="text-xs text-muted-foreground">{pseoStats.draft} pages remaining</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Est. Completion</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{pseoStats.estCompletionDate}</div>
+                  <p className="text-xs text-muted-foreground">{pseoStats.estDaysRemaining} days remaining</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Ranking</CardTitle>
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {pseoStats.pagesRanking} / {pseoStats.publishedTotal}
+                  </div>
+                  <p className="text-xs text-muted-foreground">published pages in search results</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Content breakdown table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Route Pattern</TableHead>
+                    <TableHead className="text-right">Published</TableHead>
+                    <TableHead className="text-right">Draft</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(pseoStats.breakdown).sort(([a], [b]) => a.localeCompare(b)).map(([key, val]) => (
+                    <TableRow key={key}>
+                      <TableCell className="font-medium">{key}</TableCell>
+                      <TableCell className="text-right">{val.published}</TableCell>
+                      <TableCell className="text-right">{val.draft}</TableCell>
+                      <TableCell className="text-right">{val.total}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Recently published pages */}
+          {pseoStats.recentPages.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Recently Published</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Page</TableHead>
+                      <TableHead>URL Path</TableHead>
+                      <TableHead className="text-right">Published</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pseoStats.recentPages.map((page) => (
+                      <TableRow key={page.id}>
+                        <TableCell className="font-medium">{page.meta_title || page.slug}</TableCell>
+                        <TableCell>
+                          <a
+                            href={`/${page.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                          >
+                            /{page.slug}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {new Date(page.updated_at).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* SERP Rankings */}
+      <h2 className="text-xl font-semibold">SERP Rankings</h2>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
