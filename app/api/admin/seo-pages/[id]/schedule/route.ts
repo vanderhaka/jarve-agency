@@ -25,9 +25,9 @@ export async function POST(
     return NextResponse.json({ error: 'publish_at must be a valid future date' }, { status: 400 })
   }
 
-  const success = await schedulePage(id, publishDate)
-  if (!success) {
-    return NextResponse.json({ error: 'Failed to schedule page' }, { status: 400 })
+  const result = await schedulePage(id, publishDate)
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 400 })
   }
 
   return NextResponse.json({ success: true, scheduled_at: publishDate.toISOString() })

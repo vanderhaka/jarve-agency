@@ -5,21 +5,30 @@ import { revalidatePath } from 'next/cache'
 export async function schedulePage(
   pageId: string,
   publishAt: Date
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   const supabase = createAdminClient()
+
+  // Verify page exists and is a draft
+  const { data: page } = await supabase
+    .from('seo_pages')
+    .select('id, status')
+    .eq('id', pageId)
+    .single()
+
+  if (!page) return { success: false, error: 'Page not found' }
+  if (page.status !== 'draft') return { success: false, error: 'Only draft pages can be scheduled' }
 
   const { error } = await supabase
     .from('seo_pages')
     .update({ scheduled_publish_at: publishAt.toISOString() })
     .eq('id', pageId)
-    .eq('status', 'draft')
 
   if (error) {
     console.error('Failed to schedule page:', error)
-    return false
+    return { success: false, error: error.message }
   }
 
-  return true
+  return { success: true }
 }
 
 export async function unschedulePage(pageId: string): Promise<boolean> {
