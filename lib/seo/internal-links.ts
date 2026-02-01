@@ -92,7 +92,7 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
         if (!data) break
 
         const { industries } = await import('./industries')
-        const { tier1Cities } = await import('./cities')
+        const { cities } = await import('./cities')
 
         for (const page of data) {
           let href = ''
@@ -102,7 +102,7 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
           } else {
             // industries-city: industry-{industry}-{city}
             for (const ind of industries) {
-              for (const c of tier1Cities) {
+              for (const c of cities) {
                 if (`industry-${ind.slug}-${c.slug}` === page.slug) {
                   href = `/industries/${ind.slug}/${c.slug}`
                   break
@@ -134,13 +134,13 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
         if (!data) break
 
         const { industries } = await import('./industries')
-        const { tier1Cities } = await import('./cities')
+        const { cities } = await import('./cities')
 
         // Parse current slug
         let currentIndustry = ''
         let currentCity = ''
         for (const ind of industries) {
-          for (const c of tier1Cities) {
+          for (const c of cities) {
             if (`industry-${ind.slug}-${c.slug}` === slug) {
               currentIndustry = ind.slug
               currentCity = c.slug
@@ -158,7 +158,7 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
         for (const page of data) {
           if (page.route_pattern === 'industries-city') {
             for (const ind of industries) {
-              for (const c of tier1Cities) {
+              for (const c of cities) {
                 if (`industry-${ind.slug}-${c.slug}` === page.slug) {
                   if (ind.slug === currentIndustry && c.slug !== currentCity && sameIndustry.length < 3) {
                     const industryName = industries.find(i => i.slug === currentIndustry)?.name ?? currentIndustry
@@ -169,7 +169,7 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
                     })
                   }
                   if (c.slug === currentCity && ind.slug !== currentIndustry && sameCity.length < 3) {
-                    const cityName = tier1Cities.find(ct => ct.slug === currentCity)?.name ?? currentCity
+                    const cityName = cities.find(ct => ct.slug === currentCity)?.name ?? currentCity
                     sameCity.push({
                       title: page.meta_title,
                       href: `/industries/${ind.slug}/${c.slug}`,

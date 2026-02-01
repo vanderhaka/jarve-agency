@@ -54,6 +54,7 @@ export interface SeoPage {
   content: Record<string, unknown>
   meta_title: string
   meta_description: string
+  city_tier?: number | null
   created_at: string
   updated_at: string
 }

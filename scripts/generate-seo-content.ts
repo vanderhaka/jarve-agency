@@ -2,7 +2,7 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 
 import { createClient } from '@supabase/supabase-js'
-import { cities, services, industries, solutions, comparisons, tier1Cities } from '../lib/seo'
+import { cities, services, industries, solutions, comparisons } from '../lib/seo'
 import type { RoutePattern } from '../lib/seo'
 import { generateContent } from '../lib/seo/generation'
 
@@ -16,6 +16,7 @@ interface PageDefinition {
   routePattern: RoutePattern
   prompt: string
   metaTitle: string
+  cityTier?: number
 }
 
 function buildServiceCityPrompt(serviceName: string, serviceDesc: string, priceRange: string, timeline: string, keyFeatures: string[], typicalClient: string, cityName: string, cityState: string, localDetails: string): string {
@@ -346,6 +347,7 @@ function buildPageDefinitions(): PageDefinition[] {
           city.name, city.state, city.localDetails
         ),
         metaTitle: `${service.name} in ${city.name} | Jarve`,
+        cityTier: city.tier,
       })
     }
   }
@@ -360,15 +362,16 @@ function buildPageDefinitions(): PageDefinition[] {
     })
   }
 
-  // industries-city: 12 industries x 5 tier-1 cities = 60
+  // industries-city: 12 industries x 15 cities = 180
   for (const industry of industries) {
-    for (const city of tier1Cities) {
+    for (const city of cities) {
       const slug = `industry-${industry.slug}-${city.slug}`
       pages.push({
         slug,
         routePattern: 'industries-city',
         prompt: buildIndustryPrompt(industry.name, industry.painPoints, city.name, city.state, city.localDetails),
         metaTitle: `${industry.name} Software in ${city.name} | Jarve`,
+        cityTier: city.tier,
       })
     }
   }
@@ -416,6 +419,7 @@ async function upsertPage(page: PageDefinition, content: Record<string, unknown>
         content,
         meta_title: page.metaTitle,
         meta_description: metaDesc,
+        city_tier: page.cityTier ?? null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'slug' }
@@ -478,7 +482,7 @@ function slugToPath(slug: string, routePattern: string): string {
       return `/industries/${slug.replace('industry-', '')}`
     case 'industries-city': {
       for (const ind of industries) {
-        for (const c of tier1Cities) {
+        for (const c of cities) {
           if (`industry-${ind.slug}-${c.slug}` === slug) return `/industries/${ind.slug}/${c.slug}`
         }
       }

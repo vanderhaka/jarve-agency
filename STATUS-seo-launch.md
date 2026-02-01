@@ -60,7 +60,7 @@
 - [ ] Check Vercel Cron Jobs tab — `seo-drip` should show successful run at 2am UTC
 - [ ] Check Vercel Cron Jobs tab — `serp-check` should show successful run at 4am UTC
 - [ ] Verify 3 new pages published after first drip run
-- [ ] Submit sitemap to Google Search Console
+- [x] Submit sitemap to Google Search Console (Success, 11 pages discovered)
 
 ### Within 1 week
 - [ ] Check /admin/seo-dashboard — should show SERP position data for tracked keywords
@@ -68,8 +68,8 @@
 - [ ] Check Vercel usage/billing — confirm no unexpected spikes from bots
 
 ### Billing Safety
-- [ ] Set Vercel Spend Management cap (Settings → Billing → Spend Management)
-- [ ] Consider Vercel Firewall rules if on Pro plan (blocks at edge, zero compute cost)
+- [x] Set Vercel Spend Management cap
+- [x] Cloudflare Block AI Bots + Bot Fight Mode enabled (blocks at edge, zero compute cost)
 
 ---
 

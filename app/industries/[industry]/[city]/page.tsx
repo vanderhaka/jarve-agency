@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPublishedPage, getPublishedSlugs, parseContent, buildFaqJsonLd } from '@/lib/seo/queries'
 import { industries } from '@/lib/seo/industries'
-import { cities, tier1Cities } from '@/lib/seo/cities'
+import { cities } from '@/lib/seo/cities'
 import { Breadcrumbs, SeoPageSections, InternalLinksSection } from '@/lib/seo/components'
 import { getRelatedPages } from '@/lib/seo/internal-links'
 
@@ -18,7 +18,7 @@ export async function generateStaticParams() {
   const slugs = await getPublishedSlugs('industries-city')
   return slugs.map((slug) => {
     for (const ind of industries) {
-      for (const c of tier1Cities) {
+      for (const c of cities) {
         if (buildSlug(ind.slug, c.slug) === slug) {
           return { industry: ind.slug, city: c.slug }
         }
