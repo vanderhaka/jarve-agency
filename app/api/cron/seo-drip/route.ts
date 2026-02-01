@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient()
-  const BATCH_SIZE = 3
+  const BATCH_SIZE = 5
 
   // Get next unpublished pages ordered by wave priority
   // We query each wave in order until we have BATCH_SIZE pages
