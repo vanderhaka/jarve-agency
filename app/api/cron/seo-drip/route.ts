@@ -7,6 +7,7 @@ import { cities } from '@/lib/seo/cities'
 import { industries } from '@/lib/seo/industries'
 import type { SeoContent } from '@/lib/seo/types'
 import { createVersion } from '@/lib/seo/versioning'
+import { publishScheduledPages } from '@/lib/seo/scheduling'
 
 function verifyCronSecret(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization')
@@ -64,6 +65,9 @@ export async function POST(request: NextRequest) {
   if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Publish any scheduled pages that are due
+  const scheduled = await publishScheduledPages()
 
   const supabase = createAdminClient()
   const BATCH_SIZE = 5
@@ -215,6 +219,7 @@ export async function POST(request: NextRequest) {
     .eq('status', 'draft')
 
   return NextResponse.json({
+    scheduled_published: scheduled.published,
     published,
     failed,
     remaining: count ?? 0,

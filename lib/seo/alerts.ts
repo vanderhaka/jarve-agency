@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 
-export type AlertType = 'ranking_drop' | 'ranking_lost' | 'publish_failed' | 'quality_gate_spike'
+export type AlertType = 'ranking_drop' | 'ranking_lost' | 'publish_failed' | 'quality_gate_spike' | 'broken_link'
 export type AlertSeverity = 'info' | 'warning' | 'critical'
 export type AlertStatus = 'active' | 'acknowledged' | 'resolved'
 
