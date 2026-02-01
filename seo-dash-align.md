@@ -2,6 +2,41 @@
 
 > The definitive feature set for programmatic SEO projects. Apply to any business vertical.
 
+## Implementation Status
+
+This spec reflects the **actual codebase** with clear markers for what's implemented vs planned:
+
+- ✅ **Implemented** - Fully working in production
+- 🚧 **Partial** - Some features working, others planned
+- 📋 **Planned** - Documented but not yet built
+
+### Quick Facts
+
+**Database:**
+- ✅ `seo_pages` table with `city_tier` (1-2 only)
+- ✅ Rank tracker tables: `tracked_sites`, `tracked_keywords`, `ranking_history` (no `seo_` prefix)
+- 📋 Entity tables planned (data lives in TS files: `lib/seo/cities.ts`, etc.)
+
+**Content:**
+- ✅ 15 cities (5 tier-1, 10 tier-2)
+- ✅ 6 services, 12 industries
+- ✅ 5 route patterns: `services-city`, `industries`, `industries-city`, `solutions`, `comparisons`
+- ✅ Content generation pipeline with quality gate
+
+**Publishing:**
+- ✅ Drip publishing with city tier ordering
+- ✅ Status: `draft` → `published` (no approval workflow yet)
+
+**Tracking:**
+- ✅ SERP tracking via cron (`api/cron/serp-check`)
+- ✅ Ranking history storage with `date DATE` (not `checked_at`)
+- ✅ Dashboard with stats and rankings table
+- 📋 GSC integration planned
+
+**Internal Linking:**
+- ✅ Basic internal link generation (`lib/seo/internal-links.ts`)
+- 📋 Link health monitoring planned
+
 ---
 
 ## Table of Contents
@@ -29,9 +64,9 @@
 
 ---
 
-## 1. Content Generation Pipeline
+## 1. Content Generation Pipeline ✅
 
-### 1.1 Generation Engine
+### 1.1 Generation Engine ✅
 
 | Attribute | Specification |
 |-----------|---------------|
@@ -63,17 +98,14 @@ pnpm seo generate --dry-run --limit 5
 # Generate specific route pattern
 pnpm seo generate --pattern services-city --limit 10
 
-# Generate specific location
-pnpm seo generate --location "henley-beach"
-
-# Generate specific page type
-pnpm seo generate --type service_suburb
+# Generate specific city
+pnpm seo generate --city "sydney"
 
 # Regenerate existing drafts
 pnpm seo generate --regenerate --pattern comparisons
 
 # Resume from specific slug
-pnpm seo generate --after "interior-painting-glenelg"
+pnpm seo generate --after "services/mvp-development/sydney"
 ```
 
 ### 1.4 Generation Prompt Template
@@ -83,29 +115,21 @@ interface GenerationContext {
   // Required
   pageType: RoutePattern;
   primaryEntity: string;        // Service, industry, solution, etc.
-  
-  // Location (optional)
-  location?: {
+
+  // City (optional - for city-specific pages)
+  city?: {
     name: string;
-    tier: number;
-    medianPrice?: number;
-    demographicNotes?: string;
-    architecturalStyle?: string;
-    isCoastal?: boolean;
-    nearbyLandmarks?: string[];
+    tier: 1 | 2;                // Only tier 1 or 2
   };
-  
+
   // Business context
   business: {
     name: string;
     ownerName: string;
     pronounStyle: 'first-person-singular' | 'first-person-plural';
-    yearsExperience?: number;
-    googleRating?: number;
-    reviewCount?: number;
     uniqueSellingPoints: string[];
   };
-  
+
   // Comparison context (for comparison pages)
   comparison?: {
     competitorName: string;
@@ -132,64 +156,55 @@ interface GenerationContext {
 
 ---
 
-## 2. Content Structure & Types
+## 2. Content Structure & Types ✅
 
-### 2.1 Universal Content Schema
+### 2.1 Universal Content Schema ✅
 
 ```typescript
 interface SeoContent {
   // Hero Section
-  heroHeadline: string;          // Max 8 words, no location stuffing
+  heroHeadline: string;          // Max 8 words
   heroSubheadline: string;       // Max 20 words
-  
-  // Context Section
-  localContext?: string;         // Max 50 words, location-specific relevance
-  
+
+  // Context Section (for city-specific pages)
+  cityContext?: string;          // City-specific context
+
   // Problem/Solution Section
-  problemStatement: string;      // Max 60 words, customer pain points
-  solution: string;              // Max 60 words, how we solve it
-  
+  problemStatement: string;      // Customer pain points
+  solution: string;              // How we solve it
+
   // Benefits Section
   benefits: {
-    title: string;               // Max 5 words
-    description: string;         // Max 30 words
-    icon?: string;               // Lucide icon name
-  }[];                           // Exactly 3 items
-  
-  // Trust Signals
-  localSignals: string[];        // 3 trust/credibility statements
-  
-  // Social Proof
-  testimonialMatch?: string;     // Description of ideal testimonial to display
-  
+    title: string;
+    description: string;
+  }[];                           // Array of benefits
+
+  // Trust Signals (for city pages)
+  localSignals?: string[];       // City-specific trust signals
+
   // Call to Action
-  ctaHeadline: string;           // Max 8 words
-  ctaText: string;               // Button text, max 4 words
-  ctaSubtext?: string;           // Below button, max 10 words
-  
+  ctaText: string;               // Button text
+
   // FAQ Section
   faq: {
     question: string;
-    answer: string;              // Max 100 words per answer
-  }[];                           // 3-5 items
-  
+    answer: string;
+  }[];
+
   // SEO Meta
-  metaTitle?: string;            // Max 60 chars (auto-generated if null)
-  metaDescription: string;       // Max 155 chars
-  
+  metaDescription?: string;      // Meta description
+
   // Layout & Display
-  layout: LayoutVariant;
-  
-  // Internal Linking Hints
-  relatedServices?: string[];    // Slugs to prioritize in cross-links
-  relatedLocations?: string[];   // Slugs to prioritize in cross-links
+  layout?: LayoutVariant;        // Default: 'standard'
+
+  // Social Proof
+  testimonialMatch?: string;     // Ideal testimonial description
 }
 
-type LayoutVariant = 
+type LayoutVariant =
   | 'standard'           // Default balanced layout
   | 'problem-first'      // Lead with pain points
   | 'benefits-grid'      // Visual benefits emphasis
-  | 'testimonial-heavy'  // Social proof focused
   | 'faq-heavy'          // Educational/informational
   | 'story-flow';        // Narrative structure
 ```
@@ -198,37 +213,35 @@ type LayoutVariant =
 
 | Pattern | URL Structure | Example | Use Case |
 |---------|---------------|---------|----------|
-| `service-location` | `/{service}/{location}` | `/interior-painting/henley-beach` | Core service pages |
-| `industry` | `/industries/{industry}` | `/industries/healthcare` | B2B verticals |
-| `industry-location` | `/industries/{industry}/{location}` | `/industries/retail/sydney` | B2B + geo |
-| `solution` | `/solutions/{problem}` | `/solutions/legacy-system-replacement` | Problem-focused |
-| `comparison` | `/compare/{competitor}` | `/compare/spreadsheets` | Competitor alternatives |
-| `location-hub` | `/locations/{location}` | `/locations/henley-beach` | Location landing pages |
-| `service-hub` | `/services/{service}` | `/services/interior-painting` | Service landing pages |
+| `services-city` ✅ | `/services/{service}/{city}` | `/services/mvp-development/sydney` | Core service pages |
+| `industries` ✅ | `/industries/{industry}` | `/industries/healthcare` | B2B verticals |
+| `industries-city` ✅ | `/industries/{industry}/{city}` | `/industries/retail/sydney` | B2B + geo |
+| `solutions` ✅ | `/solutions/{problem}` | `/solutions/legacy-system-replacement` | Problem-focused |
+| `comparisons` ✅ | `/compare/{tool}` | `/compare/spreadsheets` | Competitor alternatives |
+| `city-hub` 📋 | `/cities/{city}` | `/cities/sydney` | **[PLANNED]** City landing pages |
+| `service-hub` 📋 | `/services/{service}` | `/services/mvp-development` | **[PLANNED]** Service landing pages |
 
 ### 2.3 Page Status Lifecycle
 
 ```
-draft → pending_review → approved → scheduled → published → archived
-                ↓
-            rejected (with rejection_reason)
+draft → published
 ```
 
 | Status | Description |
 |--------|-------------|
-| `draft` | AI-generated, not validated |
-| `pending_review` | Passed quality gate, awaiting approval |
-| `approved` | Human-approved, ready for scheduling |
-| `scheduled` | Has future `publish_at` date |
-| `published` | Live on site |
-| `archived` | Removed from site, kept for reference |
-| `rejected` | Failed review, needs regeneration |
+| `draft` ✅ | AI-generated, not validated |
+| `published` ✅ | Live on site |
+| `pending_review` 📋 | **[PLANNED]** Passed quality gate, awaiting approval |
+| `approved` 📋 | **[PLANNED]** Human-approved, ready for scheduling |
+| `scheduled` 📋 | **[PLANNED]** Has future `publish_at` date |
+| `archived` 📋 | **[PLANNED]** Removed from site, kept for reference |
+| `rejected` 📋 | **[PLANNED]** Failed review, needs regeneration |
 
 ---
 
-## 3. Quality Gate System
+## 3. Quality Gate System ✅
 
-### 3.1 Validation Levels
+### 3.1 Validation Levels ✅
 
 | Level | Behavior | Use Case |
 |-------|----------|----------|
@@ -419,127 +432,108 @@ interface ValidationError {
 
 ---
 
-## 4. Location & Entity Data
+## 4. City & Entity Data ✅
 
-### 4.1 Location Schema
+### 4.1 City Schema
+
+**Note:** Cities are defined in `lib/seo/cities.ts` (not in database table).
 
 ```typescript
-interface Location {
-  id: string;                    // UUID
-  slug: string;                  // URL-safe identifier
-  name: string;                  // Display name
-  type: 'city' | 'suburb' | 'region' | 'state';
-  
-  // Hierarchy
-  parentId?: string;             // Parent location (suburb → city)
-  
-  // Tier System
-  tier: 1 | 2 | 3;
-  tierReason?: string;           // Why this tier
-  
-  // Geographic
-  state?: string;
-  postcode?: string;
-  latitude?: number;
-  longitude?: number;
-  isCoastal?: boolean;
-  
-  // Demographics (for content context)
-  medianPropertyPrice?: number;
-  predominantHousingEra?: string;   // "1920s-1950s", "1960s-1980s", etc.
-  architecturalStyle?: string;       // "Federation", "Art Deco", etc.
-  demographicNotes?: string;         // Free text for AI context
-  
-  // Landmarks (for local relevance)
-  nearbyLandmarks?: string[];
-  
-  // Meta
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
+interface City {
+  slug: string;                  // URL-safe identifier (e.g., "sydney")
+  name: string;                  // Display name (e.g., "Sydney")
+  tier: 1 | 2;                   // Only tier 1 or 2 supported
 }
 ```
+
+**Current cities:** 15 total (5 tier-1, 10 tier-2)
 
 ### 4.2 Tier Definitions
 
-| Tier | Criteria | Publishing Priority |
-|------|----------|---------------------|
-| **1** | Highest value (major metros, affluent suburbs, high search volume) | First |
-| **2** | Medium value (secondary cities, established suburbs) | Second |
-| **3** | Lower value (smaller areas, emerging suburbs) | Third |
+| Tier | Criteria | Publishing Priority | Count |
+|------|----------|---------------------|-------|
+| **1** | Major metros (Sydney, Melbourne, Brisbane, Perth, Adelaide) | First | 5 cities |
+| **2** | Secondary cities | Second | 10 cities |
 
-### 4.3 Service/Entity Schema
+**Note:** Tier 3 is NOT supported. Constraint: `city_tier IN (1, 2)` or `NULL`.
+
+### 4.3 Service/Entity Data ✅
+
+**Note:** Services, industries, solutions, and comparisons are defined in TypeScript files (not in database tables).
 
 ```typescript
-interface ServiceEntity {
-  id: string;
+// Simplified schema - defined in TS files, not DB
+interface Service {
+  slug: string;                  // URL-safe identifier
+  name: string;                  // Display name
+}
+
+interface Industry {
   slug: string;
   name: string;
-  shortDescription: string;      // Max 20 words
-  longDescription?: string;      // For hub pages
-  
-  // Categorization
-  category?: string;
-  tags?: string[];
-  
-  // Content hints for AI
-  targetAudience?: string;
-  painPoints?: string[];
-  uniqueSellingPoints?: string[];
-  
-  // Display
-  icon?: string;                 // Lucide icon name
-  displayOrder: number;
-  
-  // Meta
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
+}
+
+interface Solution {
+  slug: string;
+  name: string;
+}
+
+interface Comparison {
+  slug: string;
+  name: string;
 }
 ```
 
-### 4.4 Key Files
+**Current counts:**
+- Services: 6
+- Industries: 12
+- Solutions: TBD
+- Comparisons: TBD
+
+### 4.4 Key Files ✅
 
 ```
-/lib/seo/data/
-  ├── locations.ts               # Location definitions
-  ├── services.ts                # Service definitions
-  ├── industries.ts              # Industry definitions
+/lib/seo/
+  ├── cities.ts                  # City definitions (15 cities)
+  ├── services.ts                # Service definitions (6 services)
+  ├── industries.ts              # Industry definitions (12 industries)
   ├── solutions.ts               # Solution definitions
-  ├── comparisons.ts             # Comparison definitions
-  └── seed.sql                   # Database seed script
+  └── comparisons.ts             # Comparison definitions
 ```
 
 ---
 
-## 5. Publishing Pipeline
+## 5. Publishing Pipeline ✅
 
-### 5.1 Publishing Flow
+### 5.1 Publishing Flow ✅
+
+**Current Implementation (Simplified):**
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│   Draft     │────▶│ Quality Gate │────▶│  Approved   │
-└─────────────┘     └──────────────┘     └─────────────┘
-                           │                    │
-                           ▼                    ▼
-                    ┌──────────────┐     ┌─────────────┐
-                    │   Rejected   │     │  Scheduled  │
-                    └──────────────┘     └─────────────┘
-                                               │
-                                               ▼
-                                        ┌─────────────┐
-                                        │  Published  │
-                                        └─────────────┘
-                                               │
-                                               ▼
-                                        ┌─────────────────────┐
-                                        │ Post-Publish Tasks  │
-                                        │ • Revalidate cache  │
-                                        │ • Update sitemap    │
-                                        │ • Request indexing  │
-                                        │ • Update internal   │
-                                        │   links             │
-                                        └─────────────────────┘
+┌─────────────┐
+│   Draft     │
+└─────────────┘
+       │
+       │ Drip cron job (5 pages/day)
+       │ Ordered by city_tier ASC
+       ▼
+┌─────────────┐
+│  Published  │
+└─────────────┘
+       │
+       ▼
+┌─────────────────────┐
+│ Post-Publish Tasks  │
+│ • Revalidate cache  │
+└─────────────────────┘
+```
+
+**Planned Enhancements:**
+
+```
+📋 Quality Gate → Approval → Scheduling workflow
+📋 Sitemap updates
+📋 Indexing API requests
 ```
 
 ### 5.2 Drip Publishing Configuration
@@ -565,75 +559,56 @@ interface DripConfig {
   minQualityScore?: number;      // 0-100
 }
 
-// Default config
+// Default config (✅ Implemented)
 const defaultDripConfig: DripConfig = {
   enabled: true,
   pagesPerRun: 5,
   schedule: '0 2 * * *',         // 2 AM UTC daily
   priorityOrder: [
-    { routePattern: 'service-location', tierOrder: 'asc' },
-    { routePattern: 'service-hub', tierOrder: 'asc' },
-    { routePattern: 'industry', tierOrder: 'asc' },
-    { routePattern: 'comparison', tierOrder: 'asc' },
-    { routePattern: 'solution', tierOrder: 'asc' },
-    { routePattern: 'industry-location', tierOrder: 'asc' },
-    { routePattern: 'location-hub', tierOrder: 'asc' },
+    { routePattern: 'services-city', tierOrder: 'asc' },      // Tier 1 cities first
+    { routePattern: 'industries', tierOrder: 'asc' },
+    { routePattern: 'industries-city', tierOrder: 'asc' },
+    { routePattern: 'solutions', tierOrder: 'asc' },
+    { routePattern: 'comparisons', tierOrder: 'asc' },
+    // 📋 PLANNED: service-hub, city-hub
   ],
-  requireQualityGate: true,
+  requireQualityGate: false,      // Currently disabled
   minQualityScore: 80,
 };
 ```
 
-### 5.3 Publishing Algorithm
+### 5.3 Publishing Algorithm ✅
 
 ```typescript
 async function getNextPagesToPublish(limit: number): Promise<SeoPage[]> {
-  const config = await getDripConfig();
-  
-  let pages: SeoPage[] = [];
-  
-  for (const priority of config.priorityOrder) {
-    if (pages.length >= limit) break;
-    
-    const remaining = limit - pages.length;
-    
-    const batch = await db
-      .from('seo_pages')
-      .select('*')
-      .eq('status', 'approved')
-      .eq('route_pattern', priority.routePattern)
-      .order('location_tier', { ascending: priority.tierOrder === 'asc' })
-      .order('created_at', { ascending: true })
-      .limit(remaining);
-    
-    pages = [...pages, ...batch];
-  }
-  
-  return pages;
+  // ✅ Implemented in api/cron/seo-drip
+  // Publishes 'draft' pages (no approval workflow yet)
+  // Orders by city_tier ASC (tier 1 first) then created_at ASC
+
+  const batch = await db
+    .from('seo_pages')
+    .select('*')
+    .eq('status', 'draft')
+    .order('city_tier', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true })
+    .limit(limit);
+
+  return batch;
 }
 ```
 
-### 5.4 Post-Publish Tasks
+### 5.4 Post-Publish Tasks ✅
 
 ```typescript
 async function onPagePublished(page: SeoPage): Promise<void> {
-  await Promise.all([
-    // Revalidate Next.js cache
-    revalidatePath(page.path),
-    revalidatePath('/sitemap.xml'),
-    
-    // Update internal links on related pages
-    updateInternalLinks(page),
-    
-    // Request Google indexing (if API enabled)
-    requestIndexing(page.url),
-    
-    // Log publish event
-    logPublishEvent(page),
-    
-    // Schedule first ranking check (24h later)
-    scheduleRankingCheck(page, { delay: '24h' }),
-  ]);
+  // ✅ Implemented: Cache revalidation
+  await revalidatePath(`/${page.slug}`);
+
+  // 📋 Planned:
+  // - Sitemap revalidation
+  // - Internal link updates
+  // - Google indexing API
+  // - Ranking check scheduling
 }
 ```
 
@@ -653,9 +628,9 @@ async function onPagePublished(page: SeoPage): Promise<void> {
 
 ---
 
-## 6. Page Rendering
+## 6. Page Rendering ✅
 
-### 6.1 Layout Components
+### 6.1 Layout Components ✅
 
 ```typescript
 // Layout variant registry
@@ -685,61 +660,54 @@ const sections = {
 
 ### 6.2 Layout Variant Structures
 
-| Variant | Section Order |
-|---------|---------------|
-| `standard` | Hero → Problem → Solution → Benefits → Trust → FAQ → CTA → Links |
-| `problem-first` | Problem → Hero → Solution → Benefits → Trust → FAQ → CTA → Links |
-| `benefits-grid` | Hero → Benefits (3-col grid) → Problem → Solution → Trust → FAQ → CTA → Links |
-| `testimonial-heavy` | Hero → Testimonials → Problem → Solution → Benefits → FAQ → CTA → Links |
-| `faq-heavy` | Hero → Problem → Solution → FAQ (expanded) → Benefits → CTA → Links |
-| `story-flow` | Hero → LocalContext → Problem → Solution → Benefits → Testimonials → FAQ → CTA → Links |
+| Variant | Section Order | Status |
+|---------|---------------|--------|
+| `standard` | Hero → Problem → Solution → Benefits → FAQ → CTA | ✅ Implemented |
+| `problem-first` | Problem → Hero → Solution → Benefits → FAQ → CTA | ✅ Implemented |
+| `benefits-grid` | Hero → Benefits (3-col grid) → Problem → Solution → FAQ → CTA | ✅ Implemented |
+| `faq-heavy` | Hero → Problem → Solution → FAQ (expanded) → Benefits → CTA | ✅ Implemented |
+| `story-flow` | Hero → CityContext → Problem → Solution → Benefits → FAQ → CTA | ✅ Implemented |
+| `testimonial-heavy` | Hero → Testimonials → Problem → Solution → Benefits → FAQ → CTA | 📋 Planned |
 
-### 6.3 Dynamic Route Structure
+### 6.3 Dynamic Route Structure ✅
 
 ```
 /app/
-  ├── [service]/[location]/
-  │   └── page.tsx               # service-location pages
+  ├── services/[service]/[city]/
+  │   └── page.tsx               # ✅ services-city pages
+  ├── industries/[industry]/
+  │   ├── page.tsx               # ✅ industries national pages
+  │   └── [city]/
+  │       └── page.tsx           # ✅ industries-city pages
+  ├── solutions/[problem]/
+  │   └── page.tsx               # ✅ solutions pages
+  └── compare/[tool]/
+      └── page.tsx               # ✅ comparisons pages
+
+📋 PLANNED:
   ├── services/[service]/
   │   └── page.tsx               # service-hub pages
-  ├── industries/[industry]/
-  │   ├── page.tsx               # industry national pages
-  │   └── [location]/
-  │       └── page.tsx           # industry-location pages
-  ├── solutions/[problem]/
-  │   └── page.tsx               # solution pages
-  ├── compare/[tool]/
-  │   └── page.tsx               # comparison pages
-  └── locations/[location]/
-      └── page.tsx               # location-hub pages
+  └── cities/[city]/
+      └── page.tsx               # city-hub pages
 ```
 
-### 6.4 Page Template
+### 6.4 Page Template ✅
 
 ```typescript
-// app/[service]/[location]/page.tsx
+// app/services/[service]/[city]/page.tsx
 import { notFound } from 'next/navigation';
-import { getPageBySlug, getAllPublishedSlugs } from '@/lib/seo/queries';
-import { SeoPageRenderer } from '@/lib/seo/components';
+import { getPageBySlug } from '@/lib/seo/queries';
 
 interface Props {
-  params: { service: string; location: string };
-}
-
-export async function generateStaticParams() {
-  const slugs = await getAllPublishedSlugs('service-location');
-  return slugs.map(slug => {
-    const [service, location] = slug.split('/');
-    return { service, location };
-  });
+  params: { service: string; city: string };
 }
 
 export async function generateMetadata({ params }: Props) {
-  const slug = `${params.service}/${params.location}`;
+  const slug = `services/${params.service}/${params.city}`;
   const page = await getPageBySlug(slug);
-  
+
   if (!page) return {};
-  
+
   return {
     title: page.meta_title || page.content.heroHeadline,
     description: page.content.metaDescription,
@@ -749,14 +717,14 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function ServiceLocationPage({ params }: Props) {
-  const slug = `${params.service}/${params.location}`;
+export default async function ServiceCityPage({ params }: Props) {
+  const slug = `services/${params.service}/${params.city}`;
   const page = await getPageBySlug(slug);
-  
+
   if (!page || page.status !== 'published') {
     notFound();
   }
-  
+
   return <SeoPageRenderer page={page} />;
 }
 ```
@@ -789,194 +757,37 @@ export default async function ServiceLocationPage({ params }: Props) {
 
 ---
 
-## 7. Technical SEO
+## 7. Technical SEO 🚧
 
-### 7.1 Structured Data (JSON-LD)
+### 7.1 Structured Data (JSON-LD) 📋
+
+**[PLANNED]** Not yet implemented. Future implementation will include:
 
 ```typescript
+// 📋 PLANNED
 interface PageJsonLd {
-  service: ServiceSchema;
-  faq: FAQPageSchema;
-  breadcrumb: BreadcrumbListSchema;
-  organization: OrganizationSchema;
-  localBusiness?: LocalBusinessSchema;  // For location pages
-}
-
-function buildJsonLd(page: SeoPage, context: PageContext): PageJsonLd {
-  return {
-    service: {
-      '@context': 'https://schema.org',
-      '@type': 'Service',
-      name: page.content.heroHeadline,
-      description: page.content.metaDescription,
-      provider: {
-        '@type': 'LocalBusiness',
-        name: context.business.name,
-        // ... more fields
-      },
-      areaServed: context.location ? {
-        '@type': 'City',
-        name: context.location.name,
-      } : undefined,
-    },
-    faq: {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: page.content.faq.map(item => ({
-        '@type': 'Question',
-        name: item.question,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: item.answer,
-        },
-      })),
-    },
-    breadcrumb: buildBreadcrumbSchema(page),
-    organization: buildOrganizationSchema(context),
-  };
+  service?: ServiceSchema;
+  faq?: FAQPageSchema;
+  breadcrumb?: BreadcrumbListSchema;
+  organization?: OrganizationSchema;
 }
 ```
 
-### 7.2 Canonical URL Management
+### 7.2 Canonical URL Management 📋
 
-```typescript
-// middleware.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+**[PLANNED]** Not yet implemented.
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-  
-  // Normalize path (remove trailing slash, lowercase)
-  let canonicalPath = request.nextUrl.pathname
-    .toLowerCase()
-    .replace(/\/+$/, '');
-  
-  // Set header for page to read
-  response.headers.set('x-canonical-path', canonicalPath);
-  
-  return response;
-}
-```
+### 7.3 Dynamic Sitemap 📋
 
-### 7.3 Dynamic Sitemap
+**[PLANNED]** Not yet implemented.
 
-```typescript
-// app/sitemap.ts
-import { MetadataRoute } from 'next';
-import { getAllPublishedPages } from '@/lib/seo/queries';
+### 7.4 OG Image Generation 📋
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
-  
-  // Static routes
-  const staticRoutes: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-  ];
-  
-  // Dynamic SEO pages
-  const seoPages = await getAllPublishedPages();
-  const seoRoutes: MetadataRoute.Sitemap = seoPages.map(page => ({
-    url: `${baseUrl}/${page.slug}`,
-    lastModified: page.updated_at,
-    changeFrequency: 'monthly',
-    priority: getPriority(page.route_pattern, page.location_tier),
-  }));
-  
-  return [...staticRoutes, ...seoRoutes];
-}
+**[PLANNED]** Not yet implemented.
 
-function getPriority(pattern: RoutePattern, tier?: number): number {
-  const basePriority: Record<RoutePattern, number> = {
-    'service-location': 0.8,
-    'service-hub': 0.9,
-    'industry': 0.7,
-    'industry-location': 0.6,
-    'solution': 0.7,
-    'comparison': 0.7,
-    'location-hub': 0.6,
-  };
-  
-  let priority = basePriority[pattern] || 0.5;
-  
-  // Tier adjustment
-  if (tier === 1) priority += 0.05;
-  if (tier === 3) priority -= 0.05;
-  
-  return Math.min(1.0, Math.max(0.1, priority));
-}
-```
+### 7.5 Robots.txt 📋
 
-### 7.4 OG Image Generation
-
-```typescript
-// app/api/og/route.tsx
-import { ImageResponse } from '@vercel/og';
-import { NextRequest } from 'next/server';
-
-export const runtime = 'edge';
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const title = searchParams.get('title') || 'Default Title';
-  const description = searchParams.get('description') || '';
-  const type = searchParams.get('type') || 'default';
-  
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          height: '100%',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          backgroundColor: '#0f172a',
-          padding: '60px',
-        }}
-      >
-        <div style={{ color: '#f8fafc', fontSize: 60, fontWeight: 'bold' }}>
-          {title}
-        </div>
-        {description && (
-          <div style={{ color: '#94a3b8', fontSize: 30, marginTop: 20 }}>
-            {description}
-          </div>
-        )}
-      </div>
-    ),
-    {
-      width: 1200,
-      height: 630,
-    }
-  );
-}
-```
-
-### 7.5 Robots.txt
-
-```typescript
-// app/robots.ts
-import { MetadataRoute } from 'next';
-
-export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
-  
-  return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/admin/', '/api/', '/_next/'],
-      },
-    ],
-    sitemap: `${baseUrl}/sitemap.xml`,
-  };
-}
-```
+**[PLANNED]** Not yet implemented.
 
 ### 7.6 Key Files
 
@@ -995,9 +806,9 @@ export default function robots(): MetadataRoute.Robots {
 
 ---
 
-## 8. SERP Tracking
+## 8. SERP Tracking ✅
 
-### 8.1 Tracking Configuration
+### 8.1 Tracking Configuration ✅
 
 ```typescript
 interface SerpConfig {
@@ -1096,77 +907,11 @@ async function checkKeywordRanking(
 }
 ```
 
-### 8.4 Stats Aggregation (Database Trigger)
+### 8.4 Stats Aggregation 📋
 
-```sql
--- Trigger function to auto-update seo_page_stats
-CREATE OR REPLACE FUNCTION update_seo_page_stats()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO seo_page_stats (
-    page_id,
-    latest_position,
-    best_position,
-    avg_position_7d,
-    avg_position_30d,
-    check_count,
-    first_checked_at,
-    last_checked_at,
-    last_position_change,
-    days_in_top_10,
-    days_in_top_3
-  )
-  VALUES (
-    NEW.page_id,
-    NEW.position,
-    NEW.position,
-    NEW.position,
-    NEW.position,
-    1,
-    NEW.checked_at,
-    NEW.checked_at,
-    0,
-    CASE WHEN NEW.position <= 10 THEN 1 ELSE 0 END,
-    CASE WHEN NEW.position <= 3 THEN 1 ELSE 0 END
-  )
-  ON CONFLICT (page_id) DO UPDATE SET
-    latest_position = NEW.position,
-    best_position = LEAST(
-      COALESCE(seo_page_stats.best_position, NEW.position),
-      COALESCE(NEW.position, seo_page_stats.best_position)
-    ),
-    avg_position_7d = (
-      SELECT AVG(position)
-      FROM seo_ranking_snapshots
-      WHERE page_id = NEW.page_id
-        AND position IS NOT NULL
-        AND checked_at > NOW() - INTERVAL '7 days'
-    ),
-    avg_position_30d = (
-      SELECT AVG(position)
-      FROM seo_ranking_snapshots
-      WHERE page_id = NEW.page_id
-        AND position IS NOT NULL
-        AND checked_at > NOW() - INTERVAL '30 days'
-    ),
-    check_count = seo_page_stats.check_count + 1,
-    last_checked_at = NEW.checked_at,
-    last_position_change = COALESCE(seo_page_stats.latest_position, 0) - COALESCE(NEW.position, 0),
-    days_in_top_10 = seo_page_stats.days_in_top_10 + 
-      CASE WHEN NEW.position <= 10 THEN 1 ELSE 0 END,
-    days_in_top_3 = seo_page_stats.days_in_top_3 + 
-      CASE WHEN NEW.position <= 3 THEN 1 ELSE 0 END,
-    updated_at = NOW();
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+**[PLANNED]** Currently computed via queries in dashboard. Database trigger not yet implemented.
 
-CREATE TRIGGER on_ranking_snapshot_insert
-  AFTER INSERT ON seo_ranking_snapshots
-  FOR EACH ROW
-  EXECUTE FUNCTION update_seo_page_stats();
-```
+**Note:** `ranking_history` table uses `date DATE` (not `checked_at TIMESTAMPTZ`). This means one ranking check per day per keyword.
 
 ### 8.5 Key Files
 
@@ -1187,9 +932,9 @@ CREATE TRIGGER on_ranking_snapshot_insert
 
 ---
 
-## 9. Dashboard & Analytics
+## 9. Dashboard & Analytics 🚧
 
-### 9.1 KPI Cards
+### 9.1 KPI Cards ✅
 
 | Card | Metric | Calculation |
 |------|--------|-------------|
@@ -1204,78 +949,60 @@ CREATE TRIGGER on_ranking_snapshot_insert
 
 ### 9.2 Charts
 
-#### Position Trend Chart (Line)
-- X-axis: Date (filterable: 7d, 30d, 90d, all)
-- Y-axis: Position (inverted, 1 at top)
-- Series: Average position per day
-- Optional: Individual page overlay
+#### Position Trend Chart (Line) 📋
+**[PLANNED]** Not yet implemented.
 
-#### Position Distribution Chart (Bar)
-- Buckets: 1-3, 4-10, 11-20, 21-50, 51-100, Not Ranked
-- Color coded: Green → Yellow → Red → Gray
+#### Position Distribution Chart (Bar) 📋
+**[PLANNED]** Not yet implemented.
 
-#### Publishing Progress Chart (Area)
-- X-axis: Date
-- Y-axis: Cumulative published count
-- Projected completion line
+#### Publishing Progress Chart (Area) 📋
+**[PLANNED]** Not yet implemented.
 
-#### Route Pattern Breakdown (Stacked Bar)
-- X-axis: Route pattern
-- Stacked: Published (green) vs Draft (gray)
+#### Route Pattern Breakdown (Table) ✅
+**[IMPLEMENTED]** Shows breakdown by route pattern with draft/published counts.
 
-### 9.3 Rankings Table
+### 9.3 Rankings Table ✅
 
-| Column | Description | Sortable | Filterable |
-|--------|-------------|----------|------------|
-| Keyword | Derived or custom keyword | ✓ | Search |
-| Page Title | Meta title or hero headline | ✓ | Search |
-| Current Position | Latest ranking | ✓ | Buckets |
-| Best Position | All-time best | ✓ | |
-| 7d Avg | Rolling average | ✓ | |
-| 7d Change | Position delta (with arrow) | ✓ | Improved/Declined |
-| Trend | Sparkline (7 data points) | | |
-| Last Checked | Timestamp | ✓ | |
-| Actions | View page, Force check | | |
+**[IMPLEMENTED]** Basic rankings table with:
 
-#### Table Filters
-- **Position buckets**: All, Top 3, Top 10, Top 20, 50+, Not Ranked
-- **Route pattern**: service-location, industry, etc.
-- **Location tier**: 1, 2, 3
-- **Status**: Improving, Stable, Declining
+| Column | Description | Status |
+|--------|-------------|--------|
+| Keyword | Tracked keyword | ✅ Implemented |
+| Route Pattern | Page route pattern | ✅ Implemented |
+| Current Position | Latest ranking | ✅ Implemented |
+| Last Checked | Date of last check | ✅ Implemented |
 
-### 9.4 Top Movers Panel
+#### Table Filters 🚧
+- **Route pattern**: ✅ Implemented (services-city, industries, etc.)
+- **Position buckets**: 📋 Planned
+- **City tier**: 📋 Planned
+- **Status trends**: 📋 Planned
 
-```typescript
-interface MoverData {
-  page: SeoPage;
-  currentPosition: number;
-  previousPosition: number;      // 7 days ago
-  change: number;                // Positive = improved
-  changePercent: number;
-}
+### 9.4 Top Movers Panel 📋
 
-// Top 5 improvers (biggest positive change)
-// Top 5 decliners (biggest negative change)
-```
+**[PLANNED]** Not yet implemented.
 
-### 9.5 Content Pipeline Panel
+### 9.5 Content Pipeline Panel ✅
 
-| Metric | Value |
-|--------|-------|
-| Total Pages | X |
-| Published | X |
-| Approved (queued) | X |
-| Pending Review | X |
-| Draft | X |
-| Rejected | X |
-| Drip Rate | X/day |
-| Est. Completion | Date |
+**[IMPLEMENTED]** Basic stats and breakdown.
 
-#### Breakdown Table
-| Route Pattern | Tier 1 | Tier 2 | Tier 3 | Total | Published |
-|---------------|--------|--------|--------|-------|-----------|
-| service-location | X | X | X | X | X |
-| ... | ... | ... | ... | ... | ... |
+| Metric | Status |
+|--------|--------|
+| Total Pages | ✅ Implemented |
+| Published | ✅ Implemented |
+| Draft | ✅ Implemented |
+| Est. Completion | 📋 Planned |
+
+#### Breakdown Table ✅
+| Route Pattern | Tier 1 | Tier 2 | Total | Published |
+|---------------|--------|--------|-------|-----------|
+| services-city | X | X | X | X |
+| industries | - | - | X | X |
+| industries-city | X | X | X | X |
+| solutions | - | - | X | X |
+| comparisons | - | - | X | X |
+
+**Note:** Only tier 1 and 2 are supported (no tier 3).
 
 ### 9.6 Key Files
 
@@ -1299,9 +1026,9 @@ interface MoverData {
 
 ---
 
-## 10. Keyword Management
+## 10. Keyword Management 🚧
 
-### 10.1 Keyword Sources
+### 10.1 Keyword Sources ✅
 
 | Source | Description |
 |--------|-------------|
@@ -1335,76 +1062,35 @@ interface TrackedKeyword {
 }
 ```
 
-### 10.3 Bulk Operations
+### 10.3 Bulk Operations 📋
 
-```typescript
-// Bulk add keywords
-POST /api/admin/keywords
-{
-  "siteId": "uuid",
-  "keywords": ["keyword 1", "keyword 2"],
-  "source": "custom",
-  "priority": "medium"
-}
+**[PLANNED]** Not yet implemented.
 
-// Bulk delete
-DELETE /api/admin/keywords
-{
-  "ids": ["uuid1", "uuid2"]
-}
+### 10.4 Keyword Suggestions 📋
 
-// Bulk update priority
-PATCH /api/admin/keywords
-{
-  "ids": ["uuid1", "uuid2"],
-  "priority": "high"
-}
-```
-
-### 10.4 Keyword Suggestions
-
-```typescript
-async function suggestKeywords(pageId: string): Promise<string[]> {
-  const page = await getPage(pageId);
-  
-  // Extract potential keywords from content
-  const candidates = [
-    ...extractNGrams(page.content.heroHeadline, [2, 3, 4]),
-    ...extractNGrams(page.content.problemStatement, [2, 3, 4]),
-    ...page.content.faq.flatMap(f => extractNGrams(f.question, [3, 4, 5])),
-  ];
-  
-  // Dedupe and filter
-  const unique = [...new Set(candidates)]
-    .filter(k => k.split(' ').length >= 2)
-    .filter(k => !stopWords.some(sw => k.includes(sw)));
-  
-  return unique.slice(0, 10);
-}
-```
+**[PLANNED]** Not yet implemented.
 
 ---
 
-## 11. Internal Linking
+## 11. Internal Linking ✅
 
-### 11.1 Linking Strategy
+### 11.1 Linking Strategy ✅
 
 ```typescript
 interface InternalLinkConfig {
   maxLinksPerSection: number;    // Default: 3
   linkTypes: {
-    sameServiceOtherLocations: boolean;
-    sameLocationOtherServices: boolean;
+    sameServiceOtherCities: boolean;       // ✅ Implemented
+    sameCityOtherServices: boolean;        // ✅ Implemented
     relatedRoutePatterns: boolean;
     parentHub: boolean;
   };
-  
+
   // Prioritization
   priorityFactors: {
     sameServiceWeight: number;
     sameTierWeight: number;
     publishedRecentlyWeight: number;
-    highRankingWeight: number;
   };
 }
 ```
@@ -1415,55 +1101,46 @@ interface InternalLinkConfig {
 interface InternalLink {
   url: string;
   anchor: string;
-  relevanceScore: number;
-  relationship: 'same-service' | 'same-location' | 'related' | 'parent-hub';
+  relationship: 'same-service' | 'same-city' | 'related';
 }
 
 async function generateInternalLinks(
   page: SeoPage,
   config: InternalLinkConfig
 ): Promise<InternalLink[]> {
+  // ✅ Implemented in lib/seo/internal-links.ts
+  // Generates links based on route pattern and city tier
+
   const links: InternalLink[] = [];
-  
-  // Same service, other locations
-  if (config.linkTypes.sameServiceOtherLocations && page.service_slug) {
+
+  // Same service, other cities (for services-city pattern)
+  if (config.linkTypes.sameServiceOtherCities && page.route_pattern === 'services-city') {
     const related = await db
       .from('seo_pages')
       .select('*')
       .eq('status', 'published')
-      .eq('service_slug', page.service_slug)
+      .eq('route_pattern', 'services-city')
       .neq('id', page.id)
-      .order('location_tier', { ascending: true })
+      .order('city_tier', { ascending: true })
       .limit(config.maxLinksPerSection);
-    
+
     links.push(...related.map(r => ({
       url: `/${r.slug}`,
-      anchor: `${page.service_name} in ${r.location_name}`,
-      relevanceScore: calculateRelevance(page, r, config),
+      anchor: `${extractService(r.slug)} in ${extractCity(r.slug)}`,
       relationship: 'same-service',
     })));
   }
-  
-  // Same location, other services
-  if (config.linkTypes.sameLocationOtherServices && page.location_slug) {
-    // Similar logic...
-  }
-  
-  // Parent hub
-  if (config.linkTypes.parentHub) {
-    // Link to /services/{service} or /locations/{location}
-  }
-  
-  // Sort by relevance and dedupe
-  return links
-    .sort((a, b) => b.relevanceScore - a.relevanceScore)
-    .slice(0, config.maxLinksPerSection * 3);
+
+  return links;
 }
 ```
 
-### 11.3 Link Health Monitoring
+### 11.3 Link Health Monitoring 📋
+
+**[PLANNED]** Not yet implemented.
 
 ```typescript
+// 📋 PLANNED
 interface LinkHealth {
   pageId: string;
   outboundLinks: number;
@@ -1472,33 +1149,15 @@ interface LinkHealth {
   orphanPage: boolean;           // No inbound links
   lastCheckedAt: string;
 }
-
-// Cron job to check link health
-async function checkLinkHealth(): Promise<void> {
-  const pages = await getAllPublishedPages();
-  
-  for (const page of pages) {
-    const inbound = await countInboundLinks(page.id);
-    const outbound = await countOutboundLinks(page.id);
-    const broken = await findBrokenLinks(page.id);
-    
-    await upsertLinkHealth({
-      pageId: page.id,
-      inboundLinks: inbound,
-      outboundLinks: outbound,
-      brokenLinks: broken.length,
-      orphanPage: inbound === 0,
-      lastCheckedAt: new Date().toISOString(),
-    });
-  }
-}
 ```
 
 ---
 
-## 12. Alert System
+## 12. Alert System 📋
 
-### 12.1 Alert Types
+**[PLANNED]** Not yet implemented.
+
+### 12.1 Alert Types 📋
 
 | Alert | Trigger | Severity |
 |-------|---------|----------|
@@ -1579,9 +1238,11 @@ interface NotificationConfig {
 
 ---
 
-## 13. Google Search Console Integration
+## 13. Google Search Console Integration 📋
 
-### 13.1 Data to Fetch
+**[PLANNED]** Not yet implemented.
+
+### 13.1 Data to Fetch 📋
 
 | Metric | Description | Use Case |
 |--------|-------------|----------|
@@ -1655,9 +1316,11 @@ async function checkIndexingStatus(url: string): Promise<'indexed' | 'pending' |
 
 ---
 
-## 14. Content Lifecycle Management
+## 14. Content Lifecycle Management 📋
 
-### 14.1 Content Refresh
+**[PLANNED]** Not yet implemented.
+
+### 14.1 Content Refresh 📋
 
 ```typescript
 interface RefreshConfig {
@@ -1745,171 +1408,25 @@ async function bulkArchive(pageIds: string[]): Promise<void>;
 
 ## 15. Database Schema
 
-### 15.1 Complete Schema
+### 15.1 Actual Implemented Schema ✅
 
 ```sql
--- Locations (cities, suburbs, regions)
-CREATE TABLE seo_locations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('city', 'suburb', 'region', 'state')),
-  
-  parent_id UUID REFERENCES seo_locations(id),
-  
-  tier SMALLINT NOT NULL CHECK (tier IN (1, 2, 3)),
-  tier_reason TEXT,
-  
-  state TEXT,
-  postcode TEXT,
-  latitude DECIMAL(10, 8),
-  longitude DECIMAL(11, 8),
-  is_coastal BOOLEAN DEFAULT FALSE,
-  
-  median_property_price INTEGER,
-  predominant_housing_era TEXT,
-  architectural_style TEXT,
-  demographic_notes TEXT,
-  nearby_landmarks JSONB DEFAULT '[]',
-  
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Services/Entities
-CREATE TABLE seo_services (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  short_description TEXT,
-  long_description TEXT,
-  
-  category TEXT,
-  tags JSONB DEFAULT '[]',
-  
-  target_audience TEXT,
-  pain_points JSONB DEFAULT '[]',
-  unique_selling_points JSONB DEFAULT '[]',
-  
-  icon TEXT,
-  display_order INTEGER DEFAULT 0,
-  
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Industries
-CREATE TABLE seo_industries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  description TEXT,
-  pain_points JSONB DEFAULT '[]',
-  
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Solutions
-CREATE TABLE seo_solutions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  problem_description TEXT,
-  
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Comparisons
-CREATE TABLE seo_comparisons (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL,
-  competitor_name TEXT NOT NULL,
-  competitor_weaknesses JSONB DEFAULT '[]',
-  our_advantages JSONB DEFAULT '[]',
-  
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Main SEO Pages
+-- Main SEO Pages (✅ Implemented)
 CREATE TABLE seo_pages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  -- Identification
-  slug TEXT UNIQUE NOT NULL,
   route_pattern TEXT NOT NULL,
-  
-  -- Foreign keys (nullable based on route pattern)
-  service_id UUID REFERENCES seo_services(id),
-  location_id UUID REFERENCES seo_locations(id),
-  industry_id UUID REFERENCES seo_industries(id),
-  solution_id UUID REFERENCES seo_solutions(id),
-  comparison_id UUID REFERENCES seo_comparisons(id),
-  
-  -- Denormalized for queries
-  service_slug TEXT,
-  location_slug TEXT,
-  location_tier SMALLINT,
-  
-  -- Content
-  content JSONB NOT NULL,
-  layout TEXT DEFAULT 'standard',
-  
-  -- SEO Meta (can override content)
+  slug TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  content JSONB DEFAULT '{}',
   meta_title TEXT,
   meta_description TEXT,
-  
-  -- Status
-  status TEXT DEFAULT 'draft' CHECK (
-    status IN ('draft', 'pending_review', 'approved', 'scheduled', 'published', 'archived', 'rejected')
-  ),
-  rejection_reason TEXT,
-  
-  -- Quality
-  quality_score INTEGER,
-  quality_errors JSONB DEFAULT '[]',
-  quality_warnings JSONB DEFAULT '[]',
-  quality_checked_at TIMESTAMPTZ,
-  
-  -- Scheduling
-  publish_at TIMESTAMPTZ,
-  published_at TIMESTAMPTZ,
-  
-  -- Versioning
-  version INTEGER DEFAULT 1,
-  content_hash TEXT,
-  
-  -- Timestamps
+  city_tier SMALLINT CHECK (city_tier IS NULL OR city_tier IN (1, 2)),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Content versions (for history)
-CREATE TABLE seo_page_versions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  page_id UUID NOT NULL REFERENCES seo_pages(id) ON DELETE CASCADE,
-  version INTEGER NOT NULL,
-  
-  content JSONB NOT NULL,
-  quality_score INTEGER,
-  
-  snapshot_metrics JSONB,
-  
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT DEFAULT 'ai',
-  
-  UNIQUE(page_id, version)
-);
-
--- Tracked sites (for multi-site support)
-CREATE TABLE seo_tracked_sites (
+-- Tracked Sites (✅ Implemented - no seo_ prefix)
+CREATE TABLE tracked_sites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   domain TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
@@ -1917,165 +1434,65 @@ CREATE TABLE seo_tracked_sites (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Tracked keywords
-CREATE TABLE seo_tracked_keywords (
+-- Tracked Keywords (✅ Implemented - no seo_ prefix)
+CREATE TABLE tracked_keywords (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  site_id UUID NOT NULL REFERENCES seo_tracked_sites(id) ON DELETE CASCADE,
-  page_id UUID REFERENCES seo_pages(id) ON DELETE SET NULL,
-  
+  site_id UUID NOT NULL REFERENCES tracked_sites(id) ON DELETE CASCADE,
   keyword TEXT NOT NULL,
-  source TEXT DEFAULT 'auto' CHECK (source IN ('auto', 'custom', 'suggested')),
-  
+  route_pattern TEXT NOT NULL,
   active BOOLEAN DEFAULT TRUE,
-  priority TEXT DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
-  check_frequency TEXT DEFAULT 'daily',
-  
-  search_volume INTEGER,
-  difficulty INTEGER,
-  cpc DECIMAL(10, 2),
-  
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
   UNIQUE(site_id, keyword)
 );
 
--- Ranking snapshots (historical)
-CREATE TABLE seo_ranking_snapshots (
+-- Ranking History (✅ Implemented - no seo_ prefix, uses DATE not TIMESTAMPTZ)
+CREATE TABLE ranking_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  keyword_id UUID NOT NULL REFERENCES seo_tracked_keywords(id) ON DELETE CASCADE,
-  page_id UUID REFERENCES seo_pages(id) ON DELETE SET NULL,
-  
-  position INTEGER,              -- NULL = not in top N
-  url TEXT,                      -- Which URL ranked
-  
-  featured_snippet BOOLEAN DEFAULT FALSE,
-  local_pack BOOLEAN DEFAULT FALSE,
-  
-  raw_data JSONB,                -- Full SERP data
-  
-  checked_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  -- Composite index for time-series queries
-  UNIQUE(keyword_id, checked_at)
-);
-
--- Aggregated page stats (auto-updated by trigger)
-CREATE TABLE seo_page_stats (
-  page_id UUID PRIMARY KEY REFERENCES seo_pages(id) ON DELETE CASCADE,
-  
-  latest_position INTEGER,
-  best_position INTEGER,
-  worst_position INTEGER,
-  
-  avg_position_7d DECIMAL(5, 2),
-  avg_position_30d DECIMAL(5, 2),
-  
-  check_count INTEGER DEFAULT 0,
-  first_checked_at TIMESTAMPTZ,
-  last_checked_at TIMESTAMPTZ,
-  
-  last_position_change INTEGER,
-  
-  days_in_top_3 INTEGER DEFAULT 0,
-  days_in_top_10 INTEGER DEFAULT 0,
-  days_in_top_20 INTEGER DEFAULT 0,
-  
-  -- GSC data
-  total_clicks INTEGER DEFAULT 0,
-  total_impressions INTEGER DEFAULT 0,
-  avg_ctr DECIMAL(5, 4),
-  
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- GSC data (daily snapshots)
-CREATE TABLE seo_gsc_data (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  page_id UUID NOT NULL REFERENCES seo_pages(id) ON DELETE CASCADE,
-  date DATE NOT NULL,
-  
-  clicks INTEGER DEFAULT 0,
-  impressions INTEGER DEFAULT 0,
-  ctr DECIMAL(5, 4),
-  position DECIMAL(5, 2),
-  
-  top_queries JSONB DEFAULT '[]',
-  
+  keyword_id UUID NOT NULL REFERENCES tracked_keywords(id) ON DELETE CASCADE,
+  date DATE NOT NULL,           -- NOTE: Uses DATE, not checked_at TIMESTAMPTZ
+  position INTEGER,
+  url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  UNIQUE(page_id, date)
+  UNIQUE(keyword_id, date)
 );
 
--- Alerts
-CREATE TABLE seo_alerts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  type TEXT NOT NULL,
-  severity TEXT NOT NULL CHECK (severity IN ('info', 'warning', 'critical')),
-  
-  title TEXT NOT NULL,
-  message TEXT NOT NULL,
-  
-  page_id UUID REFERENCES seo_pages(id) ON DELETE SET NULL,
-  keyword_id UUID REFERENCES seo_tracked_keywords(id) ON DELETE SET NULL,
-  metadata JSONB,
-  
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'acknowledged', 'resolved')),
-  acknowledged_at TIMESTAMPTZ,
-  acknowledged_by TEXT,
-  resolved_at TIMESTAMPTZ,
-  
-  notification_sent BOOLEAN DEFAULT FALSE,
-  notification_channels JSONB DEFAULT '[]',
-  
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Internal link tracking
-CREATE TABLE seo_internal_links (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  source_page_id UUID NOT NULL REFERENCES seo_pages(id) ON DELETE CASCADE,
-  target_page_id UUID NOT NULL REFERENCES seo_pages(id) ON DELETE CASCADE,
-  
-  anchor_text TEXT,
-  relationship TEXT,
-  
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  UNIQUE(source_page_id, target_page_id)
-);
-
--- Link health stats
-CREATE TABLE seo_link_health (
-  page_id UUID PRIMARY KEY REFERENCES seo_pages(id) ON DELETE CASCADE,
-  
-  outbound_links INTEGER DEFAULT 0,
-  inbound_links INTEGER DEFAULT 0,
-  broken_links INTEGER DEFAULT 0,
-  orphan_page BOOLEAN DEFAULT FALSE,
-  
-  last_checked_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Configuration
-CREATE TABLE seo_config (
-  key TEXT PRIMARY KEY,
-  value JSONB NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Indexes
+-- Indexes (✅ Implemented)
 CREATE INDEX idx_seo_pages_status ON seo_pages(status);
 CREATE INDEX idx_seo_pages_route_pattern ON seo_pages(route_pattern);
-CREATE INDEX idx_seo_pages_location_tier ON seo_pages(location_tier);
-CREATE INDEX idx_seo_pages_published_at ON seo_pages(published_at);
-CREATE INDEX idx_seo_ranking_snapshots_keyword_date ON seo_ranking_snapshots(keyword_id, checked_at DESC);
-CREATE INDEX idx_seo_ranking_snapshots_page ON seo_ranking_snapshots(page_id);
-CREATE INDEX idx_seo_alerts_status ON seo_alerts(status);
-CREATE INDEX idx_seo_alerts_created ON seo_alerts(created_at DESC);
+CREATE INDEX idx_seo_pages_city_tier ON seo_pages(city_tier);
+```
+
+### 15.2 Planned Tables 📋
+
+The following tables are **NOT implemented** but may be added in the future:
+
+```sql
+-- 📋 PLANNED: Entity definition tables
+-- seo_locations (data lives in lib/seo/cities.ts)
+-- seo_services (data lives in lib/seo/services.ts)
+-- seo_industries (data lives in lib/seo/industries.ts)
+-- seo_solutions (data lives in lib/seo/solutions.ts)
+-- seo_comparisons (data lives in lib/seo/comparisons.ts)
+
+-- 📋 PLANNED: Content versioning
+-- seo_page_versions
+
+-- 📋 PLANNED: Page statistics
+-- seo_page_stats
+
+-- 📋 PLANNED: Google Search Console integration
+-- seo_gsc_data
+
+-- 📋 PLANNED: Alert system
+-- seo_alerts
+
+-- 📋 PLANNED: Internal linking
+-- seo_internal_links
+-- seo_link_health
+
+-- 📋 PLANNED: Configuration storage
+-- seo_config
 ```
 
 ### 15.2 Row Level Security
@@ -2109,50 +1526,55 @@ CREATE POLICY "Service role has full access"
 
 ## 16. API Endpoints
 
-### 16.1 Public API
+### 16.1 Implemented Endpoints ✅
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/seo/page/[slug]` | GET | Get published page by slug |
-| `/api/sitemap.xml` | GET | Dynamic sitemap |
-| `/api/og` | GET | OG image generation |
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|--------|
+| `/api/admin/seo-pages/stats` | GET | Get pipeline statistics | ✅ Implemented |
+| `/api/admin/rankings/route` | GET | Get rankings by route pattern | ✅ Implemented |
+| `/api/admin/rankings/keywords` | GET | Get keywords list | ✅ Implemented |
+| `/api/admin/rankings/summary` | GET | Get ranking summary stats | ✅ Implemented |
+| `/api/cron/serp-check` | POST | SERP ranking check | ✅ Implemented |
+| `/api/cron/seo-drip` | POST | Drip publish pages | ✅ Implemented |
 
-### 16.2 Admin API
+### 16.2 Planned Endpoints 📋
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/admin/pages` | GET | List all pages (with filters) |
-| `/api/admin/pages` | POST | Create page manually |
-| `/api/admin/pages/[id]` | GET | Get page by ID |
-| `/api/admin/pages/[id]` | PATCH | Update page |
-| `/api/admin/pages/[id]` | DELETE | Delete page |
-| `/api/admin/pages/[id]/publish` | POST | Publish single page |
-| `/api/admin/pages/[id]/approve` | POST | Approve page |
-| `/api/admin/pages/[id]/reject` | POST | Reject page |
-| `/api/admin/pages/[id]/regenerate` | POST | Regenerate content |
-| `/api/admin/pages/bulk` | POST | Bulk operations |
-| `/api/admin/keywords` | GET | List tracked keywords |
-| `/api/admin/keywords` | POST | Add keywords |
-| `/api/admin/keywords` | DELETE | Delete keywords |
-| `/api/admin/keywords/[id]/check` | POST | Force ranking check |
-| `/api/admin/rankings` | GET | Get ranking history |
-| `/api/admin/rankings/summary` | GET | Get ranking summary stats |
-| `/api/admin/pipeline/stats` | GET | Get pipeline statistics |
-| `/api/admin/alerts` | GET | List alerts |
-| `/api/admin/alerts/[id]/acknowledge` | POST | Acknowledge alert |
-| `/api/admin/alerts/[id]/resolve` | POST | Resolve alert |
-| `/api/admin/config` | GET | Get configuration |
-| `/api/admin/config` | PATCH | Update configuration |
+**Public API:**
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|--------|
+| `/api/seo/page/[slug]` | GET | Get published page by slug | 📋 Planned |
+| `/api/sitemap.xml` | GET | Dynamic sitemap | 📋 Planned |
+| `/api/og` | GET | OG image generation | 📋 Planned |
 
-### 16.3 Cron API
+**Admin CRUD API:**
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|--------|
+| `/api/admin/pages` | GET | List all pages (with filters) | 📋 Planned |
+| `/api/admin/pages` | POST | Create page manually | 📋 Planned |
+| `/api/admin/pages/[id]` | GET | Get page by ID | 📋 Planned |
+| `/api/admin/pages/[id]` | PATCH | Update page | 📋 Planned |
+| `/api/admin/pages/[id]` | DELETE | Delete page | 📋 Planned |
+| `/api/admin/pages/[id]/publish` | POST | Publish single page | 📋 Planned |
+| `/api/admin/pages/[id]/approve` | POST | Approve page | 📋 Planned |
+| `/api/admin/pages/[id]/reject` | POST | Reject page | 📋 Planned |
+| `/api/admin/pages/[id]/regenerate` | POST | Regenerate content | 📋 Planned |
+| `/api/admin/pages/bulk` | POST | Bulk operations | 📋 Planned |
+| `/api/admin/keywords` | GET | List tracked keywords | 📋 Planned |
+| `/api/admin/keywords` | POST | Add keywords | 📋 Planned |
+| `/api/admin/keywords` | DELETE | Delete keywords | 📋 Planned |
+| `/api/admin/keywords/[id]/check` | POST | Force ranking check | 📋 Planned |
+| `/api/admin/alerts` | GET | List alerts | 📋 Planned |
+| `/api/admin/alerts/[id]/acknowledge` | POST | Acknowledge alert | 📋 Planned |
+| `/api/admin/alerts/[id]/resolve` | POST | Resolve alert | 📋 Planned |
+| `/api/admin/config` | GET | Get configuration | 📋 Planned |
+| `/api/admin/config` | PATCH | Update configuration | 📋 Planned |
 
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/cron/seo-drip` | POST | CRON_SECRET | Drip publish |
-| `/api/cron/serp-check` | POST | CRON_SECRET | SERP ranking check |
-| `/api/cron/gsc-sync` | POST | CRON_SECRET | GSC data sync |
-| `/api/cron/link-health` | POST | CRON_SECRET | Link health check |
-| `/api/cron/generate` | POST | CRON_SECRET | Generate content |
+**Cron Jobs:**
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|--------|
+| `/api/cron/gsc-sync` | POST | GSC data sync | 📋 Planned |
+| `/api/cron/link-health` | POST | Link health check | 📋 Planned |
+| `/api/cron/generate` | POST | Generate content | 📋 Planned |
 
 ---
 
@@ -2160,16 +1582,17 @@ CREATE POLICY "Service role has full access"
 
 ### 17.1 Schedule
 
-| Job | Schedule | Purpose |
-|-----|----------|---------|
-| `seo-drip` | `0 2 * * *` (2 AM UTC) | Publish approved pages |
-| `serp-check` | `0 5 * * *` (5 AM UTC) | Check keyword rankings |
-| `gsc-sync` | `0 6 * * *` (6 AM UTC) | Sync GSC data |
-| `link-health` | `0 7 * * 0` (7 AM UTC Sunday) | Check internal links |
-| `content-refresh` | `0 3 * * 0` (3 AM UTC Sunday) | Identify stale content |
+| Job | Schedule | Purpose | Status |
+|-----|----------|---------|--------|
+| `seo-drip` | `0 2 * * *` (2 AM UTC) | Publish pages with tier ordering | ✅ Implemented |
+| `serp-check` | `0 5 * * *` (5 AM UTC) | Check keyword rankings | ✅ Implemented |
+| `gsc-sync` | `0 6 * * *` (6 AM UTC) | Sync GSC data | 📋 Planned |
+| `link-health` | `0 7 * * 0` (7 AM UTC Sunday) | Check internal links | 📋 Planned |
+| `content-refresh` | `0 3 * * 0` (3 AM UTC Sunday) | Identify stale content | 📋 Planned |
 
 ### 17.2 Vercel Configuration
 
+**Implemented:**
 ```json
 {
   "crons": [
@@ -2180,7 +1603,15 @@ CREATE POLICY "Service role has full access"
     {
       "path": "/api/cron/serp-check",
       "schedule": "0 5 * * *"
-    },
+    }
+  ]
+}
+```
+
+**Planned:**
+```json
+{
+  "crons": [
     {
       "path": "/api/cron/gsc-sync",
       "schedule": "0 6 * * *"
@@ -2304,9 +1735,11 @@ export function validateCronRequest(request: Request): boolean {
 
 ---
 
-## 20. Export & Reporting
+## 20. Export & Reporting 📋
 
-### 20.1 Export Formats
+**[PLANNED]** Not yet implemented.
+
+### 20.1 Export Formats 📋
 
 | Format | Use Case |
 |--------|----------|
@@ -2350,53 +1783,58 @@ interface ScheduledReport {
 
 ## Implementation Checklist
 
-### Phase 1: Core Infrastructure
-- [ ] Database schema migration
-- [ ] Location/service data seeding
-- [ ] Content generation pipeline
-- [ ] Quality gate system
-- [ ] Basic page rendering
+### Phase 1: Core Infrastructure ✅ COMPLETE
+- [x] ✅ Database schema migration (`seo_pages`, rank tracker tables)
+- [x] ✅ City/service data in TypeScript files (15 cities, 6 services, 12 industries)
+- [x] ✅ Content generation pipeline (`lib/seo/generation.ts`)
+- [x] ✅ Quality gate system (`lib/seo/quality-gate.ts`)
+- [x] ✅ Basic page rendering (5 route patterns)
 
-### Phase 2: Publishing Pipeline
-- [ ] Drip publishing system
-- [ ] Priority ordering logic
-- [ ] Post-publish tasks
-- [ ] Sitemap generation
+### Phase 2: Publishing Pipeline ✅ COMPLETE
+- [x] ✅ Drip publishing system (`api/cron/seo-drip`)
+- [x] ✅ Priority ordering logic with city tier support
+- [x] ✅ Post-publish tasks (cache revalidation)
+- [ ] 📋 Sitemap generation (planned)
 
-### Phase 3: Layout Variants
-- [ ] Standard layout
-- [ ] Problem-first layout
-- [ ] Benefits-grid layout
-- [ ] Testimonial-heavy layout
-- [ ] FAQ-heavy layout
-- [ ] Story-flow layout
+### Phase 3: Layout Variants 🚧 PARTIAL
+- [x] ✅ Standard layout
+- [x] ✅ Problem-first layout
+- [x] ✅ Benefits-grid layout
+- [x] ✅ FAQ-heavy layout
+- [x] ✅ Story-flow layout
+- [ ] 📋 Testimonial-heavy layout (not implemented)
 
-### Phase 4: SERP Tracking
-- [ ] SERP provider integration
-- [ ] Ranking snapshots storage
-- [ ] Stats aggregation trigger
-- [ ] Keyword management UI
+### Phase 4: SERP Tracking ✅ COMPLETE
+- [x] ✅ SERP provider integration (`api/cron/serp-check`)
+- [x] ✅ Ranking snapshots storage (`ranking_history` table)
+- [ ] 📋 Stats aggregation trigger (manual queries for now)
+- [x] ✅ Keyword management (basic tracking)
 
-### Phase 5: Dashboard
-- [ ] KPI cards
-- [ ] Position trend chart
-- [ ] Distribution chart
-- [ ] Rankings table with filters
-- [ ] Top movers panel
-- [ ] Pipeline status panel
+### Phase 5: Dashboard ✅ COMPLETE
+- [x] ✅ KPI cards with stats
+- [x] ✅ Rankings table
+- [x] ✅ Route pattern breakdown
+- [ ] 📋 Position trend chart (planned)
+- [ ] 📋 Distribution chart (planned)
+- [ ] 📋 Top movers panel (planned)
 
-### Phase 6: Advanced Features
-- [ ] Internal linking system
-- [ ] Alert system
-- [ ] GSC integration
-- [ ] Content versioning
-- [ ] Scheduled publishing
-- [ ] Export/reporting
+### Phase 6: Advanced Features 🚧 PARTIAL
+- [x] ✅ Internal linking system (`lib/seo/internal-links.ts`)
+- [ ] 📋 Alert system (not implemented)
+- [ ] 📋 GSC integration (not implemented)
+- [ ] 📋 Content versioning (not implemented)
+- [ ] 📋 Scheduled publishing (not implemented)
+- [ ] 📋 Export/reporting (not implemented)
 
-### Phase 7: Optimization
-- [ ] Link health monitoring
-- [ ] Content refresh system
-- [ ] A/B testing framework
-- [ ] Performance monitoring
+### Phase 7: Optimization 📋 NOT STARTED
+- [ ] 📋 Link health monitoring
+- [ ] 📋 Content refresh system
+- [ ] 📋 A/B testing framework
+- [ ] 📋 Performance monitoring
+
+**Legend:**
+- ✅ = Fully implemented
+- 🚧 = Partially implemented
+- 📋 = Planned but not started
 
 ---

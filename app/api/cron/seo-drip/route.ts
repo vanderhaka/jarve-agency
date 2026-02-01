@@ -6,6 +6,7 @@ import { services } from '@/lib/seo/services'
 import { cities } from '@/lib/seo/cities'
 import { industries } from '@/lib/seo/industries'
 import type { SeoContent } from '@/lib/seo/types'
+import { createVersion } from '@/lib/seo/versioning'
 
 function verifyCronSecret(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization')
@@ -151,13 +152,22 @@ export async function POST(request: NextRequest) {
 
       if (!result.passed) {
         // Store quality issues in content and skip
+        const updatedContent = { ...content, quality_issues: result.errors }
         await supabase
           .from('seo_pages')
           .update({
-            content: { ...content, quality_issues: result.errors },
+            content: updatedContent,
             updated_at: new Date().toISOString(),
           })
           .eq('id', page.id)
+
+        // Create version for failed quality gate
+        await createVersion(
+          page.id,
+          updatedContent,
+          page.meta_title,
+          page.meta_description
+        )
 
         errors.push({ slug: page.slug, issues: result.errors })
         failed++
@@ -172,6 +182,14 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', page.id)
+
+      // Create version for published page
+      await createVersion(
+        page.id,
+        content,
+        page.meta_title,
+        page.meta_description
+      )
 
       // Revalidate the page path
       const path = slugToPath(page.slug, page.route_pattern)

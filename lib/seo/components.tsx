@@ -213,6 +213,37 @@ function CombinedContextProblem({ content }: { content: SeoContent }) {
   )
 }
 
+function TestimonialsSection({ content }: { content: SeoContent }) {
+  if (!content.testimonialMatch) return null
+
+  return (
+    <section className="py-20 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary-rgb,59,130,246),0.05),transparent_50%)]" />
+      <div className="container mx-auto px-4 max-w-5xl relative">
+        <FadeIn>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-10 text-center">
+            What Clients Say
+          </h2>
+        </FadeIn>
+        <FadeIn delay={0.1}>
+          <div className="rounded-xl border border-border/50 bg-card p-8 md:p-10 max-w-3xl mx-auto shadow-lg">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-lg md:text-xl leading-relaxed italic">
+                  &ldquo;{content.testimonialMatch}&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  )
+}
+
 export function InternalLinksSection({ links }: { links: { title: string; href: string; group: string }[] }) {
   if (!links || links.length === 0) return null
 
@@ -326,6 +357,19 @@ export function SeoPageSections({ content }: { content: SeoContent }) {
           <CombinedContextProblem content={content} />
           <SolutionSection content={content} />
           <LocalSignalsSection content={content} />
+          <BenefitsSection content={content} />
+          <FaqSection content={content} />
+          <CtaSection content={content} />
+        </>
+      )
+
+    case 'testimonial-heavy':
+      return (
+        <>
+          <HeroSection content={content} />
+          <TestimonialsSection content={content} />
+          <ProblemSection content={content} />
+          <SolutionSection content={content} />
           <BenefitsSection content={content} />
           <FaqSection content={content} />
           <CtaSection content={content} />

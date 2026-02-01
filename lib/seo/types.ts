@@ -75,7 +75,7 @@ export interface SeoContent {
     question: string
     answer: string
   }[]
-  layout?: 'standard' | 'problem-first' | 'faq-heavy' | 'benefits-grid' | 'story-flow'
+  layout?: 'standard' | 'problem-first' | 'faq-heavy' | 'benefits-grid' | 'story-flow' | 'testimonial-heavy'
   testimonialMatch?: string
   metaDescription?: string
 }

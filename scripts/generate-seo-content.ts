@@ -11,6 +11,34 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Version creation helper for CLI (uses direct supabase client)
+async function createVersionCLI(
+  pageId: string,
+  content: Record<string, unknown>,
+  metaTitle: string,
+  metaDescription: string
+) {
+  const { data: lastVersion } = await supabase
+    .from('seo_page_versions')
+    .select('version_number')
+    .eq('page_id', pageId)
+    .order('version_number', { ascending: false })
+    .limit(1)
+    .single()
+
+  const nextVersion = lastVersion ? lastVersion.version_number + 1 : 1
+
+  await supabase
+    .from('seo_page_versions')
+    .insert({
+      page_id: pageId,
+      version_number: nextVersion,
+      content,
+      meta_title: metaTitle,
+      meta_description: metaDescription,
+    })
+}
+
 interface PageDefinition {
   slug: string
   routePattern: RoutePattern
@@ -409,7 +437,7 @@ async function upsertPage(page: PageDefinition, content: Record<string, unknown>
     ? content.metaDescription.slice(0, 160)
     : `${page.metaTitle.replace(' | Jarve', '')}. Australian developer, Adelaide-based, working Australia-wide.`
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('seo_pages')
     .upsert(
       {
@@ -424,7 +452,15 @@ async function upsertPage(page: PageDefinition, content: Record<string, unknown>
       },
       { onConflict: 'slug' }
     )
+    .select()
+    .single()
+
   if (error) throw new Error(`Upsert failed for ${page.slug}: ${error.message}`)
+
+  // Create version for the upserted page
+  if (data) {
+    await createVersionCLI(data.id, content, page.metaTitle, metaDesc)
+  }
 }
 
 async function countPages() {

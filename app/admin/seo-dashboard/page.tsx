@@ -29,8 +29,13 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUp, ArrowDown, Minus, TrendingUp, Target, Search, BarChart3, Plus, Trash2, FileText, Clock, ExternalLink } from 'lucide-react'
+import { ArrowUp, ArrowDown, Minus, TrendingUp, Target, Search, BarChart3, Plus, Trash2, FileText, Clock, ExternalLink, Download } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
+import PositionTrendChart from './components/PositionTrendChart'
+import DistributionChart from './components/DistributionChart'
+import TopMovers from './components/TopMovers'
+import RankingFilters, { type RankingFiltersState } from './components/RankingFilters'
+import AlertsPanel from './components/AlertsPanel'
 
 interface TrackedKeyword {
   id: string
@@ -101,6 +106,12 @@ export default function SeoRankingsPage() {
 
   const [pseoStats, setPseoStats] = useState<PseoStats | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  const [filters, setFilters] = useState<RankingFiltersState>({
+    positionBucket: 'all',
+    cityTier: 'all',
+    trend: 'all',
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -215,6 +226,18 @@ export default function SeoRankingsPage() {
               <SelectItem value="90">90 days</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/api/admin/export/rankings?format=csv&days=${days}`} download>
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/api/admin/export/pages?format=csv&status=all`} download>
+              <Download className="h-4 w-4 mr-2" />
+              Export Pages
+            </a>
+          </Button>
         </div>
       </div>
 
@@ -349,8 +372,14 @@ export default function SeoRankingsPage() {
         </>
       )}
 
+      {/* Alerts */}
+      <AlertsPanel />
+
       {/* SERP Rankings */}
       <h2 className="text-xl font-semibold">SERP Rankings</h2>
+
+      {/* Ranking filters */}
+      <RankingFilters filters={filters} onChange={setFilters} />
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -399,10 +428,30 @@ export default function SeoRankingsPage() {
         </Card>
       </div>
 
+      {/* New analytics charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <PositionTrendChart
+          siteId={siteId}
+          days={parseInt(days)}
+          positionBucket={filters.positionBucket}
+          trend={filters.trend}
+        />
+        <DistributionChart
+          siteId={siteId}
+          trend={filters.trend}
+        />
+      </div>
+
+      {/* Top Movers */}
+      <TopMovers
+        siteId={siteId}
+        positionBucket={filters.positionBucket}
+      />
+
       {/* Position over time chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Position Over Time</CardTitle>
+          <CardTitle>Position Over Time (By Keyword)</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (

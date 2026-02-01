@@ -3,9 +3,17 @@
 ALTER TABLE seo_pages
   ADD COLUMN IF NOT EXISTS city_tier SMALLINT;
 
-ALTER TABLE seo_pages
-  ADD CONSTRAINT seo_pages_city_tier_check
-  CHECK (city_tier IS NULL OR city_tier IN (1, 2));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'seo_pages_city_tier_check'
+  ) THEN
+    ALTER TABLE seo_pages
+      ADD CONSTRAINT seo_pages_city_tier_check
+      CHECK (city_tier IS NULL OR city_tier IN (1, 2));
+  END IF;
+END $$;
 
 WITH city_tiers (city_slug, tier) AS (
   VALUES
