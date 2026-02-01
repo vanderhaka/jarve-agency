@@ -3,7 +3,7 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import { runQualityGate } from '@/lib/seo/quality-gate'
 import { revalidatePath } from 'next/cache'
 import { services } from '@/lib/seo/services'
-import { cities, tier1Cities } from '@/lib/seo/cities'
+import { cities } from '@/lib/seo/cities'
 import { industries } from '@/lib/seo/industries'
 import type { SeoContent } from '@/lib/seo/types'
 
@@ -42,7 +42,7 @@ function slugToPath(slug: string, routePattern: string): string | null {
       return `/industries/${slug.replace('industry-', '')}`
     case 'industries-city': {
       for (const ind of industries) {
-        for (const c of [...tier1Cities]) {
+        for (const c of cities) {
           if (`industry-${ind.slug}-${c.slug}` === slug) {
             return `/industries/${ind.slug}/${c.slug}`
           }
@@ -82,11 +82,17 @@ export async function POST(request: NextRequest) {
     if (pages.length >= BATCH_SIZE) break
 
     const remaining = BATCH_SIZE - pages.length
-    const { data } = await supabase
+    let query = supabase
       .from('seo_pages')
       .select('id, slug, route_pattern, content, meta_title, meta_description')
       .eq('route_pattern', pattern)
       .eq('status', 'draft')
+
+    if (pattern === 'services-city' || pattern === 'industries-city') {
+      query = query.order('city_tier', { ascending: true })
+    }
+
+    const { data } = await query
       .order('created_at', { ascending: true })
       .limit(remaining)
 
