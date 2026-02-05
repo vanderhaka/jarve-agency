@@ -38,8 +38,6 @@ function buildClientPortalUrl(token: string): string {
   return `${baseUrl}/portal/${token}`
 }
 
-const generateToken = generateSecureToken
-
 /**
  * Create a new client portal token for a client user
  */
@@ -68,7 +66,7 @@ export async function createClientPortalToken(
       .is('revoked_at', null)
 
     // Generate new token
-    const token = generateToken()
+    const token = generateSecureToken()
 
     // Insert the new token
     const { data: newToken, error: insertError } = await supabase

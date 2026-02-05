@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { RankingFiltersState } from './components/RankingFilters'
 import type { TrackedKeyword, RankingEntry, PseoStats, Summary, KeywordRow } from './types'
 
@@ -83,29 +83,40 @@ export function useSeoDashboard() {
     if (!targetSiteId || !newKeywords.trim()) return
 
     setSaving(true)
-    const keywords = newKeywords.split('\n').map((k) => k.trim()).filter(Boolean)
-    await fetch('/api/admin/rankings/keywords', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ site_id: targetSiteId, keywords }),
-    })
-    setNewKeywords('')
-    setSaving(false)
-    setRefreshKey((k) => k + 1)
+    try {
+      const keywords = newKeywords.split('\n').map((k) => k.trim()).filter(Boolean)
+      const res = await fetch('/api/admin/rankings/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id: targetSiteId, keywords }),
+      })
+      if (!res.ok) throw new Error(`Failed to add keywords: ${res.status}`)
+      setNewKeywords('')
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      console.error('Failed to add keywords:', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDeleteKeyword(id: string) {
-    await fetch('/api/admin/rankings/keywords', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    setRefreshKey((k) => k + 1)
+    try {
+      const res = await fetch('/api/admin/rankings/keywords', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) throw new Error(`Failed to delete keyword: ${res.status}`)
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      console.error('Failed to delete keyword:', err)
+    }
   }
 
-  const chartData = buildChartData(rankings)
-  const keywords = getUniqueKeywords(rankings)
-  const keywordTable = buildKeywordTable(rankings)
+  const chartData = useMemo(() => buildChartData(rankings), [rankings])
+  const keywords = useMemo(() => getUniqueKeywords(rankings), [rankings])
+  const keywordTable = useMemo(() => buildKeywordTable(rankings), [rankings])
 
   return {
     summary,

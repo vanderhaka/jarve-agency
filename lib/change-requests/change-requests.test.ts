@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { generateSecureToken } from '@/lib/crypto'
 
 // Test pure functions and business logic for change requests
 // Database integration tests would require a test database setup
@@ -79,29 +80,20 @@ describe('Change Request Business Logic', () => {
   })
 
   describe('Portal Token Generation', () => {
-    function generatePortalToken(): string {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-      let token = ''
-      for (let i = 0; i < 32; i++) {
-        token += chars.charAt(Math.floor(Math.random() * chars.length))
-      }
-      return token
-    }
-
-    it('generates a 32-character token', () => {
-      const token = generatePortalToken()
-      expect(token.length).toBe(32)
+    it('generates a 64-character hex token', () => {
+      const token = generateSecureToken()
+      expect(token.length).toBe(64)
     })
 
-    it('generates only alphanumeric characters', () => {
-      const token = generatePortalToken()
-      expect(/^[A-Za-z0-9]+$/.test(token)).toBe(true)
+    it('generates only hex characters', () => {
+      const token = generateSecureToken()
+      expect(/^[a-f0-9]+$/.test(token)).toBe(true)
     })
 
     it('generates unique tokens', () => {
       const tokens = new Set<string>()
       for (let i = 0; i < 100; i++) {
-        tokens.add(generatePortalToken())
+        tokens.add(generateSecureToken())
       }
       // All 100 tokens should be unique
       expect(tokens.size).toBe(100)
