@@ -54,7 +54,7 @@ function getGSCClient() {
 /**
  * Fetch GSC data for a specific date range
  */
-export async function fetchGSCData(
+async function fetchGSCData(
   siteUrl: string,
   startDate: string,
   endDate: string

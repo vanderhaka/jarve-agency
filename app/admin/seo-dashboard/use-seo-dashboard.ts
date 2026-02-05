@@ -66,7 +66,11 @@ export function useSeoDashboard() {
       if (results.keywords) setTrackedKeywords(results.keywords)
       if (results.pseo) setPseoStats(results.pseo)
       setLoading(false)
-    }).catch(() => {})
+    }).catch((err) => {
+      if (err?.name !== 'AbortError') {
+        console.error('Failed to fetch SEO dashboard data:', err)
+      }
+    })
 
     return () => {
       cancelled = true

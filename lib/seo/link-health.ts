@@ -23,8 +23,41 @@ export async function checkPageLinks(slug: string): Promise<LinkCheckResult[]> {
 
   if (!page?.content) return []
 
-  // Extract URLs from content JSON
-  const urls = extractUrls(page.content as Record<string, unknown>)
+  return checkPageContent(slug, page.content as Record<string, unknown>)
+}
+
+/**
+ * Run link health check across all published pages.
+ * Returns total broken link count.
+ */
+export async function runLinkHealthCheck(): Promise<number> {
+  const supabase = createAdminClient()
+
+  // Fetch slug + content in a single query to avoid N+1
+  const { data: pages } = await supabase
+    .from('seo_pages')
+    .select('slug, content')
+    .eq('status', 'published')
+
+  if (!pages || pages.length === 0) return 0
+
+  let brokenCount = 0
+
+  for (const page of pages) {
+    if (!page.content) continue
+    const results = await checkPageContent(page.slug, page.content as Record<string, unknown>)
+    brokenCount += results.filter((r) => r.is_broken).length
+  }
+
+  return brokenCount
+}
+
+/**
+ * Check all links found in page content JSON.
+ */
+async function checkPageContent(slug: string, content: Record<string, unknown>): Promise<LinkCheckResult[]> {
+  const supabase = createAdminClient()
+  const urls = extractUrls(content)
   const results: LinkCheckResult[] = []
 
   for (const url of urls) {
@@ -38,30 +71,6 @@ export async function checkPageLinks(slug: string): Promise<LinkCheckResult[]> {
   }
 
   return results
-}
-
-/**
- * Run link health check across all published pages.
- * Returns total broken link count.
- */
-export async function runLinkHealthCheck(): Promise<number> {
-  const supabase = createAdminClient()
-
-  const { data: pages } = await supabase
-    .from('seo_pages')
-    .select('slug')
-    .eq('status', 'published')
-
-  if (!pages || pages.length === 0) return 0
-
-  let brokenCount = 0
-
-  for (const page of pages) {
-    const results = await checkPageLinks(page.slug)
-    brokenCount += results.filter((r) => r.is_broken).length
-  }
-
-  return brokenCount
 }
 
 function extractUrls(obj: unknown): string[] {

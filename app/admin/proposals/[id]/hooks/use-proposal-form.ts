@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { ProposalSection, PricingLineItem, ProposalContent } from '../../actions'
+import type { ProposalSection, PricingLineItem, ProposalContent } from '../../actions'
 
 export interface UseProposalFormReturn {
   content: ProposalContent | null
@@ -98,7 +98,6 @@ export function useProposalForm(initialContent: ProposalContent | null): UseProp
         total: 0
       }
       const newLineItems = [...prev.pricing.lineItems, newItem]
-      console.log('[DEBUG] Line item added:', { itemId: newItem.id, totalItems: newLineItems.length })
 
       const subtotal = newLineItems.reduce((sum, item) => sum + item.total, 0)
       const gstAmount = subtotal * prev.pricing.gstRate

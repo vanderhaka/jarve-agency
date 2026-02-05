@@ -8,7 +8,7 @@
 
 'use server'
 
-import { randomBytes } from 'crypto'
+import { generateSecureToken } from '@/lib/crypto'
 import { createClient } from '@/utils/supabase/server'
 import type {
   ClientPortalToken,
@@ -39,12 +39,7 @@ function buildClientPortalUrl(token: string): string {
   return `${baseUrl}/portal/${token}`
 }
 
-/**
- * Generate a secure random token
- */
-function generateToken(): string {
-  return randomBytes(24).toString('base64url')
-}
+const generateToken = generateSecureToken
 
 /**
  * Create a new client portal token for a client user
