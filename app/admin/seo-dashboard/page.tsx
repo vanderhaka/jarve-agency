@@ -1,17 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -19,183 +7,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUp, ArrowDown, Minus, TrendingUp, Target, Search, BarChart3, Plus, Trash2, FileText, Clock, ExternalLink, Download } from 'lucide-react'
-import { Progress } from '@/components/ui/progress'
+import { Download } from 'lucide-react'
 import PositionTrendChart from './components/PositionTrendChart'
 import DistributionChart from './components/DistributionChart'
 import TopMovers from './components/TopMovers'
-import RankingFilters, { type RankingFiltersState } from './components/RankingFilters'
+import RankingFilters from './components/RankingFilters'
 import AlertsPanel from './components/AlertsPanel'
-
-interface TrackedKeyword {
-  id: string
-  keyword: string
-  active: boolean
-  site: { id: string; domain: string; name: string }
-}
-
-interface Site {
-  id: string
-  domain: string
-  name: string
-}
-
-interface RankingEntry {
-  id: string
-  position: number | null
-  url: string | null
-  date: string
-  keyword: { id: string; keyword: string; site_id: string }
-}
-
-interface PseoStats {
-  published: number
-  draft: number
-  total: number
-  breakdown: Record<string, { published: number; draft: number; total: number }>
-  recentPages: { id: string; slug: string; meta_title: string | null; updated_at: string }[]
-  dripRate: number
-  estCompletionDate: string
-  estDaysRemaining: number
-  pagesRanking: number
-  publishedTotal: number
-}
-
-interface Summary {
-  sites: Site[]
-  avgPosition: number | null
-  top10: number
-  top30: number
-  totalTracked: number
-  totalRanking: number
-  topMovers: { keyword: string; current: number; previous: number; change: number }[]
-  biggestDrops: { keyword: string; current: number; previous: number; change: number }[]
-}
-
-const COLORS = [
-  'hsl(220, 70%, 50%)',
-  'hsl(160, 60%, 45%)',
-  'hsl(30, 80%, 55%)',
-  'hsl(280, 60%, 55%)',
-  'hsl(0, 70%, 55%)',
-  'hsl(190, 70%, 45%)',
-  'hsl(50, 80%, 50%)',
-  'hsl(320, 60%, 50%)',
-]
+import ContentPipeline from './components/ContentPipeline'
+import SerpSummaryCards from './components/SerpSummaryCards'
+import KeywordChart from './components/KeywordChart'
+import KeywordTable from './components/KeywordTable'
+import KeywordManager from './components/KeywordManager'
+import { useSeoDashboard } from './use-seo-dashboard'
 
 export default function SeoRankingsPage() {
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [rankings, setRankings] = useState<RankingEntry[]>([])
-  const [siteId, setSiteId] = useState<string>('all')
-  const [days, setDays] = useState<string>('30')
-  const [loading, setLoading] = useState(true)
-  const [trackedKeywords, setTrackedKeywords] = useState<TrackedKeyword[]>([])
-  const [newKeywords, setNewKeywords] = useState('')
-  const [addingSiteId, setAddingSiteId] = useState<string>('')
-  const [saving, setSaving] = useState(false)
-
-  const [pseoStats, setPseoStats] = useState<PseoStats | null>(null)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  const [filters, setFilters] = useState<RankingFiltersState>({
-    positionBucket: 'all',
-    cityTier: 'all',
-    trend: 'all',
-  })
-
-  useEffect(() => {
-    let cancelled = false
-    const controller = new AbortController()
-    const siteParam = siteId !== 'all' ? `&site_id=${siteId}` : ''
-    const signal = controller.signal
-
-    async function fetchData() {
-      const [sumRes, rankRes, kwRes, pseoRes] = await Promise.all([
-        fetch(`/api/admin/rankings/summary?${siteParam}`, { signal }),
-        fetch(`/api/admin/rankings?days=${days}${siteParam}`, { signal }),
-        fetch('/api/admin/rankings/keywords', { signal }),
-        fetch('/api/admin/seo-pages/stats', { signal }),
-      ])
-
-      if (cancelled) return
-
-      const results: Partial<{
-        summary: Summary
-        rankings: RankingEntry[]
-        keywords: TrackedKeyword[]
-        pseo: PseoStats
-      }> = {}
-
-      if (sumRes.ok) results.summary = await sumRes.json()
-      if (rankRes.ok) {
-        const data = await rankRes.json()
-        results.rankings = data.rankings ?? []
-      }
-      if (kwRes.ok) {
-        const data = await kwRes.json()
-        results.keywords = data.keywords ?? []
-      }
-      if (pseoRes.ok) results.pseo = await pseoRes.json()
-
-      return results
-    }
-
-    fetchData().then((results) => {
-      if (cancelled || !results) return
-      if (results.summary) setSummary(results.summary)
-      if (results.rankings) setRankings(results.rankings)
-      if (results.keywords) setTrackedKeywords(results.keywords)
-      if (results.pseo) setPseoStats(results.pseo)
-      setLoading(false)
-    }).catch(() => {})
-
-    return () => {
-      cancelled = true
-      controller.abort()
-    }
-  }, [siteId, days, refreshKey])
-
-  async function handleAddKeywords() {
-    const targetSiteId = addingSiteId || summary?.sites[0]?.id
-    if (!targetSiteId || !newKeywords.trim()) return
-
-    setSaving(true)
-    const keywords = newKeywords.split('\n').map((k) => k.trim()).filter(Boolean)
-    await fetch('/api/admin/rankings/keywords', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ site_id: targetSiteId, keywords }),
-    })
-    setNewKeywords('')
-    setSaving(false)
-    setRefreshKey((k) => k + 1)
-  }
-
-  async function handleDeleteKeyword(id: string) {
-    await fetch('/api/admin/rankings/keywords', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    setRefreshKey((k) => k + 1)
-  }
-
-  // Transform rankings into chart data: { date, keyword1: pos, keyword2: pos, ... }
-  const chartData = buildChartData(rankings)
-  const keywords = getUniqueKeywords(rankings)
-
-  // Build keyword table: latest position + change
-  const keywordTable = buildKeywordTable(rankings)
+  const {
+    summary,
+    siteId,
+    setSiteId,
+    days,
+    setDays,
+    loading,
+    trackedKeywords,
+    newKeywords,
+    setNewKeywords,
+    addingSiteId,
+    setAddingSiteId,
+    saving,
+    pseoStats,
+    filters,
+    setFilters,
+    handleAddKeywords,
+    handleDeleteKeyword,
+    chartData,
+    keywords,
+    keywordTable,
+  } = useSeoDashboard()
 
   return (
     <div className="space-y-6">
@@ -242,135 +90,7 @@ export default function SeoRankingsPage() {
       </div>
 
       {/* pSEO Content Pipeline */}
-      {pseoStats && (
-        <>
-          <div>
-            <h2 className="text-xl font-semibold mb-3">Content Pipeline</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Published / Total</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {pseoStats.published} / {pseoStats.total}
-                  </div>
-                  <Progress
-                    value={pseoStats.total > 0 ? (pseoStats.published / pseoStats.total) * 100 : 0}
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {pseoStats.total > 0 ? Math.round((pseoStats.published / pseoStats.total) * 100) : 0}% complete
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Drip Rate</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{pseoStats.dripRate} pages/day</div>
-                  <p className="text-xs text-muted-foreground">{pseoStats.draft} pages remaining</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Est. Completion</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{pseoStats.estCompletionDate}</div>
-                  <p className="text-xs text-muted-foreground">{pseoStats.estDaysRemaining} days remaining</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Ranking</CardTitle>
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {pseoStats.pagesRanking} / {pseoStats.publishedTotal}
-                  </div>
-                  <p className="text-xs text-muted-foreground">published pages in search results</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Content breakdown table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Content Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Route Pattern</TableHead>
-                    <TableHead className="text-right">Published</TableHead>
-                    <TableHead className="text-right">Draft</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Object.entries(pseoStats.breakdown).sort(([a], [b]) => a.localeCompare(b)).map(([key, val]) => (
-                    <TableRow key={key}>
-                      <TableCell className="font-medium">{key}</TableCell>
-                      <TableCell className="text-right">{val.published}</TableCell>
-                      <TableCell className="text-right">{val.draft}</TableCell>
-                      <TableCell className="text-right">{val.total}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {/* Recently published pages */}
-          {pseoStats.recentPages.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Recently Published</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Page</TableHead>
-                      <TableHead>URL Path</TableHead>
-                      <TableHead className="text-right">Published</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pseoStats.recentPages.map((page) => (
-                      <TableRow key={page.id}>
-                        <TableCell className="font-medium">{page.meta_title || page.slug}</TableCell>
-                        <TableCell>
-                          <a
-                            href={`/${page.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                          >
-                            /{page.slug}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {new Date(page.updated_at).toLocaleDateString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+      {pseoStats && <ContentPipeline pseoStats={pseoStats} />}
 
       {/* Alerts */}
       <AlertsPanel />
@@ -381,54 +101,10 @@ export default function SeoRankingsPage() {
       {/* Ranking filters */}
       <RankingFilters filters={filters} onChange={setFilters} />
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Avg Position</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {summary?.avgPosition ?? '—'}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Top 10</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary?.top10 ?? 0}</div>
-            <p className="text-xs text-muted-foreground">keywords on page 1</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Top 30</CardTitle>
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary?.top30 ?? 0}</div>
-            <p className="text-xs text-muted-foreground">keywords in top 3 pages</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Tracked</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary?.totalTracked ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {summary?.totalRanking ?? 0} ranking
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Summary cards + movers from summary API */}
+      <SerpSummaryCards summary={summary} />
 
-      {/* New analytics charts */}
+      {/* Analytics charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <PositionTrendChart
           siteId={siteId}
@@ -449,273 +125,23 @@ export default function SeoRankingsPage() {
       />
 
       {/* Position over time chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Position Over Time (By Keyword)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-              Loading...
-            </div>
-          ) : chartData.length === 0 ? (
-            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-              No ranking data yet. Data appears after the first daily cron run.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" fontSize={12} />
-                <YAxis reversed domain={[1, 'auto']} fontSize={12} label={{ value: 'Position', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Legend />
-                {keywords.map((kw, i) => (
-                  <Line
-                    key={kw}
-                    type="monotone"
-                    dataKey={kw}
-                    stroke={COLORS[i % COLORS.length]}
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Top movers */}
-      {summary && summary.topMovers.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-green-600">Top Movers (7d)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {summary.topMovers.map((m) => (
-                  <div key={m.keyword} className="flex justify-between items-center">
-                    <span className="text-sm">{m.keyword}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">{m.previous} → {m.current}</span>
-                      <Badge variant="outline" className="text-green-600">
-                        <ArrowUp className="h-3 w-3 mr-1" />+{m.change}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-red-600">Biggest Drops (7d)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {summary.biggestDrops.map((m) => (
-                  <div key={m.keyword} className="flex justify-between items-center">
-                    <span className="text-sm">{m.keyword}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">{m.previous} → {m.current}</span>
-                      <Badge variant="outline" className="text-red-600">
-                        <ArrowDown className="h-3 w-3 mr-1" />{m.change}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <KeywordChart chartData={chartData} keywords={keywords} loading={loading} />
 
       {/* Keywords table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Keywords</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Keyword</TableHead>
-                <TableHead className="text-right">Current</TableHead>
-                <TableHead className="text-right">Best</TableHead>
-                <TableHead className="text-right">7d Change</TableHead>
-                <TableHead>URL</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {keywordTable.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    No data yet
-                  </TableCell>
-                </TableRow>
-              ) : (
-                keywordTable.map((row) => (
-                  <TableRow key={row.keyword}>
-                    <TableCell className="font-medium">{row.keyword}</TableCell>
-                    <TableCell className="text-right">
-                      {row.current ?? '—'}
-                    </TableCell>
-                    <TableCell className="text-right">{row.best ?? '—'}</TableCell>
-                    <TableCell className="text-right">
-                      {row.change !== null ? (
-                        <span className={row.change > 0 ? 'text-green-600' : row.change < 0 ? 'text-red-600' : ''}>
-                          {row.change > 0 ? <ArrowUp className="inline h-3 w-3" /> : row.change < 0 ? <ArrowDown className="inline h-3 w-3" /> : <Minus className="inline h-3 w-3" />}
-                          {Math.abs(row.change)}
-                        </span>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground truncate max-w-[300px]">
-                      {row.url ?? '—'}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <KeywordTable keywordTable={keywordTable} />
 
       {/* Keyword management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Tracked Keywords</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-1 block">Add keywords (one per line)</label>
-              <textarea
-                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                placeholder={"web design melbourne\nseo agency sydney\ncustom software brisbane"}
-                value={newKeywords}
-                onChange={(e) => setNewKeywords(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium block">Site</label>
-              <Select value={addingSiteId || summary?.sites[0]?.id || ''} onValueChange={setAddingSiteId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select site" />
-                </SelectTrigger>
-                <SelectContent>
-                  {summary?.sites.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddKeywords} disabled={saving || !newKeywords.trim()} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                {saving ? 'Adding...' : 'Add Keywords'}
-              </Button>
-            </div>
-          </div>
-
-          {trackedKeywords.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Keyword</TableHead>
-                  <TableHead>Site</TableHead>
-                  <TableHead className="w-[80px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trackedKeywords.map((kw) => (
-                  <TableRow key={kw.id}>
-                    <TableCell>{kw.keyword}</TableCell>
-                    <TableCell className="text-muted-foreground">{kw.site?.name}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteKeyword(kw.id)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <KeywordManager
+        trackedKeywords={trackedKeywords}
+        sites={summary?.sites ?? []}
+        newKeywords={newKeywords}
+        setNewKeywords={setNewKeywords}
+        addingSiteId={addingSiteId}
+        setAddingSiteId={setAddingSiteId}
+        saving={saving}
+        onAddKeywords={handleAddKeywords}
+        onDeleteKeyword={handleDeleteKeyword}
+      />
     </div>
   )
-}
-
-function buildChartData(rankings: RankingEntry[]) {
-  const byDate = new Map<string, Record<string, string | number | null>>()
-
-  for (const r of rankings) {
-    const kw = r.keyword?.keyword
-    if (!kw) continue
-    if (!byDate.has(r.date)) byDate.set(r.date, { date: r.date })
-    const row = byDate.get(r.date)!
-    row[kw] = r.position
-  }
-
-  return Array.from(byDate.values()).sort((a, b) =>
-    String(a.date).localeCompare(String(b.date))
-  )
-}
-
-function getUniqueKeywords(rankings: RankingEntry[]): string[] {
-  const set = new Set<string>()
-  for (const r of rankings) {
-    if (r.keyword?.keyword) set.add(r.keyword.keyword)
-  }
-  return Array.from(set).sort()
-}
-
-interface KeywordRow {
-  keyword: string
-  current: number | null
-  best: number | null
-  change: number | null
-  url: string | null
-}
-
-function buildKeywordTable(rankings: RankingEntry[]): KeywordRow[] {
-  const byKeyword = new Map<string, RankingEntry[]>()
-
-  for (const r of rankings) {
-    const kw = r.keyword?.keyword
-    if (!kw) continue
-    if (!byKeyword.has(kw)) byKeyword.set(kw, [])
-    byKeyword.get(kw)!.push(r)
-  }
-
-  const rows: KeywordRow[] = []
-  for (const [keyword, entries] of byKeyword) {
-    const sorted = entries.sort((a, b) => b.date.localeCompare(a.date))
-    const latest = sorted[0]
-    const positions = sorted.filter((e) => e.position !== null).map((e) => e.position as number)
-    const best = positions.length > 0 ? Math.min(...positions) : null
-
-    // 7d change: compare latest vs entry ~7 days ago
-    const weekAgo = new Date()
-    weekAgo.setDate(weekAgo.getDate() - 7)
-    const weekAgoStr = weekAgo.toISOString().split('T')[0]
-    const prevEntry = sorted.find((e) => e.date <= weekAgoStr)
-
-    let change: number | null = null
-    if (latest?.position !== null && prevEntry?.position !== null && prevEntry) {
-      change = (prevEntry.position as number) - (latest.position as number)
-    }
-
-    rows.push({
-      keyword,
-      current: latest?.position ?? null,
-      best,
-      change,
-      url: latest?.url ?? null,
-    })
-  }
-
-  return rows.sort((a, b) => (a.current ?? 999) - (b.current ?? 999))
 }
