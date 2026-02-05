@@ -49,7 +49,11 @@ export default function DistributionChart({ siteId = 'all', trend = 'all' }: Dis
       setLoading(false)
     }
 
-    fetchData().catch(() => {})
+    fetchData().catch((err) => {
+      if (err?.name !== 'AbortError') {
+        console.error('Failed to fetch distribution data:', err)
+      }
+    })
 
     return () => {
       cancelled = true
