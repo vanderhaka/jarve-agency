@@ -54,12 +54,6 @@ export async function getPortalManifest(
   try {
     const supabase = createPortalServiceClient()
 
-    // Debug: Log token lookup (first/last 4 chars for security)
-    const tokenPreview = token.length > 8
-      ? `${token.slice(0, 4)}...${token.slice(-4)}`
-      : token
-    console.log(`[Portal] Looking up token: ${tokenPreview} (length: ${token.length})`)
-
     // Look up the token
     const { data: tokenData, error: tokenError } = await supabase
       .from('client_portal_tokens')
@@ -69,8 +63,6 @@ export async function getPortalManifest(
       .single()
 
     if (tokenError || !tokenData) {
-      const errorDetail = tokenError?.message ?? 'No token found'
-      console.log(`[Portal] Token lookup failed:`, errorDetail)
       return { success: false, error: 'Invalid or revoked token' }
     }
 

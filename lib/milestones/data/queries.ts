@@ -193,7 +193,7 @@ export async function reorderMilestones(projectId: string, orderedIds: string[])
 }
 
 /**
- * Complete a milestone (mark as complete, triggering invoice creation in Stage 5)
+ * Complete a milestone (mark as complete)
  * Returns the milestone - invoice creation will be handled separately
  */
 export async function completeMilestone(milestoneId: string): Promise<Milestone> {
@@ -227,10 +227,6 @@ export async function completeMilestone(milestoneId: string): Promise<Milestone>
     console.error('[completeMilestone] Error:', error)
     throw new Error('Failed to complete milestone')
   }
-
-  // TODO: In Stage 5, this is where we'd create the Xero invoice
-  // const invoice = await createXeroInvoice(data)
-  // await supabase.from('milestones').update({ invoice_id: invoice.id, status: 'invoiced' }).eq('id', milestoneId)
 
   return data
 }

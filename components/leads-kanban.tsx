@@ -177,10 +177,7 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
 
-    console.log('[DragEnd] active:', active.id, 'over:', over?.id, 'originalStatus:', originalStatus)
-
     if (!over) {
-      console.log('[DragEnd] No over target, aborting')
       setActiveId(null)
       setOriginalStatus(null)
       return
@@ -194,22 +191,15 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
     const overLead = leads.find((l) => l.id === overId)
     const targetStatus = overLead ? overLead.status : overId
 
-    console.log('[DragEnd] activeLead:', activeLead?.id, 'overId:', overId, 'targetStatus:', targetStatus)
-    console.log('[DragEnd] Check: activeLead exists?', !!activeLead, 'originalStatus?', originalStatus, 'different?', originalStatus !== targetStatus, 'valid stage?', stages.includes(targetStatus))
-
     // Use originalStatus to check if we actually moved to a different column
     // (handleDragOver already updated local state, so we can't use activeLead.status)
     if (activeLead && originalStatus && originalStatus !== targetStatus && stages.includes(targetStatus)) {
-      console.log('[DragEnd] Updating DB: lead', activeLead.id, 'from', originalStatus, 'to', targetStatus)
-
       // Update in DB
       const { data, error } = await supabase
         .from('leads')
         .update({ status: targetStatus })
         .eq('id', activeLead.id)
         .select()
-
-      console.log('[DragEnd] DB response - data:', data, 'error:', error)
 
       if (error) {
         console.error('[DragEnd] Failed to update lead status:', error)
@@ -220,11 +210,8 @@ export function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) {
           )
         )
       } else {
-        console.log('[DragEnd] Success! Refreshing...')
         router.refresh()
       }
-    } else {
-      console.log('[DragEnd] Skipping DB update - conditions not met')
     }
 
     setActiveId(null)

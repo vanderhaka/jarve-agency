@@ -3,11 +3,11 @@
  * Server actions for client portal token management
  *
  * Adapted from jarve-website for jarve-agency CRM
- * Full implementation in Stage 4
  */
 
 'use server'
 
+import { generateSecureToken } from '@/lib/crypto'
 import { createClient } from '@/utils/supabase/server'
 import type {
   ClientPortalToken,
@@ -39,18 +39,6 @@ function buildClientPortalUrl(token: string): string {
 }
 
 /**
- * Generate a secure random token
- */
-function generateToken(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let token = ''
-  for (let i = 0; i < 32; i++) {
-    token += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return token
-}
-
-/**
  * Create a new client portal token for a client user
  */
 export async function createClientPortalToken(
@@ -78,7 +66,7 @@ export async function createClientPortalToken(
       .is('revoked_at', null)
 
     // Generate new token
-    const token = generateToken()
+    const token = generateSecureToken()
 
     // Insert the new token
     const { data: newToken, error: insertError } = await supabase

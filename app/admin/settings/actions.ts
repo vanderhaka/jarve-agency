@@ -60,9 +60,7 @@ export async function updateAgencySettings(
   }
 
   // GST rate cannot be changed (fixed at 10%)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateData: any = { ...input }
-  delete updateData.gst_rate
+  const { gst_rate: _gstRate, ...updateData } = input as UpdateAgencySettingsInput & { gst_rate?: number }
 
   const { error } = await supabase
     .from('agency_settings')

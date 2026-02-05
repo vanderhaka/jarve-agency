@@ -21,7 +21,7 @@ export function TimesheetSettings({ settings, setSettings }: TimesheetSettingsPr
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground">Timesheet Lock Schedule</h3>
         <p className="text-xs text-muted-foreground">
-          Configure when timesheets are locked for the previous week (used in Stage 7)
+          Configure when timesheets are locked for the previous week
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -68,7 +68,7 @@ export function TimesheetSettings({ settings, setSettings }: TimesheetSettingsPr
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground">Reminder Settings</h3>
         <p className="text-xs text-muted-foreground">
-          Configure automated reminders (used in Stage 7)
+          Configure automated reminders
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">

@@ -70,7 +70,6 @@ export default function LeadsPage() {
   }
 
   const fetchLeads = useCallback(async () => {
-    console.log('[Leads] Fetching leads...', { showArchived })
     let query = supabase
       .from('leads')
       .select('*')
@@ -86,8 +85,6 @@ export default function LeadsPage() {
     }
 
     const { data, error } = await query
-
-    console.log('[Leads] Response:', { data, error })
 
     if (error) {
       console.error('[Leads] Error:', error)

@@ -1,6 +1,6 @@
 /**
  * Portal Actions
- * Server actions for client portal functionality (Stage 4)
+ * Server actions for client portal functionality
  *
  * Handles:
  * - Token validation and manifest retrieval

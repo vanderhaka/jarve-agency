@@ -12,8 +12,6 @@ import type { UpdateProposalInput } from './types'
 export async function updateProposal(proposalId: string, input: UpdateProposalInput) {
   const { supabase, employee } = await requireEmployee()
 
-  console.log('[updateProposal] Starting update for proposalId:', proposalId, 'employeeId:', employee.id)
-
   // Get current proposal with authorization data
   const { data: proposal, error: proposalError } = await supabase
     .from('proposals')
@@ -21,10 +19,7 @@ export async function updateProposal(proposalId: string, input: UpdateProposalIn
     .eq('id', proposalId)
     .single()
 
-  console.log('[updateProposal] Query result:', { proposal, proposalError })
-
   if (proposalError || !proposal) {
-    console.log('[updateProposal] Proposal not found - error:', proposalError, 'proposal:', proposal)
     return { success: false, message: 'Proposal not found' }
   }
 

@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getPublishedPage, getPublishedSlugs, parseContent, buildFaqJsonLd } from '@/lib/seo/queries'
 import { industries } from '@/lib/seo/industries'
 import { cities } from '@/lib/seo/cities'
-import { Breadcrumbs, SeoPageSections, InternalLinksSection } from '@/lib/seo/components'
+import { Breadcrumbs, SeoPageSections, InternalLinksSection } from '@/components/seo/components'
 import { getRelatedPages } from '@/lib/seo/internal-links'
 
 interface Props {

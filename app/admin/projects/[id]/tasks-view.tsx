@@ -9,7 +9,7 @@ import { TaskFilters, TaskFiltersState, filterTasks } from './task-filters'
 import { NewTaskDialog } from './new-task-dialog'
 
 // Dynamic import to prevent SSR hydration issues with dnd-kit
-const TaskKanban = dynamic(() => import('./task-kanban').then(mod => mod.TaskKanban), {
+const TaskKanban = dynamic(() => import('./kanban').then(mod => mod.TaskKanban), {
   ssr: false,
   loading: () => (
     <div className="flex gap-4 overflow-x-auto pb-4">

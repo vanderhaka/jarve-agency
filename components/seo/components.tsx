@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/fade-in'
-import type { SeoContent } from './types'
+import type { SeoContent } from '@/lib/seo/types'
 
 // Normalize legacy single-FAQ to array
 function normalizeFaq(faq: SeoContent['faq']): { question: string; answer: string }[] {

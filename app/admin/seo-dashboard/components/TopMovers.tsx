@@ -44,7 +44,11 @@ export default function TopMovers({ siteId = 'all', positionBucket = 'all' }: To
       setLoading(false)
     }
 
-    fetchData().catch(() => {})
+    fetchData().catch((err) => {
+      if (err?.name !== 'AbortError') {
+        console.error('Failed to fetch ranking movers:', err)
+      }
+    })
 
     return () => {
       cancelled = true

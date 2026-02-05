@@ -3,7 +3,6 @@
  * Handles Stripe Checkout sessions and payment processing
  *
  * Adapted from jarve-website for jarve-agency CRM
- * Full implementation in Stage 5
  */
 
 import Stripe from 'stripe'
