@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPublishedPage, getPublishedSlugs, parseContent, buildFaqJsonLd } from '@/lib/seo/queries'
 import { comparisons } from '@/lib/seo/comparisons'
-import { Breadcrumbs, SeoPageSections, InternalLinksSection } from '@/lib/seo/components'
+import { Breadcrumbs, SeoPageSections, InternalLinksSection } from '@/components/seo/components'
 import { getRelatedPages } from '@/lib/seo/internal-links'
 
 interface Props {

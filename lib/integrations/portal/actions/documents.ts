@@ -40,7 +40,6 @@ export async function getContractDocs(
       .order('created_at', { ascending: false })
 
     if (error) {
-      // Table might not exist yet (Stage 3)
       return { success: true, docs: [] }
     }
 

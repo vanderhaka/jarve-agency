@@ -261,8 +261,6 @@ export async function signChangeRequest(
     )
   }
 
-  // TODO: In Stage 5, create Xero invoice for the milestone here
-
   return data
 }
 

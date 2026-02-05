@@ -150,16 +150,13 @@ export async function postPortalMessage(
       return { success: false, error: 'Message is too long' }
     }
 
-    console.log('[Portal] postPortalMessage called with projectId:', projectId, 'body length:', body.length)
     const supabase = createPortalServiceClient()
 
     // Validate token
     const validation = await validateTokenForProject(supabase, token, projectId)
     if (!validation.valid) {
-      console.log('[Portal] Token validation failed:', validation.error)
       return { success: false, error: validation.error }
     }
-    console.log('[Portal] Token validated, clientUserId:', validation.clientUserId)
 
     // Insert message
     const { data: message, error } = await supabase
@@ -174,7 +171,7 @@ export async function postPortalMessage(
       .single()
 
     if (error || !message) {
-      console.log('[Portal] Insert message error:', error)
+      console.error('[Portal] Insert message error:', error)
       return { success: false, error: 'Failed to post message' }
     }
 
@@ -185,7 +182,6 @@ export async function postPortalMessage(
       }
     }
 
-    console.log('[Portal] Message posted successfully:', message.id)
     return { success: true, message: message as PortalMessage }
   } catch (error) {
     console.error('Error posting portal message:', error)
@@ -211,7 +207,6 @@ export async function postOwnerMessage(
 
     // Authenticate the employee first
     const { user } = await requireEmployee()
-    console.log('[Admin] postOwnerMessage called by user:', user.id, 'projectId:', projectId)
 
     // Use service role client for insert (RLS enabled but no policies exist)
     const supabase = createPortalServiceClient()
@@ -233,14 +228,10 @@ export async function postOwnerMessage(
       return { success: false, error: 'Failed to post message' }
     }
 
-    console.log('[Admin] Message posted successfully:', message.id)
-
     if (process.env.PORTAL_MESSAGES_WEBHOOK_MODE !== 'webhook') {
       const broadcastResult = await broadcastPortalMessage(message as PortalMessage)
       if (!broadcastResult.ok) {
         console.warn('[Admin] Broadcast failed:', broadcastResult.error)
-      } else {
-        console.log('[Admin] Message broadcast successfully')
       }
     }
 

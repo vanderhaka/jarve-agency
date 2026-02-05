@@ -165,8 +165,6 @@ export async function signProposal(rawInput: SignProposalInput) {
       if (leadUpdateError) {
         console.error('[signProposal] Lead conversion error:', leadUpdateError)
         // Non-critical, continue
-      } else {
-        console.log('[signProposal] Lead converted:', leadId)
       }
     }
 
@@ -259,7 +257,6 @@ export async function signProposal(rawInput: SignProposalInput) {
           .eq('source_id', proposal.id)
           .eq('source_table', 'proposals')
 
-        console.log('[signProposal] Auto-created project:', newProject.id)
       }
     }
 
@@ -275,8 +272,6 @@ export async function signProposal(rawInput: SignProposalInput) {
       if (!depositResult.success) {
         console.error('[signProposal] Deposit invoice error:', depositResult.error)
         // Non-critical, continue
-      } else {
-        console.log('[signProposal] Deposit invoice created:', depositResult.invoiceId)
       }
     }
 
@@ -307,7 +302,6 @@ export async function signProposal(rawInput: SignProposalInput) {
           proposalTitle: proposalDetails.title,
           portalUrl
         })
-        console.log('[signProposal] Confirmation email sent to:', input.signerEmail)
       } catch (emailError) {
         console.error('[signProposal] Confirmation email error:', emailError)
         // Non-critical, continue
@@ -321,9 +315,7 @@ export async function signProposal(rawInput: SignProposalInput) {
         versionId: sentVersion.id,
         projectId: projectId,
       }).then((result) => {
-        if (result.success) {
-          console.log('[signProposal] SOW PDF generated:', result.filePath)
-        } else {
+        if (!result.success) {
           console.error('[signProposal] SOW PDF generation failed:', result.error)
         }
       }).catch((error) => {

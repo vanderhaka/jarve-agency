@@ -1,4 +1,4 @@
-// Notification types for Stage 7 - Reminders & Notifications
+// Notification types
 
 export type NotificationType =
   | 'overdue_task'

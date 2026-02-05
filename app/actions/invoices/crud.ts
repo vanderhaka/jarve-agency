@@ -306,8 +306,6 @@ export async function createDepositInvoiceInternal(
     // Try to sync to Xero as DRAFT
     await syncInvoiceToXero(invoice.id)
 
-    console.log('[createDepositInvoiceInternal] Deposit invoice created:', invoice.invoice_number)
-
     return { success: true, invoiceId: invoice.id }
   } catch (error) {
     console.error('[createDepositInvoiceInternal] Unexpected error', { error })

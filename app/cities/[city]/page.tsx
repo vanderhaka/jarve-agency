@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { cities } from '@/lib/seo/cities'
 import { services } from '@/lib/seo/services'
 import { industries } from '@/lib/seo/industries'
-import { Breadcrumbs } from '@/lib/seo/components'
+import { Breadcrumbs } from '@/components/seo/components'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { FadeIn } from '@/components/fade-in'
 

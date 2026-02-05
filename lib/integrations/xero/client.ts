@@ -3,7 +3,6 @@
  * Handles OAuth authentication and API calls to Xero
  *
  * Adapted from jarve-website for jarve-agency CRM
- * Full implementation in Stage 5
  */
 
 import { createClient } from '@/utils/supabase/server'
@@ -186,7 +185,6 @@ export async function getXeroTenants(accessToken: string): Promise<XeroTenant[]>
 
 /**
  * Get valid access token (refreshes if needed)
- * TODO: Implement xero_connections table in Stage 5
  */
 export async function getValidAccessToken(): Promise<{ accessToken: string; tenantId: string } | null> {
   const supabase = await createClient()

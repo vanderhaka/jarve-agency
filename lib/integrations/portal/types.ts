@@ -3,7 +3,6 @@
  * Types for the client portal system
  *
  * Adapted from jarve-website for jarve-agency CRM
- * Full implementation in Stage 4
  */
 
 /**
