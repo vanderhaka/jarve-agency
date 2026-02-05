@@ -33,7 +33,11 @@ export async function createVersion(
   return data
 }
 
-export async function getVersionHistory(pageId: string): Promise<PageVersion[]> {
+export async function getVersionHistory(
+  pageId: string,
+  limit = 20,
+  offset = 0
+): Promise<PageVersion[]> {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
@@ -41,6 +45,7 @@ export async function getVersionHistory(pageId: string): Promise<PageVersion[]> 
     .select('*')
     .eq('page_id', pageId)
     .order('version_number', { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error('Failed to fetch version history:', error)

@@ -70,13 +70,22 @@ export async function bulkDelete(ids: string[]): Promise<BulkResult> {
 export async function bulkRefresh(ids: string[]): Promise<BulkResult> {
   const errors: string[] = []
   let success = 0
+  const BATCH_SIZE = 5
 
-  for (const id of ids) {
-    const result = await refreshPageContent(id)
-    if (result.success) {
-      success++
-    } else {
-      errors.push(result.error || `Failed to refresh ${id}`)
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE)
+    const results = await Promise.allSettled(
+      batch.map((id) => refreshPageContent(id).then((r) => ({ id, ...r })))
+    )
+
+    for (const settled of results) {
+      if (settled.status === 'rejected') {
+        errors.push(String(settled.reason))
+      } else if (settled.value.success) {
+        success++
+      } else {
+        errors.push(settled.value.error || `Failed to refresh ${settled.value.id}`)
+      }
     }
   }
 

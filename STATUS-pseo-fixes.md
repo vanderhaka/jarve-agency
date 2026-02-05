@@ -1,59 +1,60 @@
 # STATUS: pSEO Pipeline Fixes
 
-**Current Phase**: Phase 2 COMPLETE
+**Current Phase**: ALL PHASES COMPLETE
 **Last Updated**: 2026-02-06
 **Plan File**: `PLAN-pseo-fixes.md`
 
 ## Current Task
 
-Phases 1 & 2 complete. Ready to begin Phase 3 (Performance) in next session.
+All 4 phases complete. 66 issues resolved across 4 phases.
 
 ## Quick Summary
-
-66 issues found by 5-agent review. 4 phases:
 
 | Phase | Items | Status | Priority |
 |-------|-------|--------|----------|
 | 1: Critical Fixes | 4 steps (14 items) | **COMPLETE** | Immediate |
 | 2: High Priority | 5 steps (20 items) | **COMPLETE** | This sprint |
-| 3: Performance | 3 steps (15 items) | Pending | Next sprint |
-| 4: Data Integrity | 3 steps (17 items) | Pending | Following sprint |
+| 3: Performance | 3 steps (15 items) | **COMPLETE** | Next sprint |
+| 4: Data Integrity | 3 steps (17 items) | **COMPLETE** | Following sprint |
 
-## Phase 2 Completed Steps
+## Phase 4 Completed Steps
 
-1. **Step 2.1** - Zod validation added to bulk + schedule API routes
-2. **Step 2.2** - Bulk ops use `.select('id')` RETURNING for atomic counts (no TOCTOU race)
-3. **Step 2.3** - Content generation fixes:
-   - `fixVoice`: "We are" -> "I am", "We were" -> "I was"
-   - JSON extraction: balanced brace counting instead of greedy regex
-   - `applyVoiceFix`: fully recursive for nested objects
-   - Added 'testimonial-heavy' layout
-   - refresh.ts: passes new metaDescription + checks update errors
-4. **Step 2.4** - Partially done (dashboard data bugs - deferred redundant fetch consolidation to Phase 3)
-5. **Step 2.5** - Error handling fixes:
-   - scheduling.ts: checks .update() error on publish
-   - serp-tracker.ts: returns empty result instead of throwing on no keywords
-   - link-health.ts: uses .upsert() with unique constraint
-   - AlertsPanel.tsx: AbortController cleanup added
+1. **Step 4.1** - Database constraints:
+   - CHECK on `seo_pages.status` (draft/published)
+   - CHECK on `seo_alerts.status`, `severity`, `type`
+   - FK on `seo_link_checks.source_slug` -> `seo_pages.slug` CASCADE
+   - Orphan cleanup before FK creation
 
-## Files Changed (Phase 2)
+2. **Step 4.2** - Transaction safety:
+   - `publish_page()` DB function: atomic version + status update
+   - `update_page_content()` DB function: atomic version + content update
+   - `scheduling.ts`: uses `publish_page` RPC
+   - `refresh.ts`: uses `update_page_content` RPC
 
-- `app/api/admin/seo-pages/bulk/route.ts` - Zod validation
-- `app/api/admin/seo-pages/[id]/schedule/route.ts` - Zod validation
-- `lib/seo/bulk.ts` - Atomic count via .select('id')
-- `lib/seo/generation.ts` - Voice fixes, JSON extraction, recursive applyVoiceFix
-- `lib/seo/refresh.ts` - metaDescription handling, update error check
-- `lib/seo/scheduling.ts` - .update() error check
-- `lib/seo/serp-tracker.ts` - Graceful empty keywords handling
-- `lib/seo/link-health.ts` - .upsert() with conflict key
-- `app/admin/seo-dashboard/components/AlertsPanel.tsx` - AbortController
-- `supabase/migrations/20260206100001_link_checks_unique_constraint.sql` - NEW
-- `package.json` - Added zod dependency
+3. **Step 4.3** - Content safety and minor fixes:
+   - Quality gate: fixed word count for empty string (returned 1, now returns 0)
+   - Quality gate: HTML tag detection in AI-generated content
+   - Export: returns header row on empty data
+   - Aria-labels on delete keyword and resolve/acknowledge alert buttons
+   - CLI: validates parseInt for limit arg
+   - CLI: validates env vars at startup
+   - internal-links.ts: Map lookup replaces O(n*m) nested loops
+   - CSV export: siteId filter support added
+
+## Files Changed (Phase 4)
+
+- `supabase/migrations/20260206300000_seo_data_integrity_constraints.sql` - NEW
+- `supabase/migrations/20260206300001_atomic_publish_function.sql` - NEW
+- `lib/seo/scheduling.ts` - Uses publish_page RPC
+- `lib/seo/refresh.ts` - Uses update_page_content RPC
+- `lib/seo/quality-gate.ts` - Empty string word count fix, HTML tag detection
+- `lib/seo/export.ts` - Header row on empty data
+- `lib/seo/internal-links.ts` - Map lookup optimization
+- `app/admin/seo-dashboard/components/KeywordManager.tsx` - aria-label
+- `app/admin/seo-dashboard/components/AlertsPanel.tsx` - aria-labels
+- `app/api/admin/export/rankings/route.ts` - siteId filter
+- `scripts/generate-seo-content.ts` - parseInt validation, env var validation
 
 ## Blockers
 
-None.
-
-## Next Steps
-
-Begin Phase 3: Performance optimizations (see PLAN-pseo-fixes.md).
+None. All phases complete.

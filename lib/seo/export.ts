@@ -10,12 +10,12 @@ export function exportToCSV(
   data: Record<string, unknown>[],
   columns: { key: string; label: string }[]
 ): string {
-  if (data.length === 0) {
-    return ''
-  }
-
   // CSV header
   const header = columns.map((col) => escapeCSV(col.label)).join(',')
+
+  if (data.length === 0) {
+    return header
+  }
 
   // CSV rows
   const rows = data.map((row) => {

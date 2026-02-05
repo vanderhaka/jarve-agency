@@ -189,7 +189,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
 ## PHASE 3: Performance Optimizations
 
 ### Step 3.1: Batch database operations
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - principle: "GSC sync, link health, and bulk refresh use batched/parallel operations"
 - **evidence**: []
@@ -201,7 +201,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - `lib/seo/link-health.ts:97-101` - Fall back to GET if HEAD returns 405
 
 ### Step 3.2: Optimize database queries and indexes
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - principle: "Stats endpoint uses DB-level aggregation, not client-side loops"
 - **evidence**: []
@@ -215,7 +215,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - Add `updated_at` trigger function
 
 ### Step 3.3: Add caching and rate limiting
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - principle: "Expensive endpoints have rate limits; stats endpoint is cached"
 - **evidence**: []
@@ -233,7 +233,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
 ## PHASE 4: Data Integrity & Polish
 
 ### Step 4.1: Add database constraints
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - principle: "All enum columns have CHECK constraints; FK constraints with CASCADE"
 - **evidence**: []
@@ -245,7 +245,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - UNIQUE on `seo_link_checks(source_slug, target_url)` after dedup
 
 ### Step 4.2: Add transaction safety
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - principle: "Multi-step operations (version + update) are atomic"
 - **evidence**: []
@@ -257,7 +257,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - Similar atomic function for `refresh.ts`
 
 ### Step 4.3: Content safety and minor fixes
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - type: `npx tsc --noEmit` → "No errors"
   - lint: `npx next lint` → "No errors"

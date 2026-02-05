@@ -82,8 +82,14 @@ export async function runDailyRankCheck(): Promise<{
 
   const today = new Date().toISOString().split('T')[0]
 
-  for (const kw of keywords) {
+  for (let idx = 0; idx < keywords.length; idx++) {
+    const kw = keywords[idx]
     try {
+      // Rate limit SerpAPI calls: 1.5s delay between requests
+      if (idx > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+      }
+
       const site = kw.site as unknown as { domain: string }
       const result = await checkKeywordRanking(kw.keyword, site.domain)
 

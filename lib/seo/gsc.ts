@@ -171,31 +171,32 @@ export async function syncGSCData(): Promise<{
     return { synced: 0, skipped: 0, errors: [] }
   }
 
-  // Upsert into database
+  // Upsert into database in chunks of 1000
   const supabase = createAdminClient()
   const errors: string[] = []
   let synced = 0
+  const CHUNK_SIZE = 1000
 
-  for (const point of dataPoints) {
-    const { error } = await supabase.from('seo_gsc_data').upsert(
-      {
-        page_url: point.page_url,
-        date: point.date,
-        clicks: point.clicks,
-        impressions: point.impressions,
-        ctr: point.ctr,
-        position: point.position,
-        top_queries: point.top_queries,
-      },
-      {
-        onConflict: 'page_url,date',
-      }
-    )
+  const rows = dataPoints.map((point) => ({
+    page_url: point.page_url,
+    date: point.date,
+    clicks: point.clicks,
+    impressions: point.impressions,
+    ctr: point.ctr,
+    position: point.position,
+    top_queries: point.top_queries,
+  }))
+
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE)
+    const { error } = await supabase
+      .from('seo_gsc_data')
+      .upsert(chunk, { onConflict: 'page_url,date' })
 
     if (error) {
-      errors.push(`${point.page_url} (${point.date}): ${error.message}`)
+      errors.push(`Chunk ${Math.floor(i / CHUNK_SIZE) + 1}: ${error.message}`)
     } else {
-      synced++
+      synced += chunk.length
     }
   }
 

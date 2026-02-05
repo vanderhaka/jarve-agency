@@ -19,6 +19,7 @@ export function runQualityGate(content: SeoContent): QualityResult {
   const falseClaimsRegex = /I've built|I've worked with|worked with.*Sydney|my clients in|I've helped/i
   const wePronouns = /\bwe\b|\bour\b/i
   const buzzwords = /\bsynergy\b|\bcutting-edge\b|\binnovative\b|\bleverage\b|\bindustry-leading\b|\bbest-in-class\b|\bworld-class\b|\bgame-changer\b|\bdisruptive\b|\bparadigm\b/i
+  const htmlTags = /<\/?[a-z][\s\S]*?>/i
 
   // Helper to check all string values recursively
   const checkStringValue = (
@@ -59,6 +60,9 @@ export function runQualityGate(content: SeoContent): QualityResult {
   // Check buzzwords across all content
   checkStringValue(content, 'content', buzzwords, 'Buzzword detected')
 
+  // Check for HTML tags in content (AI sometimes generates HTML)
+  checkStringValue(content, 'content', htmlTags, 'HTML tag detected in content')
+
   // Required field checks
   if (!content.heroHeadline?.trim()) {
     errors.push('Missing required field: heroHeadline')
@@ -83,7 +87,10 @@ export function runQualityGate(content: SeoContent): QualityResult {
   }
 
   // Word count violations
-  const wordCount = (text: string): number => text.trim().split(/\s+/).length
+  const wordCount = (text: string): number => {
+    const trimmed = text.trim()
+    return trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length
+  }
 
   if (content.heroHeadline && wordCount(content.heroHeadline) > 10) {
     errors.push(

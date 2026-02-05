@@ -6,10 +6,15 @@ import { cities, services, industries, solutions, comparisons } from '../lib/seo
 import type { RoutePattern } from '../lib/seo'
 import { generateContent } from '../lib/seo/generation'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error('Missing required env vars: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY')
+  process.exit(1)
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey)
 
 // Version creation helper for CLI (uses direct supabase client)
 async function createVersionCLI(
@@ -561,9 +566,15 @@ switch (command) {
   case 'count':
     countPages()
     break
-  case 'generate':
-    generate(args[0], args[1] ? parseInt(args[1]) : undefined)
+  case 'generate': {
+    const limit = args[1] ? parseInt(args[1], 10) : undefined
+    if (limit !== undefined && (isNaN(limit) || limit < 1)) {
+      console.error('Error: limit must be a positive integer')
+      process.exit(1)
+    }
+    generate(args[0], limit)
     break
+  }
   case 'publish':
     if (!args[0]) {
       console.error('Usage: publish <slug-pattern>')

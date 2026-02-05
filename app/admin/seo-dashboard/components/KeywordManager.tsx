@@ -93,7 +93,7 @@ export default function KeywordManager({
                   <TableCell>{kw.keyword}</TableCell>
                   <TableCell className="text-muted-foreground">{kw.site?.name}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => onDeleteKeyword(kw.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => onDeleteKeyword(kw.id)} aria-label={`Delete keyword ${kw.keyword}`}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </TableCell>

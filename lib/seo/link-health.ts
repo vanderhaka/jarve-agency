@@ -41,12 +41,21 @@ export async function runLinkHealthCheck(): Promise<number> {
 
   if (!pages || pages.length === 0) return 0
 
+  // Process pages with concurrency limit of 20
+  const CONCURRENCY = 20
   let brokenCount = 0
+  const pagesWithContent = pages.filter((p) => p.content)
 
-  for (const page of pages) {
-    if (!page.content) continue
-    const results = await checkPageContent(page.slug, page.content as Record<string, unknown>)
-    brokenCount += results.filter((r) => r.is_broken).length
+  for (let i = 0; i < pagesWithContent.length; i += CONCURRENCY) {
+    const batch = pagesWithContent.slice(i, i + CONCURRENCY)
+    const results = await Promise.all(
+      batch.map((page) =>
+        checkPageContent(page.slug, page.content as Record<string, unknown>)
+      )
+    )
+    for (const pageResults of results) {
+      brokenCount += pageResults.filter((r) => r.is_broken).length
+    }
   }
 
   return brokenCount
@@ -58,18 +67,35 @@ export async function runLinkHealthCheck(): Promise<number> {
 async function checkPageContent(slug: string, content: Record<string, unknown>): Promise<LinkCheckResult[]> {
   const supabase = createAdminClient()
   const urls = extractUrls(content)
+
+  // Skip URLs checked in the last 7 days
+  const weekAgo = new Date()
+  weekAgo.setDate(weekAgo.getDate() - 7)
+  const { data: recentChecks } = await supabase
+    .from('seo_link_checks')
+    .select('target_url')
+    .eq('source_slug', slug)
+    .gte('checked_at', weekAgo.toISOString())
+
+  const recentlyChecked = new Set((recentChecks ?? []).map((r) => r.target_url))
+  const urlsToCheck = urls.filter((url) => !recentlyChecked.has(url))
+
   const results: LinkCheckResult[] = []
 
-  for (const url of urls) {
+  for (const url of urlsToCheck) {
     const result = await checkUrl(slug, url)
     results.push(result)
   }
 
-  // Store results (upsert to handle re-checks of the same links)
+  // Store results (upsert to handle re-checks, update checked_at timestamp)
   if (results.length > 0) {
+    const now = new Date().toISOString()
     await supabase
       .from('seo_link_checks')
-      .upsert(results, { onConflict: 'source_slug,target_url' })
+      .upsert(
+        results.map((r) => ({ ...r, checked_at: now })),
+        { onConflict: 'source_slug,target_url' }
+      )
   }
 
   return results
@@ -96,11 +122,20 @@ function extractUrls(obj: unknown): string[] {
 
 async function checkUrl(sourceSlug: string, url: string): Promise<LinkCheckResult> {
   try {
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       method: 'HEAD',
       redirect: 'follow',
       signal: AbortSignal.timeout(10000),
     })
+
+    // Fall back to GET if server doesn't support HEAD
+    if (response.status === 405) {
+      response = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(10000),
+      })
+    }
 
     return {
       source_slug: sourceSlug,

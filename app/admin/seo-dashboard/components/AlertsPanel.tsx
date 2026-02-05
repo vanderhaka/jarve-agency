@@ -148,6 +148,7 @@ export default function AlertsPanel() {
                         variant="ghost"
                         onClick={() => handleAction(alert.id, 'acknowledge')}
                         className="h-7 px-2 text-xs"
+                        aria-label={`Acknowledge alert: ${alert.title}`}
                       >
                         Ack
                       </Button>
@@ -157,6 +158,7 @@ export default function AlertsPanel() {
                       variant="ghost"
                       onClick={() => handleAction(alert.id, 'resolve')}
                       className="h-7 px-2 text-xs"
+                      aria-label={`Resolve alert: ${alert.title}`}
                     >
                       <X className="h-3 w-3" />
                     </Button>

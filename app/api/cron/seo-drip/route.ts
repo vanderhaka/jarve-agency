@@ -72,37 +72,27 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
   const BATCH_SIZE = 5
 
-  // Get next unpublished pages ordered by wave priority
-  // We query each wave in order until we have BATCH_SIZE pages
-  const pages: Array<{
-    id: string
-    slug: string
-    route_pattern: string
-    content: Record<string, unknown>
-    meta_title: string
-    meta_description: string
-  }> = []
+  // Get next unpublished pages with single query, then sort by wave priority
+  const { data: allDraftPages } = await supabase
+    .from('seo_pages')
+    .select('id, slug, route_pattern, content, meta_title, meta_description, city_tier, created_at')
+    .eq('status', 'draft')
+    .in('route_pattern', WAVE_ORDER)
+    .order('created_at', { ascending: true })
+    .limit(BATCH_SIZE * WAVE_ORDER.length)
 
-  for (const pattern of WAVE_ORDER) {
-    if (pages.length >= BATCH_SIZE) break
+  // Sort by wave priority, then city_tier (for city patterns), then created_at
+  const waveIndex = new Map(WAVE_ORDER.map((p, i) => [p, i]))
+  const sorted = (allDraftPages ?? []).sort((a, b) => {
+    const wA = waveIndex.get(a.route_pattern) ?? 999
+    const wB = waveIndex.get(b.route_pattern) ?? 999
+    if (wA !== wB) return wA - wB
+    // For city patterns, sort by tier
+    if (a.city_tier !== b.city_tier) return (a.city_tier ?? 99) - (b.city_tier ?? 99)
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  })
 
-    const remaining = BATCH_SIZE - pages.length
-    let query = supabase
-      .from('seo_pages')
-      .select('id, slug, route_pattern, content, meta_title, meta_description')
-      .eq('route_pattern', pattern)
-      .eq('status', 'draft')
-
-    if (pattern === 'services-city' || pattern === 'industries-city') {
-      query = query.order('city_tier', { ascending: true })
-    }
-
-    const { data } = await query
-      .order('created_at', { ascending: true })
-      .limit(remaining)
-
-    if (data) pages.push(...data)
-  }
+  const pages = sorted.slice(0, BATCH_SIZE)
 
   if (pages.length === 0) {
     return NextResponse.json({

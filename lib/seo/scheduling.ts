@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/utils/supabase/admin'
-import { createVersion } from './versioning'
 import { revalidatePath } from 'next/cache'
 
 export async function schedulePage(
@@ -60,7 +59,7 @@ export async function publishScheduledPages(): Promise<{
 
   const { data: duePages } = await supabase
     .from('seo_pages')
-    .select('id, slug, content, meta_title, meta_description')
+    .select('id, slug')
     .eq('status', 'draft')
     .not('scheduled_publish_at', 'is', null)
     .lte('scheduled_publish_at', now)
@@ -74,30 +73,25 @@ export async function publishScheduledPages(): Promise<{
 
   for (const page of duePages) {
     try {
-      await createVersion(
-        page.id,
-        page.content as Record<string, unknown>,
-        page.meta_title,
-        page.meta_description
-      )
+      // Atomic version creation + status update via DB function
+      const { data, error: rpcError } = await supabase.rpc('publish_page', {
+        p_page_id: page.id,
+      })
 
-      const { error: updateError } = await supabase
-        .from('seo_pages')
-        .update({
-          status: 'published',
-          scheduled_publish_at: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', page.id)
+      if (rpcError) {
+        errors.push(`${page.slug}: ${rpcError.message}`)
+        continue
+      }
 
-      if (updateError) {
-        errors.push(`${page.slug}: ${updateError.message}`)
+      const result = data as { success: boolean; error?: string }
+      if (!result.success) {
+        errors.push(`${page.slug}: ${result.error}`)
         continue
       }
 
       published++
     } catch (err) {
-      errors.push(`${page.slug}: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      errors.push(`${page.slug}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 

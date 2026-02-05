@@ -1,7 +1,6 @@
 import { createAdminClient } from '@/utils/supabase/admin'
 import { generateContent } from './generation'
 import { runQualityGate } from './quality-gate'
-import { createVersion } from './versioning'
 import type { SeoContent } from './types'
 
 /**
@@ -56,26 +55,20 @@ export async function refreshPageContent(pageId: string): Promise<{
     // Use new meta description if generated, otherwise keep existing
     const metaDesc = parsed.metaDescription || page.meta_description
 
-    // Create version before updating
-    await createVersion(
-      page.id,
-      newContent,
-      page.meta_title,
-      metaDesc
-    )
+    // Atomic version creation + content update via DB function
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('update_page_content', {
+      p_page_id: page.id,
+      p_content: newContent,
+      p_meta_description: metaDesc,
+    })
 
-    // Update page content and meta description
-    const { error: updateError } = await supabase
-      .from('seo_pages')
-      .update({
-        content: newContent,
-        meta_description: metaDesc,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', page.id)
+    if (rpcError) {
+      return { success: false, error: `Failed to update page: ${rpcError.message}` }
+    }
 
-    if (updateError) {
-      return { success: false, error: `Failed to update page: ${updateError.message}` }
+    const result = rpcResult as { success: boolean; error?: string }
+    if (!result.success) {
+      return { success: false, error: result.error }
     }
 
     return { success: true }

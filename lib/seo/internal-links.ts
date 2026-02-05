@@ -25,52 +25,37 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
         const { services } = await import('./services')
         const { cities } = await import('./cities')
 
-        // Parse current slug to extract service and city
-        let currentService = ''
-        let currentCity = ''
+        // Build slug -> {service, city} lookup map (O(s*c) once instead of O(s*c*n))
+        const slugMap = new Map<string, { service: string; city: string }>()
         for (const svc of services) {
           for (const c of cities) {
-            if (`${svc.slug}-${c.slug}` === slug) {
-              currentService = svc.slug
-              currentCity = c.slug
-              break
-            }
+            slugMap.set(`${svc.slug}-${c.slug}`, { service: svc.slug, city: c.slug })
           }
-          if (currentService) break
         }
 
-        if (!currentService || !currentCity) break
+        const current = slugMap.get(slug)
+        if (!current) break
 
         const sameService: InternalLink[] = []
         const sameCity: InternalLink[] = []
 
         for (const page of data) {
-          let pageService = ''
-          let pageCity = ''
-          for (const svc of services) {
-            for (const c of cities) {
-              if (`${svc.slug}-${c.slug}` === page.slug) {
-                pageService = svc.slug
-                pageCity = c.slug
-                break
-              }
-            }
-            if (pageService) break
-          }
+          const parsed = slugMap.get(page.slug)
+          if (!parsed) continue
 
-          if (pageService === currentService && pageCity !== currentCity && sameService.length < 3) {
-            const serviceName = services.find(s => s.slug === currentService)?.name ?? currentService
+          if (parsed.service === current.service && parsed.city !== current.city && sameService.length < 3) {
+            const serviceName = services.find(s => s.slug === current.service)?.name ?? current.service
             sameService.push({
               title: page.meta_title,
-              href: `/services/${pageService}/${pageCity}`,
+              href: `/services/${parsed.service}/${parsed.city}`,
               group: `More ${serviceName} pages`,
             })
           }
-          if (pageCity === currentCity && pageService !== currentService && sameCity.length < 3) {
-            const cityName = cities.find(c => c.slug === currentCity)?.name ?? currentCity
+          if (parsed.city === current.city && parsed.service !== current.service && sameCity.length < 3) {
+            const cityName = cities.find(c => c.slug === current.city)?.name ?? current.city
             sameCity.push({
               title: page.meta_title,
-              href: `/services/${pageService}/${pageCity}`,
+              href: `/services/${parsed.service}/${parsed.city}`,
               group: `More in ${cityName}`,
             })
           }
@@ -136,49 +121,40 @@ export async function getRelatedPages(slug: string, routePattern: string): Promi
         const { industries } = await import('./industries')
         const { cities } = await import('./cities')
 
-        // Parse current slug
-        let currentIndustry = ''
-        let currentCity = ''
+        // Build slug -> {industry, city} lookup map
+        const indCityMap = new Map<string, { industry: string; city: string }>()
         for (const ind of industries) {
           for (const c of cities) {
-            if (`industry-${ind.slug}-${c.slug}` === slug) {
-              currentIndustry = ind.slug
-              currentCity = c.slug
-              break
-            }
+            indCityMap.set(`industry-${ind.slug}-${c.slug}`, { industry: ind.slug, city: c.slug })
           }
-          if (currentIndustry) break
         }
 
-        if (!currentIndustry || !currentCity) break
+        const current = indCityMap.get(slug)
+        if (!current) break
 
         const sameIndustry: InternalLink[] = []
         const sameCity: InternalLink[] = []
 
         for (const page of data) {
           if (page.route_pattern === 'industries-city') {
-            for (const ind of industries) {
-              for (const c of cities) {
-                if (`industry-${ind.slug}-${c.slug}` === page.slug) {
-                  if (ind.slug === currentIndustry && c.slug !== currentCity && sameIndustry.length < 3) {
-                    const industryName = industries.find(i => i.slug === currentIndustry)?.name ?? currentIndustry
-                    sameIndustry.push({
-                      title: page.meta_title,
-                      href: `/industries/${ind.slug}/${c.slug}`,
-                      group: `More ${industryName} pages`,
-                    })
-                  }
-                  if (c.slug === currentCity && ind.slug !== currentIndustry && sameCity.length < 3) {
-                    const cityName = cities.find(ct => ct.slug === currentCity)?.name ?? currentCity
-                    sameCity.push({
-                      title: page.meta_title,
-                      href: `/industries/${ind.slug}/${c.slug}`,
-                      group: `More in ${cityName}`,
-                    })
-                  }
-                  break
-                }
-              }
+            const parsed = indCityMap.get(page.slug)
+            if (!parsed) continue
+
+            if (parsed.industry === current.industry && parsed.city !== current.city && sameIndustry.length < 3) {
+              const industryName = industries.find(i => i.slug === current.industry)?.name ?? current.industry
+              sameIndustry.push({
+                title: page.meta_title,
+                href: `/industries/${parsed.industry}/${parsed.city}`,
+                group: `More ${industryName} pages`,
+              })
+            }
+            if (parsed.city === current.city && parsed.industry !== current.industry && sameCity.length < 3) {
+              const cityName = cities.find(ct => ct.slug === current.city)?.name ?? current.city
+              sameCity.push({
+                title: page.meta_title,
+                href: `/industries/${parsed.industry}/${parsed.city}`,
+                group: `More in ${cityName}`,
+              })
             }
           }
         }

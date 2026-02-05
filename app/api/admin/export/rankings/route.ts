@@ -51,13 +51,14 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const format = searchParams.get('format') || 'csv'
   const days = parseInt(searchParams.get('days') || '30', 10)
+  const siteId = searchParams.get('site_id')
 
   // Fetch ranking data with keyword and site info
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - days)
   const cutoffStr = cutoffDate.toISOString().split('T')[0]
 
-  const { data: rankings, error } = await supabase
+  let query = supabase
     .from('ranking_history')
     .select(
       `
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest) {
       created_at,
       tracked_keywords (
         keyword,
+        site_id,
         tracked_sites (
           domain,
           name
@@ -77,6 +79,12 @@ export async function GET(request: NextRequest) {
     )
     .gte('date', cutoffStr)
     .order('date', { ascending: false })
+
+  if (siteId) {
+    query = query.eq('tracked_keywords.site_id', siteId)
+  }
+
+  const { data: rankings, error } = await query
 
   if (error) {
     console.error('[export/rankings] Error:', error)
