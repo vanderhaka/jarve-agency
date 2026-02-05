@@ -109,7 +109,6 @@ export function useSeoDashboard() {
 
   return {
     summary,
-    rankings,
     siteId,
     setSiteId,
     days,
