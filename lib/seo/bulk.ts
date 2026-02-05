@@ -11,59 +11,51 @@ interface BulkResult {
 export async function bulkPublish(ids: string[]): Promise<BulkResult> {
   const supabase = createAdminClient()
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('seo_pages')
     .update({ status: 'published', updated_at: new Date().toISOString() })
     .in('id', ids)
     .eq('status', 'draft')
+    .select('id')
 
   if (error) {
     return { success: 0, failed: ids.length, errors: [error.message] }
   }
 
-  const { count } = await supabase
-    .from('seo_pages')
-    .select('*', { count: 'exact', head: true })
-    .in('id', ids)
-    .eq('status', 'published')
-
   revalidatePath('/sitemap.xml')
 
-  const success = count ?? 0
+  const success = data?.length ?? 0
   return { success, failed: ids.length - success, errors: [] }
 }
 
 export async function bulkUnpublish(ids: string[]): Promise<BulkResult> {
   const supabase = createAdminClient()
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('seo_pages')
     .update({ status: 'draft', updated_at: new Date().toISOString() })
     .in('id', ids)
     .eq('status', 'published')
+    .select('id')
 
   if (error) {
     return { success: 0, failed: ids.length, errors: [error.message] }
   }
 
-  const { count } = await supabase
-    .from('seo_pages')
-    .select('*', { count: 'exact', head: true })
-    .in('id', ids)
-    .eq('status', 'draft')
-
   revalidatePath('/sitemap.xml')
 
-  return { success: count ?? 0, failed: ids.length - (count ?? 0), errors: [] }
+  const success = data?.length ?? 0
+  return { success, failed: ids.length - success, errors: [] }
 }
 
 export async function bulkDelete(ids: string[]): Promise<BulkResult> {
   const supabase = createAdminClient()
 
-  const { error, count } = await supabase
+  const { data, error } = await supabase
     .from('seo_pages')
     .delete()
     .in('id', ids)
+    .select('id')
 
   if (error) {
     return { success: 0, failed: ids.length, errors: [error.message] }
@@ -71,7 +63,8 @@ export async function bulkDelete(ids: string[]): Promise<BulkResult> {
 
   revalidatePath('/sitemap.xml')
 
-  return { success: count ?? ids.length, failed: 0, errors: [] }
+  const success = data?.length ?? 0
+  return { success, failed: ids.length - success, errors: [] }
 }
 
 export async function bulkRefresh(ids: string[]): Promise<BulkResult> {

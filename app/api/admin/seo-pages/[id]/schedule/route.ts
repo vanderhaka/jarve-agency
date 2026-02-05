@@ -1,29 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { z } from 'zod'
+import { requireAdmin, isAuthError } from '@/lib/auth/require-admin'
 import { schedulePage, unschedulePage } from '@/lib/seo/scheduling'
+
+const scheduleSchema = z.object({
+  publish_at: z.string().datetime().refine(
+    (val) => new Date(val) > new Date(),
+    { message: 'publish_at must be a future date' }
+  ),
+})
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
 
   const { id } = await params
   const body = await request.json()
-  const { publish_at } = body
+  const parsed = scheduleSchema.safeParse(body)
 
-  if (!publish_at) {
-    return NextResponse.json({ error: 'publish_at is required' }, { status: 400 })
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues.map((i) => i.message).join(', ') },
+      { status: 400 }
+    )
   }
 
-  const publishDate = new Date(publish_at)
-  if (isNaN(publishDate.getTime()) || publishDate <= new Date()) {
-    return NextResponse.json({ error: 'publish_at must be a valid future date' }, { status: 400 })
-  }
+  const publishDate = new Date(parsed.data.publish_at)
 
   const result = await schedulePage(id, publishDate)
   if (!result.success) {
@@ -37,11 +42,8 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
 
   const { id } = await params
   const success = await unschedulePage(id)

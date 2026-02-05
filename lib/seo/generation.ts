@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 // Re-export types for convenience
 export type { SeoContent } from './types'
 
-const LAYOUTS = ['standard', 'problem-first', 'faq-heavy', 'benefits-grid', 'story-flow'] as const
+const LAYOUTS = ['standard', 'problem-first', 'faq-heavy', 'benefits-grid', 'story-flow', 'testimonial-heavy'] as const
 
 /**
  * Post-processes generated content to replace "we/our" language with first-person
@@ -19,6 +19,10 @@ export function fixVoice(str: string): string {
     .replace(/\bwe'll\b/g, "I'll")
     .replace(/\bWe'd\b/g, "I'd")
     .replace(/\bwe'd\b/g, "I'd")
+    .replace(/\bWe are\b/g, 'I am')
+    .replace(/\bwe are\b/g, 'I am')
+    .replace(/\bWe were\b/g, 'I was')
+    .replace(/\bwe were\b/g, 'I was')
     .replace(/\bWe (?=[a-z])/g, 'I ')
     .replace(/\bwe (?=[a-z])/g, 'I ')
     .replace(/\b[Oo]ur team\b/g, 'I')
@@ -46,6 +50,51 @@ export function pickLayout(): string {
 }
 
 /**
+ * Extract the first balanced JSON object from text.
+ * Counts braces to avoid greedy regex issues.
+ */
+function extractJson(text: string): Record<string, unknown> {
+  const start = text.indexOf('{')
+  if (start === -1) throw new Error('No JSON found in response')
+
+  let depth = 0
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '{') depth++
+    else if (text[i] === '}') depth--
+    if (depth === 0) {
+      return JSON.parse(text.slice(start, i + 1))
+    }
+  }
+  throw new Error('Unbalanced JSON in response')
+}
+
+/**
+ * Recursively apply fixVoice to all string values in an object.
+ */
+function applyVoiceFix(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const key of Object.keys(obj)) {
+    const val = obj[key]
+    if (typeof val === 'string') {
+      result[key] = fixVoice(val)
+    } else if (Array.isArray(val)) {
+      result[key] = val.map((item: unknown) => {
+        if (typeof item === 'string') return fixVoice(item)
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+          return applyVoiceFix(item as Record<string, unknown>)
+        }
+        return item
+      })
+    } else if (val && typeof val === 'object') {
+      result[key] = applyVoiceFix(val as Record<string, unknown>)
+    } else {
+      result[key] = val
+    }
+  }
+  return result
+}
+
+/**
  * Generates SEO content using Claude Sonnet 4.
  *
  * @param prompt - The complete prompt including context, requirements, and JSON schema
@@ -61,37 +110,18 @@ export async function generateContent(prompt: string): Promise<Record<string, un
   })
 
   const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error('No JSON found in response')
-  const content = JSON.parse(jsonMatch[0])
+  const content = extractJson(text)
 
   // Normalize FAQ to always be an array
   if (content.faq && !Array.isArray(content.faq)) {
     content.faq = [content.faq]
   }
 
-  // Apply fixVoice to all string fields
-  for (const key of Object.keys(content)) {
-    const val = content[key]
-    if (typeof val === 'string') {
-      content[key] = fixVoice(val)
-    } else if (Array.isArray(val)) {
-      content[key] = val.map((item: unknown) => {
-        if (typeof item === 'string') return fixVoice(item)
-        if (item && typeof item === 'object') {
-          const obj = { ...(item as Record<string, unknown>) }
-          for (const k of Object.keys(obj)) {
-            if (typeof obj[k] === 'string') obj[k] = fixVoice(obj[k] as string)
-          }
-          return obj
-        }
-        return item
-      })
-    }
-  }
+  // Apply fixVoice recursively to all string fields
+  const fixed = applyVoiceFix(content)
 
   // Assign random layout
-  content.layout = pickLayout()
+  fixed.layout = pickLayout()
 
-  return content
+  return fixed
 }

@@ -49,7 +49,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
 ## PHASE 1: Critical Fixes
 
 ### Step 1.1: Fix Supabase client mismatches in lib/seo/
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep -r "from '@/utils/supabase/server'" lib/seo/` → "No matches (all switched to admin)"
   - test: `grep "createAnonClient()" lib/seo/queries.ts | head -1` → "No module-scope client"
@@ -65,7 +65,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - **Why**: Cookie-based client fails silently in cron jobs (no cookies). Versions, alerts, GSC data likely not persisting in production.
 
 ### Step 1.2: Add admin role verification to all admin API routes
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep -r "employee.*role.*admin\|is_admin" app/api/admin/seo-pages/` → "Found in all route files"
   - type: `npx tsc --noEmit` → "No errors"
@@ -82,7 +82,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - **Why**: Any authenticated user can currently bulk publish/delete pages and burn API credits.
 
 ### Step 1.3: Fix version numbering race condition
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep "create_page_version\|FOR UPDATE" supabase/migrations/*version*` → "Function exists with locking"
   - type: `npx tsc --noEmit` → "No errors"
@@ -97,7 +97,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - **Why**: Concurrent cron + bulk refresh produces duplicate version numbers.
 
 ### Step 1.4: Fix dashboard loading states that freeze on error
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep -A2 "catch.*err" app/admin/seo-dashboard/use-seo-dashboard.ts` → "setLoading(false) in catch"
   - test: `grep -A2 "catch.*err" app/admin/seo-dashboard/components/PositionTrendChart.tsx` → "setLoading(false) in catch"
@@ -118,7 +118,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
 ## PHASE 2: High Priority Bugs
 
 ### Step 2.1: Add input validation to API routes
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep "z\.\|zod" app/api/admin/seo-pages/bulk/route.ts` → "Zod schema found"
   - type: `npx tsc --noEmit` → "No errors"
@@ -131,7 +131,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - `app/api/cron/seo-drip/route.ts` - Verify Vercel cron signature header
 
 ### Step 2.2: Fix bulk operation count bugs
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep "count: 'exact'" lib/seo/bulk.ts` → "Found in delete and publish/unpublish"
   - type: `npx tsc --noEmit` → "No errors"
@@ -142,7 +142,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - `lib/seo/bulk.ts:24-33` - Use `.update({...}).select('id')` with RETURNING instead of separate count query (TOCTOU race fix)
 
 ### Step 2.3: Fix content generation bugs
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - type: `npx tsc --noEmit` → "No errors"
   - principle: "fixVoice correctly handles 'We are' -> 'I am' and recurses into nested content"
@@ -156,7 +156,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - `lib/seo/refresh.ts:57-62` - Pass `newContent.metaDescription` instead of stale `page.meta_description`
 
 ### Step 2.4: Fix dashboard data bugs
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - test: `grep "date.*position\|{ date:" app/admin/seo-dashboard/components/DistributionChart.tsx` → "Map stores date alongside position"
   - type: `npx tsc --noEmit` → "No errors"
@@ -172,7 +172,7 @@ Fix all issues from the pSEO pipeline review across 4 phases: critical fixes, hi
   - Add delete confirmation dialog to `handleDeleteKeyword`
 
 ### Step 2.5: Fix error handling gaps
-- **passes**: false
+- **passes**: true
 - **criteria**:
   - type: `npx tsc --noEmit` → "No errors"
   - principle: "All .update()/.insert() calls check error return"

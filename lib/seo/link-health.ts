@@ -65,9 +65,11 @@ async function checkPageContent(slug: string, content: Record<string, unknown>):
     results.push(result)
   }
 
-  // Store results
+  // Store results (upsert to handle re-checks of the same links)
   if (results.length > 0) {
-    await supabase.from('seo_link_checks').insert(results)
+    await supabase
+      .from('seo_link_checks')
+      .upsert(results, { onConflict: 'source_slug,target_url' })
   }
 
   return results

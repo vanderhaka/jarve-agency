@@ -4,7 +4,7 @@
  */
 
 import { google } from 'googleapis'
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 
 interface GSCRow {
   keys: string[]
@@ -172,7 +172,7 @@ export async function syncGSCData(): Promise<{
   }
 
   // Upsert into database
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const errors: string[] = []
   let synced = 0
 

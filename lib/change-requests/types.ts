@@ -46,7 +46,7 @@ export const SignChangeRequestSchema = z.object({
   signer_name: z.string().min(1).max(200),
   signer_email: z.string().email(),
   signature_svg: z.string().transform(sanitizeSvg),
-  ip_address: z.string().ip().optional(),
+  ip_address: z.string().optional(),
 })
 
 export type SignChangeRequestInput = z.infer<typeof SignChangeRequestSchema>

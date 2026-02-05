@@ -53,6 +53,7 @@ export default function PositionTrendChart({ siteId = 'all', days = 30, position
       if (err?.name !== 'AbortError') {
         console.error('Failed to fetch position trend data:', err)
       }
+      setLoading(false)
     })
 
     return () => {

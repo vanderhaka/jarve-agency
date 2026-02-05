@@ -53,22 +53,30 @@ export async function refreshPageContent(pageId: string): Promise<{
       return { success: false, error: `Quality gate failed: ${qg.errors.join(', ')}` }
     }
 
+    // Use new meta description if generated, otherwise keep existing
+    const metaDesc = parsed.metaDescription || page.meta_description
+
     // Create version before updating
     await createVersion(
       page.id,
       newContent,
       page.meta_title,
-      page.meta_description
+      metaDesc
     )
 
-    // Update page content
-    await supabase
+    // Update page content and meta description
+    const { error: updateError } = await supabase
       .from('seo_pages')
       .update({
         content: newContent,
+        meta_description: metaDesc,
         updated_at: new Date().toISOString(),
       })
       .eq('id', page.id)
+
+    if (updateError) {
+      return { success: false, error: `Failed to update page: ${updateError.message}` }
+    }
 
     return { success: true }
   } catch (err) {

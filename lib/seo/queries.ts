@@ -1,9 +1,8 @@
 import { createAnonClient } from '@/utils/supabase/anon'
 import type { SeoPage, SeoContent } from './types'
 
-const supabase = createAnonClient()
-
 export async function getPublishedPage(slug: string): Promise<SeoPage | null> {
+  const supabase = createAnonClient()
   const { data } = await supabase
     .from('seo_pages')
     .select('*')
@@ -14,6 +13,7 @@ export async function getPublishedPage(slug: string): Promise<SeoPage | null> {
 }
 
 export async function getPublishedSlugs(routePattern: string): Promise<string[]> {
+  const supabase = createAnonClient()
   const { data } = await supabase
     .from('seo_pages')
     .select('slug')
@@ -23,6 +23,7 @@ export async function getPublishedSlugs(routePattern: string): Promise<string[]>
 }
 
 export async function getAllPublishedPages(): Promise<Pick<SeoPage, 'slug' | 'route_pattern' | 'updated_at'>[]> {
+  const supabase = createAnonClient()
   const { data } = await supabase
     .from('seo_pages')
     .select('slug, route_pattern, updated_at')

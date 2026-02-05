@@ -81,7 +81,7 @@ export async function publishScheduledPages(): Promise<{
         page.meta_description
       )
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('seo_pages')
         .update({
           status: 'published',
@@ -89,6 +89,11 @@ export async function publishScheduledPages(): Promise<{
           updated_at: new Date().toISOString(),
         })
         .eq('id', page.id)
+
+      if (updateError) {
+        errors.push(`${page.slug}: ${updateError.message}`)
+        continue
+      }
 
       published++
     } catch (err) {

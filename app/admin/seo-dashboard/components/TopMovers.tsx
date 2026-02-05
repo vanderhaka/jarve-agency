@@ -48,6 +48,7 @@ export default function TopMovers({ siteId = 'all', positionBucket = 'all' }: To
       if (err?.name !== 'AbortError') {
         console.error('Failed to fetch ranking movers:', err)
       }
+      setLoading(false)
     })
 
     return () => {

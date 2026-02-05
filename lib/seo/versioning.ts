@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 
 export interface PageVersion {
   id: string
@@ -16,31 +16,14 @@ export async function createVersion(
   metaTitle: string,
   metaDescription: string
 ): Promise<PageVersion | null> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
-  // Get the highest version number for this page
-  const { data: lastVersion } = await supabase
-    .from('seo_page_versions')
-    .select('version_number')
-    .eq('page_id', pageId)
-    .order('version_number', { ascending: false })
-    .limit(1)
-    .single()
-
-  const nextVersion = lastVersion ? lastVersion.version_number + 1 : 1
-
-  // Insert new version
-  const { data, error } = await supabase
-    .from('seo_page_versions')
-    .insert({
-      page_id: pageId,
-      version_number: nextVersion,
-      content,
-      meta_title: metaTitle,
-      meta_description: metaDescription,
-    })
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc('create_page_version', {
+    p_page_id: pageId,
+    p_content: content,
+    p_meta_title: metaTitle,
+    p_meta_description: metaDescription,
+  })
 
   if (error) {
     console.error('Failed to create version:', error)
@@ -51,7 +34,7 @@ export async function createVersion(
 }
 
 export async function getVersionHistory(pageId: string): Promise<PageVersion[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('seo_page_versions')
@@ -71,7 +54,7 @@ export async function getVersion(
   pageId: string,
   versionNumber: number
 ): Promise<PageVersion | null> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('seo_page_versions')
@@ -89,7 +72,7 @@ export async function getVersion(
 }
 
 export async function getLatestVersion(pageId: string): Promise<PageVersion | null> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('seo_page_versions')

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 
 export type AlertType = 'ranking_drop' | 'ranking_lost' | 'publish_failed' | 'quality_gate_spike' | 'broken_link'
 export type AlertSeverity = 'info' | 'warning' | 'critical'
@@ -23,7 +23,7 @@ export async function createAlert(
   message?: string,
   metadata?: Record<string, unknown>
 ): Promise<SeoAlert | null> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('seo_alerts')
@@ -47,7 +47,7 @@ export async function createAlert(
 }
 
 export async function acknowledgeAlert(id: string): Promise<boolean> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { error } = await supabase
     .from('seo_alerts')
@@ -63,7 +63,7 @@ export async function acknowledgeAlert(id: string): Promise<boolean> {
 }
 
 export async function resolveAlert(id: string): Promise<boolean> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { error } = await supabase
     .from('seo_alerts')
@@ -82,7 +82,7 @@ export async function resolveAlert(id: string): Promise<boolean> {
 }
 
 export async function getActiveAlerts(): Promise<SeoAlert[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('seo_alerts')

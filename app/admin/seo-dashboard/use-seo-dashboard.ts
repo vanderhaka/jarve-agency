@@ -70,6 +70,7 @@ export function useSeoDashboard() {
       if (err?.name !== 'AbortError') {
         console.error('Failed to fetch SEO dashboard data:', err)
       }
+      setLoading(false)
     })
 
     return () => {

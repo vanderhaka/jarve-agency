@@ -1,34 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { z } from 'zod'
+import { requireAdmin, isAuthError } from '@/lib/auth/require-admin'
 import { bulkPublish, bulkUnpublish, bulkDelete, bulkRefresh } from '@/lib/seo/bulk'
 
 const VALID_ACTIONS = ['publish', 'unpublish', 'delete', 'refresh'] as const
 type BulkAction = (typeof VALID_ACTIONS)[number]
 
+const bulkSchema = z.object({
+  action: z.enum(VALID_ACTIONS),
+  pageIds: z.array(z.string().uuid()).min(1).max(100),
+})
+
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
 
   const body = await request.json()
-  const { action, pageIds } = body as { action: string; pageIds: string[] }
+  const parsed = bulkSchema.safeParse(body)
 
-  if (!action || !VALID_ACTIONS.includes(action as BulkAction)) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: `Invalid action. Must be one of: ${VALID_ACTIONS.join(', ')}` },
+      { error: parsed.error.issues.map((i) => i.message).join(', ') },
       { status: 400 }
     )
   }
 
-  if (!Array.isArray(pageIds) || pageIds.length === 0) {
-    return NextResponse.json({ error: 'pageIds must be a non-empty array' }, { status: 400 })
-  }
-
-  if (pageIds.length > 100) {
-    return NextResponse.json({ error: 'Maximum 100 pages per bulk operation' }, { status: 400 })
-  }
+  const { action, pageIds } = parsed.data
 
   const handlers: Record<BulkAction, (ids: string[]) => ReturnType<typeof bulkPublish>> = {
     publish: bulkPublish,
@@ -37,7 +34,7 @@ export async function POST(request: NextRequest) {
     refresh: bulkRefresh,
   }
 
-  const result = await handlers[action as BulkAction](pageIds)
+  const result = await handlers[action](pageIds)
 
   return NextResponse.json(result)
 }

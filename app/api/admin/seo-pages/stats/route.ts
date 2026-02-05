@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { requireAdmin, isAuthError } from '@/lib/auth/require-admin'
 
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
+  const { supabase } = auth
 
   // Total counts by status
   const { data: statusCounts } = await supabase

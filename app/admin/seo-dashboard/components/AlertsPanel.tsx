@@ -12,16 +12,20 @@ export default function AlertsPanel() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchAlerts()
+    const controller = new AbortController()
+    fetchAlerts(controller.signal)
+    return () => controller.abort()
   }, [])
 
-  async function fetchAlerts() {
+  async function fetchAlerts(signal?: AbortSignal) {
     try {
-      const res = await fetch('/api/admin/alerts')
+      const res = await fetch('/api/admin/alerts', { signal })
       const data = await res.json()
       setAlerts(data.alerts || [])
     } catch (error) {
-      console.error('Failed to fetch alerts:', error)
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Failed to fetch alerts:', error)
+      }
     } finally {
       setLoading(false)
     }

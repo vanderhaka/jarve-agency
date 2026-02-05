@@ -77,7 +77,7 @@ export async function runDailyRankCheck(): Promise<{
   }
 
   if (!keywords || keywords.length === 0) {
-    throw new Error('No active keywords configured')
+    return { checked: 0, found: 0, errors: [] }
   }
 
   const today = new Date().toISOString().split('T')[0]
